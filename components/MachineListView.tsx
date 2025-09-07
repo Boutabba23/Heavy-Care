@@ -444,7 +444,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
               </div>
             )}
             {/* Delete buttons section */}
-            <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="destructive"
                 size="sm"
