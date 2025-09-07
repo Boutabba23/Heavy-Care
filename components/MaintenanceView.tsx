@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { MaintenanceRecord, Machine } from "../types";
-import ImportMaintenanceModal from "./ImportMaintenanceModal";
+import { MaintenanceRecord, Machine, Toast } from "../types";
 import {
   Card,
   CardHeader,
@@ -42,14 +41,15 @@ interface MaintenanceViewProps {
     record: Partial<MaintenanceRecord> | null,
     viewOnly?: boolean
   ) => void;
-  onDeleteMaintenance: (recordId: string) => void;
+  onDeleteMaintenance: (recordId: string, showNotification?: boolean) => void;
   onOpenConfirmationDialog: ReturnType<
     typeof useAppLogic
   >["actions"]["openConfirmationDialog"];
   onOpenMaintenanceImportModal: () => Promise<void>; // Make sure this is properly typed as async
+  addToast: (toast: Omit<Toast, "id">) => void; // Add this prop for toast notifications
 }
 
-const maintenanceSequence = ["C", "D", "C", "E", "C", "D", "C", "F"];
+const maintenanceSequence = ["C", "D", "C", "E", "C", "D", "F"];
 
 // fix: Changed export to a named export to resolve module import issue.
 export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
@@ -59,6 +59,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
   onDeleteMaintenance,
   onOpenConfirmationDialog,
   onOpenMaintenanceImportModal,
+  addToast,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -117,7 +118,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
       description: `Êtes-vous sûr de vouloir supprimer cette opération de maintenance pour ${getMachineName(
         record.machineId
       )} ? Cette action est irréversible.`,
-      onConfirm: () => onDeleteMaintenance(record.id),
+      onConfirm: () => onDeleteMaintenance(record.id), // Use default behavior (show notification)
     });
   };
 
@@ -134,8 +135,21 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
     onOpenConfirmationDialog({
       title: "Supprimer les maintenances par engin",
       description: `Êtes-vous sûr de vouloir supprimer toutes les ${recordsOfMachine.length} opérations de maintenance pour l'engin "${machineName}" ? Cette action est irréversible.`,
-      onConfirm: () => {
-        recordsOfMachine.forEach((record) => onDeleteMaintenance(record.id));
+      onConfirm: async () => {
+        // Create an array of promises for all deletions
+        const deletePromises = recordsOfMachine.map(record => 
+          onDeleteMaintenance(record.id, false) // Pass false to suppress individual notifications
+        );
+        
+        // Wait for all deletions to complete
+        await Promise.all(deletePromises);
+        
+        // Show a single toast with the count of deleted records
+        addToast({
+          type: "info",
+          title: "Maintenances Supprimées",
+          description: `${recordsOfMachine.length} opération(s) de maintenance supprimée(s).`,
+        });
       },
     });
   };
@@ -152,8 +166,21 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
     onOpenConfirmationDialog({
       title: "Supprimer les maintenances par gamme",
       description: `Êtes-vous sûr de vouloir supprimer toutes les ${recordsOfGamme.length} opérations de maintenance de gamme "${rangeFilter}" ? Cette action est irréversible.`,
-      onConfirm: () => {
-        recordsOfGamme.forEach((record) => onDeleteMaintenance(record.id));
+      onConfirm: async () => {
+        // Create an array of promises for all deletions
+        const deletePromises = recordsOfGamme.map(record => 
+          onDeleteMaintenance(record.id, false) // Pass false to suppress individual notifications
+        );
+        
+        // Wait for all deletions to complete
+        await Promise.all(deletePromises);
+        
+        // Show a single toast with the count of deleted records
+        addToast({
+          type: "info",
+          title: "Maintenances Supprimées",
+          description: `${recordsOfGamme.length} opération(s) de maintenance supprimée(s).`,
+        });
       },
     });
   };
@@ -165,8 +192,21 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
     onOpenConfirmationDialog({
       title: "Supprimer toutes les maintenances",
       description: `Êtes-vous sûr de vouloir supprimer toutes les ${maintenanceRecords.length} opérations de maintenance ? Cette action est irréversible.`,
-      onConfirm: () => {
-        maintenanceRecords.forEach((record) => onDeleteMaintenance(record.id));
+      onConfirm: async () => {
+        // Create an array of promises for all deletions
+        const deletePromises = maintenanceRecords.map(record => 
+          onDeleteMaintenance(record.id, false) // Pass false to suppress individual notifications
+        );
+        
+        // Wait for all deletions to complete
+        await Promise.all(deletePromises);
+        
+        // Show a single toast with the count of deleted records
+        addToast({
+          type: "info",
+          title: "Maintenances Supprimées",
+          description: `${maintenanceRecords.length} opération(s) de maintenance supprimée(s).`,
+        });
       },
     });
   };
@@ -466,6 +506,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Engin</TableHead>
+                    <TableHead>Code</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Heures de Service</TableHead>
                     <TableHead>Gamme éxecutée</TableHead>
@@ -482,6 +523,9 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                       <TableRow key={record.id}>
                         <TableCell className="font-medium max-w-sm truncate">
                           {getMachineName(record.machineId)}
+                        </TableCell>
+                        <TableCell>
+                          {machines.find(m => m.id === record.machineId)?.code || ''}
                         </TableCell>
                         <TableCell>
                           {new Date(record.date).toLocaleDateString()}
@@ -601,22 +645,22 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
           <CardHeader className="mb-6">
             <CardTitle>Rechercher une Opération</CardTitle>
             <CardDescription>
-              Filtrez par nom d'engin, gamme de maintenance, ou date.
+              Filtrez par code d'engin, gamme de maintenance, ou date.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
               <div className="space-y-2">
-                <Label htmlFor="machine-filter">Engin</Label>
+                <Label htmlFor="machine-filter">Code</Label>
                 <Select
                   id="machine-filter"
                   value={machineFilter}
                   onChange={(e) => setMachineFilter(e.target.value)}
                 >
-                  <option value="all">Tous les engins</option>
+                  <option value="all">Tous les codes</option>
                   {machines.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.designation}
+                      {m.code}
                     </option>
                   ))}
                 </Select>
@@ -655,7 +699,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                 className="flex items-center gap-2"
               >
                 <TrashIcon className="h-4 w-4" />
-                Supprimer par engin
+                Supprimer par code
               </Button>
               <Button
                 variant="destructive"

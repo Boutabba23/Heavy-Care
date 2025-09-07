@@ -142,7 +142,8 @@ export const useAppLogic = () => {
     });
 
   const addToast = useCallback((toast: Omit<Toast, "id">) => {
-    const id = `toast-${Date.now()}`;
+    // Create a more unique ID to prevent duplicates
+    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setToasts((prev) => [...prev, { id, ...toast }]);
   }, []);
 
@@ -531,191 +532,139 @@ export const useAppLogic = () => {
   };
 
   const closeImportModal = () => setIsImportModalOpen(false);
-  const openMaintenanceImportModal = () =>
+  const openMaintenanceImportModal = async () => {
+    // Refresh data before opening the modal to ensure we have the latest maintenance records
+    await fetchData();
     setIsMaintenanceImportModalOpen(true);
+  };
   const closeMaintenanceImportModal = () =>
     setIsMaintenanceImportModalOpen(false);
 
   const importMaintenanceRecords = async (newMaintenanceData: any[]) => {
-    try {
-      console.log("Importing maintenance records:", newMaintenanceData);
+    // Filter out any records that don't have the minimum required data
+    const validMaintenanceData = newMaintenanceData.filter(record => 
+      record.date && 
+      record.serviceHours !== undefined && 
+      record.maintenanceRange
+    );
 
-      // Fetch all machines to create mapping for machine identification
-      const { data: machinesData, error: machinesError } = await supabase
-        .from("machines")
-        .select("id, code, designation");
-
-      if (machinesError) {
-        throw machinesError;
-      }
-
-      console.log("Available machines from database:", machinesData);
-
-      // Create maps for quick lookup
-      const machineCodeToIdMap = new Map<string, string>();
-      const machineDesignationToIdMap = new Map<string, string>();
-
-      machinesData.forEach((machine: any) => {
-        machineCodeToIdMap.set(machine.code, machine.id);
-        machineDesignationToIdMap.set(
-          machine.designation.toLowerCase(),
-          machine.id
-        );
+    if (validMaintenanceData.length === 0) {
+      addToast({
+        type: "warning",
+        title: "Importation Annulée",
+        description: "Aucun enregistrement de maintenance valide à importer.",
       });
+      closeMaintenanceImportModal();
+      return;
+    }
 
-      console.log("Machine code to ID map:", machineCodeToIdMap);
-      console.log("Machine designation to ID map:", machineDesignationToIdMap);
-
-      // Track records that couldn't be matched for better feedback
-      let unmatchedRecordsCount = 0;
-      const unmatchedRecords: string[] = [];
-
-      // Create maintenance records for each imported item
-      const maintenanceRecordsToAdd = newMaintenanceData
-        .filter((record) => {
-          // Filter out records with "Inconnu" machine designation
-          if (
-            record.machineDesignation &&
-            String(record.machineDesignation).toLowerCase().includes("inconnu")
-          ) {
-            console.log(
-              "Skipping record with 'Inconnu' machine designation:",
-              record
-            );
-            return false;
-          }
-          return true;
-        })
-        .map((record) => {
-          console.log("Processing record:", record);
-
-          // Try to find the machine ID by designation
-          let machineId: string | undefined = undefined; // Use undefined instead of null
-
-          if (record.machineDesignation) {
-            // First try exact match with designation
-            machineId =
-              machineDesignationToIdMap.get(
-                record.machineDesignation.toLowerCase()
-              ) || undefined;
-
-            console.log("Exact match result:", machineId);
-
-            // If not found, try partial match
-            if (!machineId) {
-              for (const [
-                designation,
-                id,
-              ] of machineDesignationToIdMap.entries()) {
-                if (
-                  record.machineDesignation
-                    .toLowerCase()
-                    .includes(designation) ||
-                  designation.includes(record.machineDesignation.toLowerCase())
-                ) {
-                  machineId = id;
-                  console.log("Partial match found:", machineId);
-                  break;
-                }
-              }
-            }
-
-            // If still not found, try to match with machine codes
-            if (!machineId) {
-              machineId =
-                machineCodeToIdMap.get(record.machineDesignation) || undefined;
-              console.log("Code match result:", machineId);
-            }
-
-            // If still not found, collect for feedback
-            if (!machineId) {
-              unmatchedRecordsCount++;
-              unmatchedRecords.push(record.machineDesignation);
-              console.log("No match found for:", record.machineDesignation);
-            }
-          } else {
-            // No machine designation provided
-            unmatchedRecordsCount++;
-            unmatchedRecords.push("Aucune désignation fournie");
-            console.log("No machine designation provided");
-          }
-
-          // Only include machine_id in the record if it's not undefined
-          const baseRecord = {
-            id: `maint-${Date.now()}-${Math.random()
-              .toString(36)
-              .substr(2, 9)}`,
-            date: record.date,
-            service_hours: record.serviceHours,
-            maintenance_range: record.maintenanceRange,
-            filters_used: [], // Empty for now
-          };
-
-          // Add machine_id only if it's defined
-          if (machineId !== undefined) {
-            console.log("Adding record with machine ID:", machineId);
-            return {
-              ...baseRecord,
-              machine_id: machineId,
-            };
-          } else {
-            console.log("Adding record without machine ID");
-            return baseRecord;
-          }
-        })
-        .filter((record) => record.date && record.date !== "Invalid Date"); // Filter out records with invalid dates
-
-      console.log("Records to add:", maintenanceRecordsToAdd);
-
-      // Insert all records (including those without matched machines)
-      if (maintenanceRecordsToAdd.length > 0) {
-        const { data, error } = await supabase
-          .from("maintenance_records")
-          .insert(maintenanceRecordsToAdd as any) // Cast to any to avoid type issues
-          .select();
-
-        if (error) {
-          throw error;
-        }
-
-        // Refresh data to show the new records
-        await fetchData();
-
-        // Show success message with details about unmatched records
-        let description = `Données de maintenance importées avec succès. ${maintenanceRecordsToAdd.length} enregistrements ont été ajoutés à la table de maintenance.`;
-
-        if (unmatchedRecordsCount > 0) {
-          description += ` ${unmatchedRecordsCount} enregistrement(s) n'ont pas pu être associés à un engin existant et seront importés sans association.`;
-        }
-
-        addToast({
-          type: "success",
-          title: "Importation de Maintenance",
-          description,
-        });
-
-        console.log("Imported maintenance records:", data);
-      } else {
-        // Show message if no records to import
-        addToast({
-          type: "info",
-          title: "Importation de Maintenance",
-          description: "Aucun enregistrement de maintenance à importer.",
-        });
+    // Function to normalize values for comparison
+    const normalizeValue = (value: any) => {
+      if (typeof value === 'string') {
+        return value.trim();
       }
-    } catch (error: any) {
+      if (typeof value === 'number') {
+        return value.toString();
+      }
+      if (value === null || value === undefined) {
+        return '';
+      }
+      return String(value);
+    };
+
+    // Function to check if two records are duplicates
+    const isDuplicateRecord = (existingRecord: any, newRecord: any) => {
+      // Normalize dates (remove time part if exists)
+      const date1 = normalizeValue(existingRecord.date).split('T')[0];
+      const date2 = normalizeValue(newRecord.date).split('T')[0];
+      
+      // Handle database format vs import format
+      const machineId1 = existingRecord.machineId || existingRecord.machine_id;
+      const machineId2 = newRecord.machineId || newRecord.machine_id;
+      
+      const serviceHours1 = existingRecord.serviceHours !== undefined ? 
+        existingRecord.serviceHours : existingRecord.service_hours;
+      const serviceHours2 = newRecord.serviceHours !== undefined ? 
+        newRecord.serviceHours : newRecord.service_hours;
+      
+      const maintenanceRange1 = existingRecord.maintenanceRange || existingRecord.maintenance_range;
+      const maintenanceRange2 = newRecord.maintenanceRange || newRecord.maintenance_range;
+      
+      // Normalize maintenance range (case insensitive)
+      const range1 = normalizeValue(maintenanceRange1).toUpperCase();
+      const range2 = normalizeValue(maintenanceRange2).toUpperCase();
+      
+      const isDup = (
+        normalizeValue(machineId1) === normalizeValue(machineId2) &&
+        date1 === date2 &&
+        serviceHours1 === serviceHours2 &&
+        range1 === range2
+      );
+      
+      
+      return isDup;
+    };
+
+    // Filter out duplicates by checking against existing maintenance records
+    const uniqueMaintenanceData = validMaintenanceData.filter((newRecord) => {
+      // Check if this record already exists in the database
+      const isExistingRecord = maintenanceRecords.some((existingRecord) => {
+        return isDuplicateRecord(existingRecord, newRecord);
+      });
+      
+      return !isExistingRecord;
+    });
+
+    if (uniqueMaintenanceData.length === 0) {
+      addToast({
+        type: "warning",
+        title: "Importation Annulée",
+        description: "Tous les enregistrements de maintenance sélectionnés existent déjà.",
+      });
+      closeMaintenanceImportModal();
+      return;
+    }
+
+    const maintenanceRecordsToAdd = uniqueMaintenanceData.map((record) => ({
+      id: `maint-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      machine_id: record.machineId || null,
+      date: record.date,
+      service_hours: record.serviceHours,
+      maintenance_range: record.maintenanceRange,
+      filters_used: [],
+    }));
+
+    const { error } = await supabase
+      .from("maintenance_records")
+      .insert(maintenanceRecordsToAdd as any);
+
+    if (error) {
       console.error("Error importing maintenance records:", error);
       addToast({
         type: "error",
         title: "Erreur d'importation",
-        description: `Échec de l'importation des données de maintenance: ${error.message}`,
+        description: `Échec de l'importation des enregistrements de maintenance: ${error.message}`,
       });
+    } else {
+      fetchData();
+      const duplicateCount = validMaintenanceData.length - uniqueMaintenanceData.length;
+      
+      // Show appropriate toast based on results
+      if (duplicateCount > 0) {
+        addToast({
+          type: "success",
+          title: "Importation Réussie",
+          description: `${maintenanceRecordsToAdd.length} enregistrements de maintenance ont été ajoutés. ${duplicateCount} doublons ont été ignorés.`,
+        });
+      } else {
+        addToast({
+          type: "success",
+          title: "Importation Réussie",
+          description: `${maintenanceRecordsToAdd.length} enregistrements de maintenance ont été ajoutés.`,
+        });
+      }
     }
-
-    // Log the data for debugging
-    console.log("Maintenance data to import:", newMaintenanceData);
-
-    closeMaintenanceImportModal(); // Fixed this to close the correct modal
+    closeMaintenanceImportModal();
   };
 
   const importMachines = async (
@@ -896,16 +845,22 @@ export const useAppLogic = () => {
     closeMaintenanceModal();
   };
 
-  const deleteMaintenanceRecord = async (recordId: string) => {
+  const deleteMaintenanceRecord = async (recordId: string, showNotification: boolean = true) => {
     const { error } = await supabase
       .from("maintenance_records")
       .delete()
       .eq("id", recordId);
     if (error) {
-      addToast({ type: "error", title: "Erreur", description: error.message });
+      if (showNotification) {
+        addToast({ type: "error", title: "Erreur", description: error.message });
+      }
+      return false; // Return false to indicate failure
     } else {
       fetchData();
-      addToast({ type: "info", title: "Enregistrement Supprimé" });
+      if (showNotification) {
+        addToast({ type: "info", title: "Enregistrement Supprimé" });
+      }
+      return true; // Return true to indicate success
     }
   };
 

@@ -214,6 +214,7 @@ const AppContent: React.FC = () => {
             onDeleteMaintenance={actions.deleteMaintenanceRecord}
             onOpenConfirmationDialog={actions.openConfirmationDialog}
             onOpenMaintenanceImportModal={actions.openMaintenanceImportModal}
+            addToast={actions.addToast}
           />
         );
       case View.ANALYTICS:

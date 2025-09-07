@@ -99,12 +99,12 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
         }
       });
 
-      // Only add records that have actual data
-      if (hasData) {
+      // Only add records that have actual data and meet minimum requirements
+      if (hasData && isValidMaintenanceRecord(record)) {
         console.log(`Adding CSV record from line ${i}:`, record);
         records.push(record);
       } else {
-        console.log(`Skipping empty CSV record from line ${i}`);
+        console.log(`Skipping invalid CSV record from line ${i}`);
       }
     }
 
@@ -157,18 +157,42 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
           }
         });
 
-        // Only add records that have actual data
-        if (hasData) {
+        console.log(`Processing row ${i}:`, record);
+        console.log(`Row ${i} has data:`, hasData);
+
+        // Only add records that have actual data and meet minimum requirements
+        if (hasData && isValidMaintenanceRecord(record)) {
           console.log(`Adding record from row ${i}:`, record);
           records.push(record);
         } else {
-          console.log(`Skipping empty row ${i}`);
+          console.log(`Skipping invalid record from row ${i}`);
+          if (hasData) {
+            console.log(`Row ${i} had data but failed validation`);
+          }
         }
       }
     }
 
     console.log("Final parsed Excel records:", records);
     return records;
+  };
+
+  // Helper function to validate if a record has the minimum required fields for maintenance
+  const isValidMaintenanceRecord = (record: any): boolean => {
+    // Check if the record has the essential fields for maintenance data
+    const hasDate = record["Date De Gamme"] !== undefined && record["Date De Gamme"] !== null && record["Date De Gamme"] !== "";
+    const hasGamme = record["Gamme éxecutée"] !== undefined && record["Gamme éxecutée"] !== null && record["Gamme éxecutée"] !== "";
+    const hasReleve = record["Relevé De Gamme"] !== undefined && record["Relevé De Gamme"] !== null && record["Relevé De Gamme"] !== "";
+    
+    // Also check for machine designation
+    const hasMachine = record.DESIGNATION !== undefined && record.DESIGNATION !== null && record.DESIGNATION !== "";
+    
+    const isValid = hasDate && hasGamme && hasReleve && hasMachine;
+    
+    console.log("Validating record:", record);
+    console.log("Has Date:", hasDate, "Has Gamme:", hasGamme, "Has Releve:", hasReleve, "Has Machine:", hasMachine, "Is Valid:", isValid);
+    
+    return isValid;
   };
 
   const handleImportClick = async () => {
@@ -213,8 +237,6 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
   const processImportedRecords = (rawRecords: any[]) => {
     try {
       console.log("ImportMaintenanceModal: Raw records from file:", rawRecords);
-      console.log("ImportMaintenanceModal: Existing maintenance records:", maintenanceRecords);
-      console.log("ImportMaintenanceModal: Existing maintenance records count:", maintenanceRecords?.length || 0);
 
       // Early exit if no records
       if (!rawRecords || rawRecords.length === 0) {
@@ -223,6 +245,24 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
           type: "warning",
           title: "Aucun enregistrement",
           description: "Aucun enregistrement trouvé dans le fichier.",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      console.log(`Found ${rawRecords.length} raw records`);
+
+      // Use the isValidMaintenanceRecord function for validation
+      const validRawRecords = rawRecords.filter(record => isValidMaintenanceRecord(record));
+
+      console.log(`Found ${validRawRecords.length} valid records`);
+
+      if (validRawRecords.length === 0) {
+        console.log("ImportMaintenanceModal: No valid records to process");
+        addToast({
+          type: "warning",
+          title: "Aucun enregistrement valide",
+          description: `Aucun enregistrement valide trouvé dans le fichier. ${rawRecords.length} enregistrements trouvés, mais aucun ne répond aux critères.`,
         });
         setIsProcessing(false);
         return;
@@ -248,6 +288,7 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
         "Date de la maintenance": "date",
 
         // Service hours mappings
+        "Relevé De Gamme": "serviceHours",
         "Heurs De Gamme": "serviceHours",
         "Heur De Gamme": "serviceHours",
         "Heures De Gamme": "serviceHours",
@@ -272,12 +313,8 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
       };
 
       // Process the records to match our expected format
-      const processedRecords = rawRecords.map((record, index) => {
+      const processedRecords = validRawRecords.map((record, index) => {
         console.log(`Processing row ${index}:`, record);
-        // First record explanation:
-        // 1. The parseExcel/parseCSV functions read data starting from the 6th row (index 5)
-        // 2. The first data row (6th row in Excel) becomes the first element in rawRecords array
-        // 3. This first element (index 0) is processed here as the first record
 
         // Normalize field names using the mapping
         const normalizedRecord: any = {};
@@ -383,6 +420,7 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
           normalizedRecord["Heurs De Gamme"] ||
           normalizedRecord["Heur De Gamme"] ||
           normalizedRecord["Heures De Gamme"] ||
+          normalizedRecord["Relevé De Gamme"] ||
           "0";
 
         let serviceHours = 0;
@@ -434,184 +472,8 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
         return result;
       });
 
-      // Function to normalize values for comparison
-      const normalizeValue = (value: any): string => {
-        if (typeof value === 'string') {
-          return value.trim();
-        }
-        if (typeof value === 'number') {
-          return value.toString();
-        }
-        if (value === null || value === undefined) {
-          return '';
-        }
-        return String(value);
-      };
-
-      // Function to check if two records are duplicates
-      const isDuplicateRecord = (record1: any, record2: any): boolean => {
-        // Normalize dates (remove time part if exists)
-        const date1 = normalizeValue(record1.date).split('T')[0];
-        const date2 = normalizeValue(record2.date).split('T')[0];
-        
-        // Normalize service hours (handle string vs number)
-        const hours1 = typeof record1.serviceHours === 'string' ? 
-          parseInt(record1.serviceHours, 10) : record1.serviceHours;
-        const hours2 = typeof record2.serviceHours === 'string' ? 
-          parseInt(record2.serviceHours, 10) : record2.serviceHours;
-        
-        // Handle database format vs import format
-        const machineId1 = record1.machineId || record1.machine_id;
-        const machineId2 = record2.machineId || record2.machine_id;
-        
-        const serviceHours1 = record1.serviceHours !== undefined ? record1.serviceHours : record1.service_hours;
-        const serviceHours2 = record2.serviceHours !== undefined ? record2.serviceHours : record2.service_hours;
-        
-        const maintenanceRange1 = record1.maintenanceRange || record1.maintenance_range;
-        const maintenanceRange2 = record2.maintenanceRange || record2.maintenance_range;
-        
-        // Normalize maintenance range (case insensitive)
-        const range1 = normalizeValue(maintenanceRange1).toUpperCase();
-        const range2 = normalizeValue(maintenanceRange2).toUpperCase();
-        
-        const isDup = (
-          normalizeValue(machineId1) === normalizeValue(machineId2) &&
-          date1 === date2 &&
-          serviceHours1 === serviceHours2 &&
-          range1 === range2
-        );
-        
-        if (isDup) {
-          console.log("ImportMaintenanceModal: Found duplicate records:", record1, record2);
-        }
-        
-        return isDup;
-      };
-
-      // Filter out records with invalid data or empty records
-      const validRecords = processedRecords.filter((record, index, self) => {
-        console.log(`ImportMaintenanceModal: Checking record ${index}:`, record);
-        
-        // Explicitly check if this is a header row and exclude it
-        const recordKeys = Object.keys(record);
-        const isHeaderRow =
-          recordKeys.some(
-            (key) =>
-              String(key).includes("Date De Gamme") ||
-              String(key).includes("Gamme") ||
-              String(key).includes("Heur")
-          ) &&
-          recordKeys.some((key) => {
-            const value = record[key as keyof typeof record];
-            return (
-              typeof value === "string" &&
-              (String(value).includes("Date De Gamme") ||
-                String(value).includes("Gamme") ||
-                String(value).includes("Heur"))
-            );
-          });
-
-        if (isHeaderRow) {
-          console.log("ImportMaintenanceModal: Skipping header row:", record);
-          return false;
-        }
-
-        // Check if this is a record with "Inconnu" machine designation and exclude it
-        if (
-          record.machineDesignation &&
-          String(record.machineDesignation).toLowerCase().includes("inconnu")
-        ) {
-          console.log(
-            "ImportMaintenanceModal: Skipping record with 'Inconnu' machine designation:",
-            record
-          );
-          return false;
-        }
-
-        // Check if the record has meaningful data
-        const hasDate = record.date && record.date !== "Invalid Date";
-        const hasServiceHours =
-          record.serviceHours !== undefined && record.serviceHours >= 0;
-        const hasMaintenanceRange =
-          record.maintenanceRange && record.maintenanceRange.length === 1;
-
-        // Check if this is a duplicate record within the file itself
-        const isDuplicateInFile = self.some((r, i) => {
-          // Don't compare record with itself
-          if (i >= index) return false;
-          const isDup = isDuplicateRecord(r, record);
-          if (isDup) {
-            console.log(`ImportMaintenanceModal: Record ${index} is duplicate of record ${i} in file`);
-          }
-          return isDup;
-        });
-
-        // Check if this is a duplicate of an existing maintenance record
-        const isExistingRecord = maintenanceRecords.some(
-          (existingRecord) => {
-            const isDup = isDuplicateRecord(existingRecord, record);
-            if (isDup) {
-              console.log(`ImportMaintenanceModal: Record ${index} is duplicate of existing record:`, existingRecord);
-            }
-            return isDup;
-          }
-        );
-
-        // At minimum, we need a date and either a machine designation or service hours
-        const hasRequiredData =
-          hasDate && (record.machineDesignation || hasServiceHours);
-
-        // Check if this looks like a valid data row (not a header or empty row)
-        const looksLikeValidData = Object.keys(record).length > 3; // Increased threshold
-
-        const isValid = hasRequiredData && !isDuplicateInFile && !isExistingRecord && looksLikeValidData;
-        console.log(`ImportMaintenanceModal: Record ${index} validation:`, {
-          hasDate,
-          hasServiceHours,
-          hasMaintenanceRange,
-          isDuplicateInFile,
-          isExistingRecord,
-          hasRequiredData,
-          looksLikeValidData,
-          isValid,
-        });
-
-        return isValid;
-      });
-
-      console.log("Valid records to import:", validRecords);
-      console.log(`ImportMaintenanceModal: Original records: ${processedRecords.length}, Valid records: ${validRecords.length}`);
-
-      if (validRecords.length === 0) {
-        addToast({
-          type: "warning",
-          title: "Aucun enregistrement valide",
-          description: "Aucun enregistrement valide trouvé dans le fichier.",
-        });
-        setIsProcessing(false);
-        return;
-      }
-
       // Import the records
-      onImportMaintenanceRecords(validRecords);
-
-      // Show a warning if some records were duplicates
-      const totalRecords = processedRecords.length;
-      const duplicateRecords = totalRecords - validRecords.length;
-      
-      if (duplicateRecords > 0) {
-        addToast({
-          type: "warning",
-          title: "Enregistrements dupliqués détectés",
-          description: `${duplicateRecords} enregistrement(s) de maintenance existent déjà et ont été ignorés.`,
-        });
-      }
-
-      addToast({
-        type: "success",
-        title: "Importation réussie",
-        description: `${validRecords.length} enregistrement(s) de maintenance ont été importés avec succès.`,
-      });
+      onImportMaintenanceRecords(processedRecords);
 
       // Close the modal
       setIsProcessing(false);

@@ -1,6 +1,6 @@
 import { MaintenanceRecord, Machine } from '../types';
 
-export const maintenanceSequence = ['C', 'D', 'C', 'E', 'C', 'D', 'C', 'F'];
+export const maintenanceSequence = ['C', 'D', 'C', 'E', 'C', 'D', 'F'];
 
 export const calculateNextMaintenance = (
     machine: Machine,
