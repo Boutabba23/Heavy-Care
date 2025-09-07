@@ -41,6 +41,7 @@ interface ImportModalProps {
   onClose: () => void;
   onImportMachines: (machines: ParsedMachine[]) => void;
   onImportMaintenanceRecords?: (records: ParsedMaintenanceRecord[]) => void;
+  existingMachines?: Machine[]; // Add this prop
 }
 
 const ImportModal: React.FC<ImportModalProps> = ({
@@ -48,6 +49,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
   onClose,
   onImportMachines,
   onImportMaintenanceRecords,
+  existingMachines = [], // Default to empty array
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [validatedRows, setValidatedRows] = useState<ValidatedRow[]>([]);
@@ -514,7 +516,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
       "Gamme éxecutée": "gamme",
       "Gamme executée": "gamme",
       Gamme: "gamme",
-      "Gamme ": "gamme", // Handle trailing space
+      
       Maintenance: "gamme",
       "Gamme d'entretien": "gamme",
 
@@ -1284,14 +1286,44 @@ const ImportModal: React.FC<ImportModalProps> = ({
   };
 
   const handleImportClick = () => {
+    // Filter out existing machines before import
     const validRows = validatedRows.filter((row) => !row._error);
+    
+    // If we have existing machines, filter out duplicates
+    const filteredValidRows = validRows.filter((row) => {
+      if (existingMachines.length === 0) return true; // No existing machines to check against
+      
+      // Check if this is a machine row
+      if ((row as ValidatedMachineRow).code !== undefined) {
+        const machineRow = row as ValidatedMachineRow;
+        // Check if machine with same code or designation already exists
+        const isExistingByCode = existingMachines.some(
+          m => m.code === machineRow.code
+        );
+        const isExistingByDesignation = existingMachines.some(
+          m => m.designation === machineRow.designation
+        );
+        
+        if (isExistingByCode) {
+          console.log(`Machine with code ${machineRow.code} already exists, skipping import`);
+          return false;
+        }
+        
+        if (isExistingByDesignation) {
+          console.log(`Machine with designation ${machineRow.designation} already exists, skipping import`);
+          return false;
+        }
+      }
+      
+      return true;
+    });
 
     if (importType === "maintenance" && onImportMaintenanceRecords) {
-      onImportMaintenanceRecords(validRows as ParsedMaintenanceRecord[]);
+      onImportMaintenanceRecords(filteredValidRows as ParsedMaintenanceRecord[]);
     } else if (importType === "mixed") {
       // For mixed content, separate machine and maintenance data
       // Improved filtering logic for maintenance rows
-      const maintenanceRows = validRows.filter((row) => {
+      const maintenanceRows = filteredValidRows.filter((row) => {
         // Check if it's a maintenance row by looking for maintenance-specific fields
         return (
           (row as ParsedMaintenanceRecord).gamme !== undefined ||
@@ -1320,7 +1352,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
       }) as ParsedMaintenanceRecord[];
 
       // Improved filtering logic for machine rows
-      const machineRows = validRows.filter((row) => {
+      const machineRows = filteredValidRows.filter((row) => {
         // Check if it's a machine row by looking for machine-specific fields
         const isMaintenanceRow =
           (row as ParsedMaintenanceRecord).gamme !== undefined ||
@@ -1351,7 +1383,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
       // Show feedback when no data was detected
       if (machineRows.length === 0 && maintenanceRows.length === 0) {
         // Try to determine what type of data we have based on content
-        const hasMaintenanceIndicators = validRows.some((row) =>
+        const hasMaintenanceIndicators = filteredValidRows.some((row) =>
           Object.keys(row).some((key) => {
             const value = (row as any)[key];
             return (
@@ -1367,13 +1399,13 @@ const ImportModal: React.FC<ImportModalProps> = ({
         );
 
         if (hasMaintenanceIndicators && onImportMaintenanceRecords) {
-          onImportMaintenanceRecords(validRows as ParsedMaintenanceRecord[]);
+          onImportMaintenanceRecords(filteredValidRows as ParsedMaintenanceRecord[]);
         } else {
-          onImportMachines(validRows as ParsedMachine[]);
+          onImportMachines(filteredValidRows as ParsedMachine[]);
         }
       }
     } else if (importType === "machines") {
-      onImportMachines(validRows as ParsedMachine[]);
+      onImportMachines(filteredValidRows as ParsedMachine[]);
     }
   };
 
@@ -1490,7 +1522,40 @@ const ImportModal: React.FC<ImportModalProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  // Update renderValidRows to show a warning for duplicate machines
   const renderValidRows = () => {
+    // Filter valid rows to identify duplicates
+    const validRows = validatedRows.filter((row) => !row._error);
+    const duplicateRows: ValidatedRow[] = [];
+    const uniqueRows: ValidatedRow[] = [];
+    
+    validRows.forEach((row) => {
+      if (existingMachines.length === 0) {
+        uniqueRows.push(row);
+        return;
+      }
+      
+      // Check if this is a machine row
+      if ((row as ValidatedMachineRow).code !== undefined) {
+        const machineRow = row as ValidatedMachineRow;
+        // Check if machine with same code or designation already exists
+        const isExistingByCode = existingMachines.some(
+          m => m.code === machineRow.code
+        );
+        const isExistingByDesignation = existingMachines.some(
+          m => m.designation === machineRow.designation
+        );
+        
+        if (isExistingByCode || isExistingByDesignation) {
+          duplicateRows.push(row);
+        } else {
+          uniqueRows.push(row);
+        }
+      } else {
+        uniqueRows.push(row);
+      }
+    });
+
     if (importType === "maintenance") {
       return (
         <Table>
@@ -1507,7 +1572,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {validRows.map((row, i) => (
+            {uniqueRows.map((row, i) => (
               <TableRow key={`valid-${i}`}>
                 <TableCell>{(row as ParsedMaintenanceRecord).gamme}</TableCell>
                 <TableCell>
@@ -1530,11 +1595,11 @@ const ImportModal: React.FC<ImportModalProps> = ({
       );
     } else if (importType === "mixed") {
       // For mixed content, show both machine and maintenance data
-      const machineRows = validRows.filter(
+      const machineRows = uniqueRows.filter(
         (row) => (row as ValidatedMachineRow).code !== undefined
       );
 
-      const maintenanceRows = validRows.filter(
+      const maintenanceRows = uniqueRows.filter(
         (row) => (row as ParsedMaintenanceRecord).gamme !== undefined
       );
 
@@ -1619,36 +1684,60 @@ const ImportModal: React.FC<ImportModalProps> = ({
               </Table>
             </div>
           )}
+          
+          {duplicateRows.length > 0 && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3">
+              <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                Engins existants détectés
+              </h4>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                {duplicateRows.length} engin(s) existent déjà dans la base de données et seront ignorés lors de l'importation.
+              </p>
+            </div>
+          )}
         </div>
       );
     } else {
       return (
-        <Table>
-          <TableHeader className="sticky top-0 bg-background/95">
-            <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Désignation</TableHead>
-              <TableHead>Marque</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Heures</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {validRows.map((row, i) => (
-              <TableRow key={`valid-${i}`}>
-                <TableCell>{(row as ValidatedMachineRow).code}</TableCell>
-                <TableCell>
-                  {(row as ValidatedMachineRow).designation}
-                </TableCell>
-                <TableCell>{(row as ValidatedMachineRow).marque}</TableCell>
-                <TableCell>{(row as ValidatedMachineRow).type}</TableCell>
-                <TableCell>
-                  {(row as ValidatedMachineRow).serviceHours}
-                </TableCell>
+        <div className="space-y-4">
+          <Table>
+            <TableHeader className="sticky top-0 bg-background/95">
+              <TableRow>
+                <TableHead>Code</TableHead>
+                <TableHead>Désignation</TableHead>
+                <TableHead>Marque</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Heures</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {uniqueRows.map((row, i) => (
+                <TableRow key={`valid-${i}`}>
+                  <TableCell>{(row as ValidatedMachineRow).code}</TableCell>
+                  <TableCell>
+                    {(row as ValidatedMachineRow).designation}
+                  </TableCell>
+                  <TableCell>{(row as ValidatedMachineRow).marque}</TableCell>
+                  <TableCell>{(row as ValidatedMachineRow).type}</TableCell>
+                  <TableCell>
+                    {(row as ValidatedMachineRow).serviceHours}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          
+          {duplicateRows.length > 0 && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3">
+              <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                Engins existants détectés
+              </h4>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                {duplicateRows.length} engin(s) existent déjà dans la base de données et seront ignorés lors de l'importation.
+              </p>
+            </div>
+          )}
+        </div>
       );
     }
   };

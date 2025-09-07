@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MaintenanceRecord, Machine, Toast } from "../types";
 import {
   Dialog,
@@ -17,6 +17,7 @@ interface ImportMaintenanceModalProps {
   onClose: () => void;
   onImportMaintenanceRecords: (records: any[]) => void;
   machines: Machine[];
+  maintenanceRecords?: MaintenanceRecord[]; // Add this prop for existing maintenance records
   addToast: (toast: Omit<Toast, "id">) => void;
 }
 
@@ -25,10 +26,17 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
   onClose,
   onImportMaintenanceRecords,
   machines,
+  maintenanceRecords = [], // Default to empty array
   addToast,
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Add effect to log when maintenanceRecords change
+  useEffect(() => {
+    console.log('ImportMaintenanceModal: maintenanceRecords updated', maintenanceRecords);
+    console.log('ImportMaintenanceModal: maintenanceRecords length', maintenanceRecords?.length || 0);
+  }, [maintenanceRecords]);
 
   const handleClose = () => {
     setFile(null);
@@ -204,11 +212,13 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
 
   const processImportedRecords = (rawRecords: any[]) => {
     try {
-      console.log("Raw records from file:", rawRecords);
+      console.log("ImportMaintenanceModal: Raw records from file:", rawRecords);
+      console.log("ImportMaintenanceModal: Existing maintenance records:", maintenanceRecords);
+      console.log("ImportMaintenanceModal: Existing maintenance records count:", maintenanceRecords?.length || 0);
 
       // Early exit if no records
       if (!rawRecords || rawRecords.length === 0) {
-        console.log("No records to process");
+        console.log("ImportMaintenanceModal: No records to process");
         addToast({
           type: "warning",
           title: "Aucun enregistrement",
@@ -424,8 +434,64 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
         return result;
       });
 
+      // Function to normalize values for comparison
+      const normalizeValue = (value: any): string => {
+        if (typeof value === 'string') {
+          return value.trim();
+        }
+        if (typeof value === 'number') {
+          return value.toString();
+        }
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return String(value);
+      };
+
+      // Function to check if two records are duplicates
+      const isDuplicateRecord = (record1: any, record2: any): boolean => {
+        // Normalize dates (remove time part if exists)
+        const date1 = normalizeValue(record1.date).split('T')[0];
+        const date2 = normalizeValue(record2.date).split('T')[0];
+        
+        // Normalize service hours (handle string vs number)
+        const hours1 = typeof record1.serviceHours === 'string' ? 
+          parseInt(record1.serviceHours, 10) : record1.serviceHours;
+        const hours2 = typeof record2.serviceHours === 'string' ? 
+          parseInt(record2.serviceHours, 10) : record2.serviceHours;
+        
+        // Handle database format vs import format
+        const machineId1 = record1.machineId || record1.machine_id;
+        const machineId2 = record2.machineId || record2.machine_id;
+        
+        const serviceHours1 = record1.serviceHours !== undefined ? record1.serviceHours : record1.service_hours;
+        const serviceHours2 = record2.serviceHours !== undefined ? record2.serviceHours : record2.service_hours;
+        
+        const maintenanceRange1 = record1.maintenanceRange || record1.maintenance_range;
+        const maintenanceRange2 = record2.maintenanceRange || record2.maintenance_range;
+        
+        // Normalize maintenance range (case insensitive)
+        const range1 = normalizeValue(maintenanceRange1).toUpperCase();
+        const range2 = normalizeValue(maintenanceRange2).toUpperCase();
+        
+        const isDup = (
+          normalizeValue(machineId1) === normalizeValue(machineId2) &&
+          date1 === date2 &&
+          serviceHours1 === serviceHours2 &&
+          range1 === range2
+        );
+        
+        if (isDup) {
+          console.log("ImportMaintenanceModal: Found duplicate records:", record1, record2);
+        }
+        
+        return isDup;
+      };
+
       // Filter out records with invalid data or empty records
       const validRecords = processedRecords.filter((record, index, self) => {
+        console.log(`ImportMaintenanceModal: Checking record ${index}:`, record);
+        
         // Explicitly check if this is a header row and exclude it
         const recordKeys = Object.keys(record);
         const isHeaderRow =
@@ -446,7 +512,7 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
           });
 
         if (isHeaderRow) {
-          console.log("Skipping header row:", record);
+          console.log("ImportMaintenanceModal: Skipping header row:", record);
           return false;
         }
 
@@ -456,7 +522,7 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
           String(record.machineDesignation).toLowerCase().includes("inconnu")
         ) {
           console.log(
-            "Skipping record with 'Inconnu' machine designation:",
+            "ImportMaintenanceModal: Skipping record with 'Inconnu' machine designation:",
             record
           );
           return false;
@@ -469,16 +535,27 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
         const hasMaintenanceRange =
           record.maintenanceRange && record.maintenanceRange.length === 1;
 
-        // Check if this is a duplicate record
-        const isDuplicate =
-          self.findIndex(
-            (r, i) =>
-              i < index &&
-              r.date === record.date &&
-              r.serviceHours === record.serviceHours &&
-              r.maintenanceRange === record.maintenanceRange &&
-              r.machineDesignation === record.machineDesignation
-          ) !== -1;
+        // Check if this is a duplicate record within the file itself
+        const isDuplicateInFile = self.some((r, i) => {
+          // Don't compare record with itself
+          if (i >= index) return false;
+          const isDup = isDuplicateRecord(r, record);
+          if (isDup) {
+            console.log(`ImportMaintenanceModal: Record ${index} is duplicate of record ${i} in file`);
+          }
+          return isDup;
+        });
+
+        // Check if this is a duplicate of an existing maintenance record
+        const isExistingRecord = maintenanceRecords.some(
+          (existingRecord) => {
+            const isDup = isDuplicateRecord(existingRecord, record);
+            if (isDup) {
+              console.log(`ImportMaintenanceModal: Record ${index} is duplicate of existing record:`, existingRecord);
+            }
+            return isDup;
+          }
+        );
 
         // At minimum, we need a date and either a machine designation or service hours
         const hasRequiredData =
@@ -487,12 +564,13 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
         // Check if this looks like a valid data row (not a header or empty row)
         const looksLikeValidData = Object.keys(record).length > 3; // Increased threshold
 
-        const isValid = hasRequiredData && !isDuplicate && looksLikeValidData;
-        console.log(`Record validation:`, {
+        const isValid = hasRequiredData && !isDuplicateInFile && !isExistingRecord && looksLikeValidData;
+        console.log(`ImportMaintenanceModal: Record ${index} validation:`, {
           hasDate,
           hasServiceHours,
           hasMaintenanceRange,
-          isDuplicate,
+          isDuplicateInFile,
+          isExistingRecord,
           hasRequiredData,
           looksLikeValidData,
           isValid,
@@ -502,6 +580,7 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
       });
 
       console.log("Valid records to import:", validRecords);
+      console.log(`ImportMaintenanceModal: Original records: ${processedRecords.length}, Valid records: ${validRecords.length}`);
 
       if (validRecords.length === 0) {
         addToast({
@@ -515,6 +594,18 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
 
       // Import the records
       onImportMaintenanceRecords(validRecords);
+
+      // Show a warning if some records were duplicates
+      const totalRecords = processedRecords.length;
+      const duplicateRecords = totalRecords - validRecords.length;
+      
+      if (duplicateRecords > 0) {
+        addToast({
+          type: "warning",
+          title: "Enregistrements dupliqués détectés",
+          description: `${duplicateRecords} enregistrement(s) de maintenance existent déjà et ont été ignorés.`,
+        });
+      }
 
       addToast({
         type: "success",

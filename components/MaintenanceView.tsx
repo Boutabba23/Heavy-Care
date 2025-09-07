@@ -46,7 +46,7 @@ interface MaintenanceViewProps {
   onOpenConfirmationDialog: ReturnType<
     typeof useAppLogic
   >["actions"]["openConfirmationDialog"];
-  onOpenMaintenanceImportModal: () => void;
+  onOpenMaintenanceImportModal: () => Promise<void>; // Make sure this is properly typed as async
 }
 
 const maintenanceSequence = ["C", "D", "C", "E", "C", "D", "C", "F"];
@@ -571,7 +571,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
               </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              <Button onClick={onOpenMaintenanceImportModal} variant="outline">
+              <Button onClick={() => onOpenMaintenanceImportModal()} variant="outline">
                 <ArrowUpTrayIcon className="mr-2 h-5 w-5" />
                 Importer
               </Button>

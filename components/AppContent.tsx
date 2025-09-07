@@ -358,6 +358,7 @@ const AppContent: React.FC = () => {
           isOpen={state.isImportModalOpen}
           onClose={actions.closeImportModal}
           onImportMachines={actions.importMachines}
+          existingMachines={state.machines} // Pass existing machines
         />
       )}
       {state.isMaintenanceImportModalOpen && (
@@ -366,6 +367,7 @@ const AppContent: React.FC = () => {
           onClose={actions.closeMaintenanceImportModal}
           onImportMaintenanceRecords={actions.importMaintenanceRecords}
           machines={state.machines}
+          maintenanceRecords={state.maintenanceRecords} // Pass existing maintenance records
           addToast={actions.addToast}
         />
       )}

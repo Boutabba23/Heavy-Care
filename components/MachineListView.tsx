@@ -105,13 +105,37 @@ const MachineListView: React.FC<MachineListViewProps> = ({
     };
   }, [openMenuId]);
 
+  // Reset selected type when marque changes
+  useEffect(() => {
+    if (selectedMarque) {
+      // Check if current selected type is valid for the new marque
+      const isValidType = machines
+        .filter((machine) => machine.marque === selectedMarque)
+        .some((machine) => machine.type === selectedType);
+      
+      if (selectedType && !isValidType) {
+        setSelectedType("");
+      }
+    }
+  }, [selectedMarque, selectedType, machines]);
+
   // Get unique marques and types for filter options
   const uniqueMarques = Array.from(
     new Set(machines.map((machine) => machine.marque))
   ).sort();
-  const uniqueTypes = Array.from(
-    new Set(machines.map((machine) => machine.type))
-  ).sort();
+  
+  // Get types filtered by selected marque
+  const filteredTypes = selectedMarque 
+    ? Array.from(
+        new Set(
+          machines
+            .filter((machine) => machine.marque === selectedMarque)
+            .map((machine) => machine.type)
+        )
+      ).sort()
+    : Array.from(
+        new Set(machines.map((machine) => machine.type))
+      ).sort();
 
   const handleDeleteClick = (machine: Machine) => {
     onOpenConfirmationDialog({
@@ -405,7 +429,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
                   className="w-full"
                 >
                   <option value="">Tous les types</option>
-                  {uniqueTypes.map((type) => (
+                  {filteredTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
                     </option>
