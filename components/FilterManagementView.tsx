@@ -470,8 +470,8 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
 
   return (
     <div>
-      <Card className="mb-6">
-        <CardHeader>
+      <Card className="mb-6 rounded-xl">
+        <CardHeader className="rounded-xl">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div>
               <CardTitle className="text-2xl">

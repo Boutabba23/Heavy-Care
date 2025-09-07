@@ -119,18 +119,16 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     return upcoming.sort((a, b) => a.nextMaint.dueIn - b.nextMaint.dueIn);
   }, [machines, maintenanceRecords]);
 
-  const machineBrandsData = useMemo(() => {
-    const brandCounts = machines.reduce((acc, machine) => {
-      acc[machine.marque] = (acc[machine.marque] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return Object.entries(brandCounts)
-      .map(([label, value]) => ({ label, value }))
-      .sort((a, b) => b.value - a.value);
-  }, [machines]);
-
   const maintenanceHistoryData = useMemo(() => {
+    // Handle case where maintenanceRecords might be undefined or empty
+    if (!maintenanceRecords || maintenanceRecords.length === 0) {
+      console.log('No maintenance records data available');
+      return [];
+    }
+    
+    console.log('Calculating maintenance history data...');
+    console.log('Maintenance records input:', maintenanceRecords);
+    
     const monthNames = [
       "Jan",
       "Fév",
@@ -149,6 +147,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     const monthLabels: Record<string, string> = {};
 
     const today = new Date();
+    // Generate last 6 months including current month
     for (let i = 5; i >= 0; i--) {
       const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
       const monthKey = `${d.getFullYear()}-${d.getMonth()}`;
@@ -159,18 +158,63 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       monthLabels[monthKey] = monthLabel;
     }
 
-    maintenanceRecords.forEach((record) => {
-      const recordDate = new Date(record.date);
-      const monthKey = `${recordDate.getFullYear()}-${recordDate.getMonth()}`;
-      if (monthKey in history) {
-        history[monthKey]++;
+    console.log('Initialized history:', history);
+    console.log('Month labels:', monthLabels);
+
+    maintenanceRecords.forEach((record, index) => {
+      try {
+        console.log(`Processing record ${index}:`, record);
+        
+        // Handle different date formats
+        let recordDate: Date;
+        if (typeof record.date === 'string') {
+          // Try to parse the date string
+          recordDate = new Date(record.date);
+        } else {
+          // Assume it's already a Date object
+          recordDate = record.date as Date;
+        }
+        
+        console.log(`Record date for ${index}:`, recordDate);
+        
+        if (isNaN(recordDate.getTime())) {
+          console.error(`Invalid date for record ${index}:`, record.date);
+          return;
+        }
+        
+        const monthKey = `${recordDate.getFullYear()}-${recordDate.getMonth()}`;
+        console.log(`Month key for record ${index}:`, monthKey);
+        
+        if (monthKey in history) {
+          history[monthKey]++;
+          console.log(`Incremented count for ${monthKey}:`, history[monthKey]);
+        } else {
+          console.log(`Month key ${monthKey} not in history range`);
+        }
+      } catch (error) {
+        console.error('Error processing maintenance record:', record, error);
       }
     });
 
-    return Object.keys(history).map((key) => ({
+    console.log('History after processing records:', history);
+
+    const data = Object.keys(history).map((key) => ({
       label: monthLabels[key],
       value: history[key],
     }));
+    
+    // Debug log
+    console.log('Maintenance History Data:', data);
+    console.log('Maintenance History Data Length:', data.length);
+    console.log('Maintenance Records Count:', maintenanceRecords.length);
+    
+    // Handle case where all records might be outside the date range
+    if (data.length === 0 && maintenanceRecords.length > 0) {
+      console.log('All maintenance records outside date range, returning default data');
+      return [{ label: 'Hors période', value: maintenanceRecords.length }];
+    }
+    
+    return data;
   }, [maintenanceRecords]);
 
   return (
@@ -182,6 +226,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         </p>
       </div>
 
+      {/* Statistic Cards - Keep these at the top */}
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Total Engins"
@@ -189,7 +234,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           icon={<ExcavatorIcon className="h-5 w-5" />}
           onClick={() => onSetView(View.MACHINE_LIST)}
           className="animate-slideInUp"
-          style={{ animationDelay: "100ms" }}
+          style={{ animationDelay: "100ms"}}
         />
         <StatCard
           title="Groupes de Filtres"
@@ -209,91 +254,93 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card
-          className="flex flex-col animate-slideInUp"
-          style={{ animationDelay: "400ms" }}
-        >
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Maintenance à Venir</CardTitle>
-                <CardDescription>
-                  Engins nécessitant une maintenance dans les 100 prochaines
-                  heures.
-                </CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onSetView(View.MAINTENANCE)}
-              >
-                Voir tout
-              </Button>
+      {/* Maintenance à Venir - Full width */}
+      <Card
+        className="flex flex-col animate-slideInUp"
+        style={{ animationDelay: "400ms" }}
+      >
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Maintenance à Venir</CardTitle>
+              <CardDescription>
+                Engins nécessitant une maintenance dans les 100 prochaines
+                heures.
+              </CardDescription>
             </div>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {upcomingMaintenance.length > 0 ? (
-              <div className="space-y-4">
-                {upcomingMaintenance.map((machine) => (
-                  <div
-                    key={machine.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                  >
-                    <div>
-                      <p className="font-semibold">{machine.designation}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {machine.marque} - {machine.code}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      {machine.nextMaint.dueIn >= 0 ? (
-                        <>
-                          <p
-                            className={`font-bold text-lg ${
-                              machine.nextMaint.dueIn < 25
-                                ? "text-destructive"
-                                : "text-warning"
-                            }`}
-                          >
-                            {machine.nextMaint.dueIn} hs
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Gamme {machine.nextMaint.gamme} à{" "}
-                            {machine.nextMaint.hours.toLocaleString()} hs
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="font-bold text-lg text-destructive">
-                            En Retard
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            de {-machine.nextMaint.dueIn} hs
-                          </p>
-                        </>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onSelectMachine(machine.id)}
-                    >
-                      Détails
-                    </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onSetView(View.MAINTENANCE)}
+            >
+              Voir tout
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1 mt-6">
+          {upcomingMaintenance.length > 0 ? (
+            <div className="space-y-4">
+              {upcomingMaintenance.map((machine) => (
+                <div
+                  key={machine.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                >
+                  <div>
+                    <p className="font-semibold">{machine.designation}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {machine.marque} - {machine.code}
+                    </p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  Aucune maintenance urgente à signaler.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  <div className="text-right">
+                    {machine.nextMaint.dueIn >= 0 ? (
+                      <>
+                        <p
+                          className={`font-bold text-lg ${
+                            machine.nextMaint.dueIn < 25
+                              ? "text-destructive"
+                              : "text-warning"
+                          }`}
+                        >
+                          {machine.nextMaint.dueIn} hs
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Gamme {machine.nextMaint.gamme} à{" "}
+                          {machine.nextMaint.hours.toLocaleString()} hs
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-bold text-lg text-destructive">
+                          En Retard
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          de {-machine.nextMaint.dueIn} hs
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onSelectMachine(machine.id)}
+                  >
+                    Détails
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                Aucune maintenance urgente à signaler.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
+      {/* Stock Faible and Historique des Maintenances - Side by side on large screens, stacked on small */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card
           className="flex flex-col animate-slideInUp"
           style={{ animationDelay: "500ms" }}
@@ -315,7 +362,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="flex-1">
+          <CardContent className="flex-1 mt-6">
             {lowStockItems.length > 0 ? (
               <div className="relative w-full border rounded-md max-h-96 overflow-y-auto">
                 <Table>
@@ -352,26 +399,10 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             )}
           </CardContent>
         </Card>
-      </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card
           className="flex flex-col animate-slideInUp"
           style={{ animationDelay: "600ms" }}
-        >
-          <CardHeader>
-            <CardTitle>Répartition du parc par marque</CardTitle>
-            <CardDescription>
-              Visualisation du nombre d'engins pour chaque marque.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 flex items-center justify-center">
-            <BarChart data={machineBrandsData} />
-          </CardContent>
-        </Card>
-        <Card
-          className="flex flex-col animate-slideInUp"
-          style={{ animationDelay: "700ms" }}
         >
           <CardHeader>
             <CardTitle>Historique des Maintenances</CardTitle>
@@ -379,8 +410,31 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               Nombre d'opérations effectuées au cours des 6 derniers mois.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 flex items-center justify-center">
-            <BarChart data={maintenanceHistoryData} />
+          <CardContent className="flex-1 p-0">
+            <div className="w-full h-full">
+              {maintenanceHistoryData.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-1/4">Mois</TableHead>
+                      <TableHead className="text-right w-3/4">Nombre d'opérations</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {maintenanceHistoryData.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium w-1/4 truncate">{item.label}</TableCell>
+                        <TableCell className="text-right w-3/4">{item.value}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="flex items-center justify-center h-[300px]">
+                  <p className="text-muted-foreground">Aucune donnée de maintenance disponible</p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -607,7 +661,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
                 Articles en stock faible (stock < 10) :
                 ${JSON.stringify(lowStockItems, null, 2)}
-                
+
                 Coûts de maintenance par type de filtre (Top 10) :
                 ${JSON.stringify(
                   analyticsData.maintenanceCostByFilterType,

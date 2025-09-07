@@ -184,8 +184,10 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
     const hasGamme = record["Gamme éxecutée"] !== undefined && record["Gamme éxecutée"] !== null && record["Gamme éxecutée"] !== "";
     const hasReleve = record["Relevé De Gamme"] !== undefined && record["Relevé De Gamme"] !== null && record["Relevé De Gamme"] !== "";
     
-    // Also check for machine designation
-    const hasMachine = record.DESIGNATION !== undefined && record.DESIGNATION !== null && record.DESIGNATION !== "";
+    // Check for machine identification (either code or designation)
+    const hasMachineCode = record["Code Engin"] !== undefined && record["Code Engin"] !== null && record["Code Engin"] !== "";
+    const hasMachineDesignation = record.DESIGNATION !== undefined && record.DESIGNATION !== null && record.DESIGNATION !== "";
+    const hasMachine = hasMachineCode || hasMachineDesignation;
     
     const isValid = hasDate && hasGamme && hasReleve && hasMachine;
     
@@ -300,7 +302,13 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
         "heurs de gamme": "serviceHours",
         "HEURS DE GAMME": "serviceHours",
 
-        // Machine designation mappings
+        // Machine code mappings (prioritize code over designation)
+        "Code Engin": "machineCode",
+        Code: "machineCode",
+        code: "machineCode",
+        CODE: "machineCode",
+        
+        // Machine designation mappings (fallback)
         DESIGNATION: "machineDesignation",
         Designation: "machineDesignation",
         Désignation: "machineDesignation",
@@ -308,8 +316,6 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
         Engin: "machineDesignation",
         engin: "machineDesignation",
         ENGİN: "machineDesignation",
-        "Code Engin": "machineDesignation",
-        Code: "machineDesignation",
       };
 
       // Process the records to match our expected format
@@ -327,35 +333,53 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
 
         console.log("Normalized record:", normalizedRecord);
 
-        // Find the machine by matching the machineDesignation with machine designation or code
+        // Find the machine by matching the machineCode with machine code, fallback to designation
         let machineId = null;
         let machineDesignation = "";
 
-        // Try different possible field names for machine designation
-        const designationValue =
-          normalizedRecord.machineDesignation ||
-          normalizedRecord.Engin ||
-          normalizedRecord.engin ||
+        // Try different possible field names for machine identification
+        const codeValue =
+          normalizedRecord.machineCode ||
           normalizedRecord.Code ||
+          normalizedRecord.code ||
           normalizedRecord["Code Engin"] ||
           "";
 
-        console.log("Looking for machine with designation:", designationValue);
+        const designationValue =
+          normalizedRecord.machineDesignation ||
+          normalizedRecord.DESIGNATION ||
+          normalizedRecord.Designation ||
+          normalizedRecord.Désignation ||
+          normalizedRecord.designation ||
+          normalizedRecord.Engin ||
+          normalizedRecord.engin ||
+          normalizedRecord.ENGİN ||
+          "";
+
+        console.log("Looking for machine with code:", codeValue, "or designation:", designationValue);
         console.log("Available machines:", machines);
 
-        if (designationValue) {
-          // Try to match with existing machines by designation or code
+        if (codeValue || designationValue) {
+          // Try to match with existing machines by code first, then by designation
           const machine = machines.find(
-            (m) =>
-              m.designation
-                .toLowerCase()
-                .includes(String(designationValue).toLowerCase()) ||
-              m.designation.toLowerCase() ===
-                String(designationValue).toLowerCase() ||
-              m.code
-                .toLowerCase()
-                .includes(String(designationValue).toLowerCase()) ||
-              m.code.toLowerCase() === String(designationValue).toLowerCase()
+            (m) => {
+              // First try to match by code
+              if (codeValue) {
+                return m.code
+                  .toLowerCase()
+                  .includes(String(codeValue).toLowerCase()) ||
+                  m.code.toLowerCase() === String(codeValue).toLowerCase();
+              }
+              // If no code match, try to match by designation
+              if (designationValue) {
+                return m.designation
+                  .toLowerCase()
+                  .includes(String(designationValue).toLowerCase()) ||
+                  m.designation.toLowerCase() ===
+                    String(designationValue).toLowerCase();
+              }
+              return false;
+            }
           );
 
           if (machine) {
@@ -363,7 +387,7 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
             machineDesignation = machine.designation;
             console.log("Found matching machine:", machine);
           } else {
-            machineDesignation = String(designationValue);
+            machineDesignation = String(codeValue || designationValue);
             console.log("No matching machine found");
           }
         }
@@ -531,8 +555,8 @@ const ImportMaintenanceModal: React.FC<ImportMaintenanceModalProps> = ({
               <li>Heurs De Gamme (nombre entier)</li>
               <li>Gamme (C, D, E, ou F)</li>
               <li>
-                Engin (correspondant à un engin existant par désignation ou
-                code)
+                Code Engin (correspondant à un engin existant par code, prioritaire) OU
+                Engin (correspondant à un engin existant par désignation)
               </li>
             </ul>
           </div>

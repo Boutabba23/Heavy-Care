@@ -10,20 +10,72 @@ interface BarChartProps {
 }
 
 const BarChart: React.FC<BarChartProps> = ({ data }) => {
-  if (!data || data.length === 0) {
+  // Debug log
+  console.log('BarChart received data:', data);
+  console.log('BarChart data type:', typeof data);
+  
+  // More robust check for empty data
+  if (!data) {
+    console.log('BarChart: data is null or undefined');
     return (
-      <div className="flex items-center justify-center h-full min-h-[250px] text-sm text-muted-foreground">
+      <div className="flex items-center justify-center h-full min-h-[300px] text-sm text-muted-foreground">
+        Aucune donnée disponible.
+      </div>
+    );
+  }
+  
+  if (!Array.isArray(data)) {
+    console.log('BarChart: data is not an array');
+    return (
+      <div className="flex items-center justify-center h-full min-h-[300px] text-sm text-muted-foreground">
+        Format de données invalide.
+      </div>
+    );
+  }
+  
+  console.log('BarChart data length:', data.length);
+  
+  if (data.length === 0) {
+    console.log('BarChart: data array is empty');
+    return (
+      <div className="flex items-center justify-center h-full min-h-[300px] text-sm text-muted-foreground">
         Aucune donnée à afficher pour ce graphique.
       </div>
     );
   }
 
-  const maxValue = Math.max(...data.map((d) => d.value), 1); // Avoid division by zero
+  // Filter out any invalid data points
+  const validData = data.filter(item => 
+    item && 
+    typeof item.label === 'string' && 
+    typeof item.value === 'number' && 
+    !isNaN(item.value) &&
+    isFinite(item.value) &&
+    item.value >= 0
+  );
+
+  console.log('BarChart valid data:', validData);
+  console.log('BarChart valid data length:', validData.length);
+
+  if (validData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[300px] text-sm text-muted-foreground">
+        Aucune donnée valide à afficher pour ce graphique.
+      </div>
+    );
+  }
+
+  // Calculate max value, ensuring it's at least 1 to avoid division by zero
+  const maxValue = Math.max(...validData.map((d) => d.value), 1);
+
+  // Debug log
+  console.log('BarChart maxValue:', maxValue);
 
   return (
-    <div className="w-full h-64 flex items-end justify-around gap-2 px-4 pt-4 border-t border-border -mt-px">
-      {data.map((item, index) => {
-        const barHeight = (item.value / maxValue) * 100;
+    <div className="w-full min-h-[300px] h-64 flex items-end justify-around gap-2 px-4 pt-4">
+      {validData.map((item, index) => {
+        // Calculate bar height as a percentage, ensuring it's between 0 and 100
+        const barHeight = Math.min(Math.max((item.value / maxValue) * 100, 5), 100); // Minimum 5% height for visibility
         const animationDelay = `${index * 50}ms`;
 
         return (
@@ -32,7 +84,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
             className="flex-1 flex flex-col items-center justify-end group"
             style={{ minWidth: "20px", maxWidth: "60px" }}
           >
-            <div className="relative w-full bg-primary/20 rounded-t-lg transition-all duration-300 group-hover:bg-primary/40">
+            <div className="relative w-full bg-primary/20 rounded-t-lg transition-all duration-300 group-hover:bg-primary/40 flex flex-col justify-end h-full">
               <div
                 className="w-full bg-primary rounded-t-lg origin-bottom animate-slideInUp"
                 style={{
@@ -42,7 +94,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
                 }}
                 title={`${item.label}: ${item.value}`}
               ></div>
-              <div className="absolute -top-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs font-bold bg-card px-2 py-1 rounded-lg shadow-lg border">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs font-bold bg-card px-2 py-1 rounded-lg shadow-lg border">
                 {item.value}
               </div>
             </div>
