@@ -1,0 +1,575 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import {
+  Machine,
+  FilterGroup,
+  FilterType,
+  View,
+  FilterReference,
+  AssignedFilter,
+  Theme,
+  MaintenanceRecord,
+  Notification,
+  Toast,
+  StockUpdateInfo,
+  CustomColors,
+  SavedTheme,
+} from "../types";
+import { calculateNextMaintenance } from "../utils/maintenance";
+import { supabase } from "../utils/supabase";
+
+interface ConfirmationDialogConfig {
+  isOpen: boolean;
+  title: string;
+  description: string;
+  onConfirm: () => void;
+}
+
+const loadFromStorage = <T>(key: string, defaultValue: T): T => {
+  try {
+    // Check if we're in a browser environment
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return defaultValue;
+    }
+
+    const storedValue = localStorage.getItem(key);
+    if (storedValue) {
+      try {
+        return JSON.parse(storedValue);
+      } catch (e) {
+        if (key === "gestifiltres-theme" && !storedValue.startsWith('"')) {
+          console.warn("Old theme format detected, migrating.");
+          return storedValue as T;
+        }
+        throw e;
+      }
+    }
+  } catch (error) {
+    console.error(`Error processing localStorage key "${key}":`, error);
+  }
+  return defaultValue;
+};
+
+export const defaultCustomColors: CustomColors = {
+  background: "#f8fafc",
+  foreground: "#0f172a",
+  foregroundSecondary: "#64748b",
+  card: "#ffffff",
+  cardForeground: "#0f172a",
+  primary: "#f97316",
+  primaryForeground: "#f8fafc",
+  accent: "#f1f5f9",
+  destructive: "#ef4444",
+  destructiveForeground: "#f8fafc",
+  border: "#e2e8f0",
+  input: "#f1f5f9",
+  ring: "#f97316",
+  cardBorders: [
+    "#3b82f6",
+    "#10b981",
+    "#f59e0b",
+    "#ef4444",
+    "#8b5cf6",
+    "#0ea5e9",
+  ],
+};
+
+export const useAppLogic = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
+  const [machines, setMachines] = useState<Machine[]>([]);
+  const [filterGroups, setFilterGroups] = useState<FilterGroup[]>([]);
+  const [filterTypes, setFilterTypes] = useState<FilterType[]>([]);
+  const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
+  const [maintenanceRecords, setMaintenanceRecords] = useState<
+    MaintenanceRecord[]
+  >([]);
+
+  const [theme, _setTheme] = useState<Theme>(() =>
+    loadFromStorage("gestifiltres-theme", "default-light")
+  );
+  const [savedThemes, setSavedThemes] = useState<SavedTheme[]>(() =>
+    loadFromStorage("gestifiltres-savedThemes", [])
+  );
+  const [customColors, setCustomColors] = useState<CustomColors>(() => {
+    const saved = loadFromStorage(
+      "gestifiltres-customColors",
+      defaultCustomColors
+    );
+    return { ...defaultCustomColors, ...saved };
+  });
+
+  const [highlightedFilterGroupId, setHighlightedFilterGroupId] = useState<
+    string | null
+  >(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const [isMachineModalOpen, setIsMachineModalOpen] = useState(false);
+  const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
+
+  const [isFilterGroupModalOpen, setIsFilterGroupModalOpen] = useState(false);
+  const [editingFilterGroup, setEditingFilterGroup] =
+    useState<FilterGroup | null>(null);
+
+  const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
+  const [editingMaintenanceRecord, setEditingMaintenanceRecord] =
+    useState<Partial<MaintenanceRecord> | null>(null);
+  const [isMaintenanceViewOnly, setIsMaintenanceViewOnly] = useState(false);
+
+  const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
+  const [stockUpdateInfo, setStockUpdateInfo] =
+    useState<StockUpdateInfo | null>(null);
+
+  const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
+  const [editingCustomTheme, setEditingCustomTheme] =
+    useState<SavedTheme | null>(null);
+
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isMaintenanceImportModalOpen, setIsMaintenanceImportModalOpen] = useState(false);
+
+  const [confirmationDialogConfig, setConfirmationDialogConfig] =
+    useState<ConfirmationDialogConfig>({
+      isOpen: false,
+      title: "",
+      description: "",
+      onConfirm: () => {},
+    });
+
+  const addToast = useCallback((toast: Omit<Toast, "id">) => {
+    const id = `toast-${Date.now()}`;
+    setToasts((prev) => [...prev, { id, ...toast }]);
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [
+        machinesRes,
+        filterGroupsRes,
+        filterTypesRes,
+        maintenanceRecordsRes,
+      ] = await Promise.all([
+        supabase.from("machines").select("*"),
+        supabase.from("filter_groups").select("*"),
+        supabase.from("filter_types").select("*"),
+        supabase.from("maintenance_records").select("*"),
+      ]);
+
+      if (machinesRes.error) throw machinesRes.error;
+      if (filterGroupsRes.error) throw filterGroupsRes.error;
+      if (filterTypesRes.error) throw filterTypesRes.error;
+      if (maintenanceRecordsRes.error) throw maintenanceRecordsRes.error;
+
+      // Transform database results to match application types
+      const transformedMachines = (machinesRes.data || []).map(
+        (machine: any) => ({
+          id: machine.id,
+          code: machine.code,
+          designation: machine.designation,
+          marque: machine.marque,
+          type: machine.type,
+          serialNumber: machine.serial_number || "",
+          registrationNumber: machine.registration_number || "",
+          serviceHours: machine.service_hours,
+          assignedFilters: machine.assigned_filters || [],
+        })
+      );
+
+      const transformedFilterGroups = (filterGroupsRes.data || []).map(
+        (group: any) => ({
+          id: group.id,
+          name: group.name,
+          filterType: group.filter_type || "",
+          originalReferenceId: group.original_reference_id,
+          references: group["references"] || [],
+        })
+      );
+
+      const transformedMaintenanceRecords = (
+        maintenanceRecordsRes.data || []
+      ).map((record: any) => ({
+        id: record.id,
+        machineId: record.machine_id,
+        maintenanceRange: record.maintenance_range,
+        serviceHours: record.service_hours,
+        date: record.date,
+        filtersUsed: record.filters_used || [],
+      }));
+
+      setMachines(transformedMachines);
+      setFilterGroups(transformedFilterGroups);
+      setFilterTypes(filterTypesRes.data || []);
+      setMaintenanceRecords(transformedMaintenanceRecords);
+    } catch (error: any) {
+      console.error("Failed to fetch data from Supabase:", error);
+      addToast({
+        type: "error",
+        title: "Erreur de chargement",
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [addToast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      localStorage.setItem("gestifiltres-theme", JSON.stringify(theme));
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      localStorage.setItem(
+        "gestifiltres-customColors",
+        JSON.stringify(customColors)
+      );
+    }
+  }, [customColors]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      localStorage.setItem(
+        "gestifiltres-savedThemes",
+        JSON.stringify(savedThemes)
+      );
+    }
+  }, [savedThemes]);
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const navigateToFilterGroup = (groupId: string) => {
+    setIsAIAssistantOpen(false);
+    setCurrentView(View.FILTER_MANAGEMENT);
+    setHighlightedFilterGroupId(groupId);
+  };
+
+  useEffect(() => {
+    const now = new Date().toISOString();
+    const currentValidAlerts: Omit<Notification, "read" | "createdAt">[] = [];
+
+    const historyByMachine = new Map<string, MaintenanceRecord[]>();
+    maintenanceRecords.forEach((rec) => {
+      if (!historyByMachine.has(rec.machineId))
+        historyByMachine.set(rec.machineId, []);
+      historyByMachine.get(rec.machineId)!.push(rec);
+    });
+
+    machines.forEach((machine) => {
+      const history = historyByMachine.get(machine.id) || [];
+      const nextMaint = calculateNextMaintenance(machine, history);
+      if (nextMaint && nextMaint.dueIn <= 50) {
+        currentValidAlerts.push({
+          id: `maint-alert-${machine.id}-${nextMaint.hours}`,
+          type: "maintenance",
+          message: `L'engin ${machine.designation} (${machine.code}) nécessite une maintenance (Gamme ${nextMaint.gamme}) dans ${nextMaint.dueIn}h.`,
+          entityId: machine.id,
+        });
+      }
+    });
+
+    filterGroups.forEach((group) => {
+      group.references.forEach((ref) => {
+        if (ref.stock > 0 && ref.stock <= 5) {
+          currentValidAlerts.push({
+            id: `stock-alert-${ref.id}`,
+            type: "stock",
+            message: `Le stock pour le filtre ${ref.reference} (${ref.manufacturer}) est faible (${ref.stock} unités).`,
+            entityId: group.id,
+          });
+        }
+      });
+    });
+
+    setNotifications((prevNotifications) => {
+      const prevMap = new Map(prevNotifications.map((n) => [n.id, n]));
+      const updatedMap = new Map(prevMap);
+
+      // Add or update current alerts
+      currentValidAlerts.forEach((alert) => {
+        if (updatedMap.has(alert.id)) {
+          // Update existing notification
+          const existing = updatedMap.get(alert.id)!;
+          if (!existing.read) {
+            updatedMap.set(alert.id, {
+              ...existing,
+              message: alert.message,
+            });
+          }
+        } else {
+          // Add new notification
+          updatedMap.set(alert.id, {
+            ...alert,
+            read: false,
+            createdAt: now,
+          });
+        }
+      });
+
+      // Convert back to array and sort by creation date (newest first)
+      return Array.from(updatedMap.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    });
+  }, [machines, maintenanceRecords, filterGroups]);
+
+  const markNotificationAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+  };
+
+  const saveMachine = async (machineData: {
+    code: string;
+    designation: string;
+    marque: string;
+    type: string;
+    serialNumber?: string;
+    registrationNumber?: string;
+    serviceHours: number;
+  }) => {
+    // Prepare the machine data for insertion
+    const machineToSave = editingMachine
+      ? {
+          id: editingMachine.id,
+          code: machineData.code,
+          designation: machineData.designation,
+          marque: machineData.marque,
+          type: machineData.type,
+          serial_number: machineData.serialNumber || null, // Use null instead of empty string
+          registration_number: machineData.registrationNumber || null, // Use null instead of empty string
+          service_hours: machineData.serviceHours,
+          assigned_filters: editingMachine.assignedFilters || [],
+        }
+      : {
+          id: `m-${Date.now()}`,
+          code: machineData.code,
+          designation: machineData.designation,
+          marque: machineData.marque,
+          type: machineData.type,
+          serial_number: machineData.serialNumber || null, // Use null instead of empty string
+          registration_number: machineData.registrationNumber || null, // Use null instead of empty string
+          service_hours: machineData.serviceHours,
+          assigned_filters: [],
+        };
+
+    const { error } = await supabase
+      .from("machines")
+      .upsert(machineToSave as any);
+
+    if (error) {
+      console.error("Error saving machine:", error);
+      addToast({
+        type: "error",
+        title: "Erreur",
+        description: `Échec de la sauvegarde de l'engin: ${error.message}`,
+      });
+    } else {
+      fetchData();
+      const successMessage = editingMachine
+        ? "Engin Mis à Jour"
+        : "Engin Ajouté";
+      addToast({
+        type: "success",
+        title: successMessage,
+        description: `L'engin ${machineToSave.designation} a été sauvegardé.`,
+      });
+    }
+  };
+
+  const openMaintenanceImportModal = () => setIsMaintenanceImportModalOpen(true);
+  const closeMaintenanceImportModal = () => setIsMaintenanceImportModalOpen(false);
+
+  const importMaintenanceRecords = async (records: any[]) => {
+    try {
+      const recordsToInsert = records.map(record => ({
+        id: `mr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        machine_id: record.machineId,
+        maintenance_range: record.maintenanceRange,
+        service_hours: record.serviceHours,
+        date: record.date,
+        filters_used: record.filtersUsed || []
+      }));
+
+      const { error } = await supabase
+        .from("maintenance_records")
+        .insert(recordsToInsert);
+
+      if (error) {
+        addToast({
+          type: "error",
+          title: "Erreur d'importation",
+          description: `Échec de l'importation des enregistrements: ${error.message}`
+        });
+      } else {
+        fetchData();
+        addToast({
+          type: "success",
+          title: "Importation réussie",
+          description: `${records.length} enregistrement(s) de maintenance importé(s) avec succès`
+        });
+      }
+    } catch (error: any) {
+      console.error("Error importing maintenance records:", error);
+      addToast({
+        type: "error",
+        title: "Erreur d'importation",
+        description: `Une erreur s'est produite: ${error.message}`
+      });
+    }
+  };
+
+  const importMachines = async (
+    newMachinesData: Omit<Machine, "id" | "assignedFilters">[]
+  ) => {
+    const machinesToAdd = newMachinesData.map((nm) => ({
+      id: `m-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      code: nm.code,
+      designation: nm.designation,
+      marque: nm.marque,
+      type: nm.type,
+      serial_number: nm.serialNumber || null, // Use null instead of empty string
+      registration_number: nm.registrationNumber || null, // Use null instead of empty string
+      service_hours: nm.serviceHours,
+      assigned_filters: [],
+    }));
+
+    // Filter out any records that might have invalid data
+    const validMachinesToAdd = machinesToAdd.filter(
+      (machine) =>
+        machine.code && machine.designation && machine.marque && machine.type
+    );
+
+    if (validMachinesToAdd.length === 0) {
+      addToast({
+        type: "warning",
+        title: "Importation Annulée",
+        description: "Aucun engin valide à importer.",
+      });
+      closeImportModal();
+      return;
+    }
+
+    const { error } = await supabase
+      .from("machines")
+      .insert(validMachinesToAdd as any);
+
+    if (error) {
+      console.error("Error importing machines:", error);
+      addToast({
+        type: "error",
+        title: "Erreur d'importation",
+        description: `Échec de l'importation des engins: ${error.message}`,
+      });
+    } else {
+      fetchData();
+      addToast({
+        type: "success",
+        title: "Importation Réussie",
+        description: `${validMachinesToAdd.length} engins ont été ajoutés.`,
+      });
+    }
+    closeImportModal();
+  };
+
+  const openImportModal = () => setIsImportModalOpen(true);
+  const closeImportModal = () => setIsImportModalOpen(false);
+
+  // ... rest of the functions
+
+  const state = {
+    isLoading,
+    currentView,
+    machines,
+    filterGroups,
+    filterTypes,
+    selectedMachine,
+    maintenanceRecords,
+    theme,
+    savedThemes,
+    customColors,
+    highlightedFilterGroupId,
+    isSidebarOpen,
+    notifications,
+    toasts,
+    isScannerOpen,
+    isAIAssistantOpen,
+    isMachineModalOpen,
+    editingMachine,
+    isFilterGroupModalOpen,
+    editingFilterGroup,
+    isMaintenanceModalOpen,
+    editingMaintenanceRecord,
+    isMaintenanceViewOnly,
+    isAddStockModalOpen,
+    stockUpdateInfo,
+    isThemeCustomizerOpen,
+    editingCustomTheme,
+    isImportModalOpen,
+    isMaintenanceImportModalOpen,
+    confirmationDialogConfig,
+  };
+
+  const actions = {
+    setCurrentView,
+    setSelectedMachine,
+    setTheme,
+    setSavedThemes,
+    setCustomColors,
+    setHighlightedFilterGroupId,
+    setIsSidebarOpen,
+    setNotifications,
+    setToasts,
+    removeToast,
+    addToast,
+    navigateToFilterGroup,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    clearAllNotifications,
+    fetchData,
+    setIsScannerOpen,
+    setIsAIAssistantOpen,
+    setIsMachineModalOpen,
+    setEditingMachine,
+    setIsFilterGroupModalOpen,
+    setEditingFilterGroup,
+    setIsMaintenanceModalOpen,
+    setEditingMaintenanceRecord,
+    setIsMaintenanceViewOnly,
+    setIsAddStockModalOpen,
+    setStockUpdateInfo,
+    setIsThemeCustomizerOpen,
+    setEditingCustomTheme,
+    setIsImportModalOpen,
+    setIsMaintenanceImportModalOpen,
+    setConfirmationDialogConfig,
+    saveMachine,
+    openMaintenanceImportModal,
+    closeMaintenanceImportModal,
+    importMaintenanceRecords,
+    importMachines,
+    openImportModal,
+    closeImportModal,
+    // ... rest of the actions
+  };
+
+  return { state, actions };
+};
