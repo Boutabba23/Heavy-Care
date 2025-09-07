@@ -63,12 +63,7 @@ const LoginView: React.FC = () => {
     setIsLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-      redirectTo:
-        process.env.NODE_ENV === "production"
-          ? "https://maintenance-app-rust.vercel.app"
-          : "http://localhost:3000",
-    },
+      
     });
     if (error) {
         setError(error.message);
