@@ -528,6 +528,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
       // Service hours mappings
       Heures: "serviceHours",
       "Heurs De Gamme": "serviceHours",
+      "Relevé De Gamme": "serviceHours",
       "Heurs De Gamme ": "serviceHours", // Handle trailing space
       "Heures de Service": "serviceHours",
       "Heures Service": "serviceHours",
