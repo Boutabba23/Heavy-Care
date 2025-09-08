@@ -416,7 +416,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-1/4 max-sm:text-left ">Mois</TableHead>
+                      <TableHead className="w-1/4  ">Mois</TableHead>
                       <TableHead className="text-right max-sm:text-left w-3/4">Nombre d'opérations</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -424,7 +424,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                     {maintenanceHistoryData.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell className="font-medium w-1/4 truncate">{item.label}</TableCell>
-                        <TableCell className="text-right w-3/4">{item.value}</TableCell>
+                        <TableCell className="text-right w-3/4 max-sm:text-left">{item.value}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
