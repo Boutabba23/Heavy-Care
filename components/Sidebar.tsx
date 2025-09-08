@@ -121,7 +121,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           />
           <NavItem
             view={View.MACHINE_LIST}
-            label="Gestion des Engins"
+            label="Gestion de Matériel"
             icon={<ExcavatorIcon className="h-5 w-5" />}
           />
           <NavItem
