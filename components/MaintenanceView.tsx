@@ -190,7 +190,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
     if (maintenanceRecords.length === 0) return;
 
     onOpenConfirmationDialog({
-      title: "Supprimer toutes les maintenances",
+      title: "Supprimer tout",
       description: `Êtes-vous sûr de vouloir supprimer toutes les ${maintenanceRecords.length} opérations de maintenance ? Cette action est irréversible.`,
       onConfirm: async () => {
         // Create an array of promises for all deletions

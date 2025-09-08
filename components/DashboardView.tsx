@@ -229,7 +229,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Statistic Cards - Keep these at the top */}
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
-          title="Total Engins"
+          title="Total Matériel"
           value={machines.length}
           icon={<ExcavatorIcon className="h-5 w-5" />}
           onClick={() => onSetView(View.MACHINE_LIST)}

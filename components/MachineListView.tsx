@@ -361,7 +361,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
         <CardHeader className="rounded-xl">
           <div className="flex flex-col min-[1160px]:flex-row justify-between min-[1160px]:items-center gap-4">
             <div>
-              <CardTitle className="text-2xl">Votre Parc d'Engins</CardTitle>
+              <CardTitle className="text-2xl">Votre Parc de Matériel</CardTitle>
               <CardDescription>
                 Gérez, ajoutez, et modifiez vos engins en toute simplicité.
               </CardDescription>
@@ -392,7 +392,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
       {machines.length > 0 && (
         <Card className="mb-6">
           <CardHeader className="mb-6">
-            <CardTitle>Rechercher un Engin</CardTitle>
+            <CardTitle>Rechercher un Matériel</CardTitle>
             <CardDescription>
               Filtrez votre parc par désignation, marque, type ou code.
             </CardDescription>
@@ -497,7 +497,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
                 className="flex items-center gap-2"
               >
                 <TrashIcon className="h-4 w-4" />
-                Supprimer tous les engins
+                Supprimer tous
               </Button>
             </div>
           </CardContent>

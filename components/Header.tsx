@@ -29,9 +29,9 @@ const Header: React.FC<HeaderProps> = (props) => {
       case View.DASHBOARD:
         return "Tableau de bord";
       case View.MACHINE_LIST:
-        return "Gestion des Engins";
+        return "Gestion de Matériel";
       case View.MACHINE_DETAIL:
-        return props.selectedMachine?.designation || "Détail de l'engin";
+        return props.selectedMachine?.designation || "Détail du Matériel";
       case View.FILTER_MANAGEMENT:
         return "Gestion des Filtres";
       case View.MAINTENANCE:
