@@ -382,7 +382,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
               )}
               <Button onClick={onAddMachine}>
                 <PlusIcon className="mr-2 h-5 w-5" />
-                <span>Nouveau Engin</span>
+                <span>Nouveau Matériel</span>
               </Button>
             </div>
           </div>

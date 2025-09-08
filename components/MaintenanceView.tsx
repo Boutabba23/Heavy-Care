@@ -719,7 +719,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                 className="flex items-center gap-2"
               >
                 <TrashIcon className="h-4 w-4" />
-                Supprimer toutes les maintenances
+                Supprimer tout
               </Button>
             </div>
           </CardContent>
