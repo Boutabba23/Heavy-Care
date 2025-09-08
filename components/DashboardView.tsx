@@ -416,8 +416,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-1/4 sm:text-left ">Mois</TableHead>
-                      <TableHead className="text-right sm:text-left w-3/4">Nombre d'opérations</TableHead>
+                      <TableHead className="w-1/4 max-sm:text-left ">Mois</TableHead>
+                      <TableHead className="text-right max-sm:text-left w-3/4">Nombre d'opérations</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
