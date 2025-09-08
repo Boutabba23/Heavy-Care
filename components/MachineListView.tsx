@@ -497,7 +497,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
                 className="flex items-center gap-2"
               >
                 <TrashIcon className="h-4 w-4" />
-                Supprimer tous
+                Supprimer tout
               </Button>
             </div>
           </CardContent>
