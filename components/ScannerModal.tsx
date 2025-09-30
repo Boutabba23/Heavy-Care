@@ -94,7 +94,7 @@ const ScannerModal: React.FC<ScannerModalProps> = ({ isOpen, onClose, onScan }) 
   }, [isOpen, onScan]);
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose}>
+    <Dialog isOpen={isOpen} onClose={onClose} closeOnOutsideClick={false} closeOnEscape={false}>
       <DialogHeader>
         <DialogTitle>Scanner un QR Code</DialogTitle>
         <DialogDescription>

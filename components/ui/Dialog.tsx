@@ -5,6 +5,8 @@ interface DialogProps {
   onClose: () => void;
   children: React.ReactNode;
   size?: "default" | "sm" | "lg" | "xl";
+  closeOnOutsideClick?: boolean;
+  closeOnEscape?: boolean;
 }
 
 const Dialog: React.FC<DialogProps> = ({
@@ -12,8 +14,12 @@ const Dialog: React.FC<DialogProps> = ({
   onClose,
   children,
   size = "default",
+  closeOnOutsideClick = true,
+  closeOnEscape = true,
 }) => {
   useEffect(() => {
+    if (!closeOnEscape) return;
+    
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
@@ -23,7 +29,7 @@ const Dialog: React.FC<DialogProps> = ({
     return () => {
       window.removeEventListener("keydown", handleEsc);
     };
-  }, [onClose]);
+  }, [onClose, closeOnEscape]);
 
   if (!isOpen) return null;
 
@@ -37,7 +43,7 @@ const Dialog: React.FC<DialogProps> = ({
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 animate-fadeIn"
-      onClick={onClose}
+      onClick={closeOnOutsideClick ? onClose : undefined}
     >
       <div
         className={`relative z-50 flex flex-col w-full border bg-background shadow-lg duration-200 sm:rounded-xl max-h-[90vh] animate-slideInUp ${sizeClasses[size]}`}

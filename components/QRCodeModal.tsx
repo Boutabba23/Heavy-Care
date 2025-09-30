@@ -35,7 +35,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose, url, title }
   };
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose}>
+    <Dialog isOpen={isOpen} onClose={onClose} closeOnOutsideClick={false} closeOnEscape={false}>
         <div ref={printRef}>
             <DialogHeader className="text-center">
                 <DialogTitle>QR Code pour {title}</DialogTitle>

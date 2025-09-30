@@ -35,7 +35,7 @@ const AddStockModal: React.FC<AddStockModalProps> = ({ isOpen, onClose, onAdd, s
   if (!stockInfo) return null;
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose}>
+    <Dialog isOpen={isOpen} onClose={onClose} closeOnOutsideClick={false} closeOnEscape={false}>
       <DialogHeader>
         <DialogTitle>Ajouter du Stock</DialogTitle>
         <DialogDescription>

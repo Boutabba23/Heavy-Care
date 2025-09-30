@@ -190,7 +190,7 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ isOpen, onClose, on
   };
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose}>
+    <Dialog isOpen={isOpen} onClose={onClose} closeOnOutsideClick={false} closeOnEscape={false}>
         <DialogHeader>
             <DialogTitle>{viewOnly ? "Détails de l'Opération" : isEditing ? "Modifier l'Opération de Maintenance" : 'Nouvelle Opération de Maintenance'}</DialogTitle>
             <DialogDescription>
