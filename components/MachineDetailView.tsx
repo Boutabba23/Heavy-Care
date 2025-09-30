@@ -157,21 +157,10 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
           return newState;
         });
         
-        // Créer une nouvelle liste sans l'instance spécifique
-        const newAssignedFilters = [...machine.assignedFilters];
-        // Trouver et supprimer uniquement l'instance à l'index spécifié
-        // mais seulement si elle correspond au type de filtre
-        for (let i = 0; i < newAssignedFilters.length; i++) {
-          if (i === index && newAssignedFilters[i].filterTypeId === filterTypeId) {
-            newAssignedFilters.splice(i, 1);
-            break;
-          }
-        }
+
         
-        // Appeler la fonction parent avec la nouvelle liste
-        // Note: Ceci suppose que le parent a une fonction pour mettre à jour toute la liste
-        // Si ce n'est pas le cas, nous devrons trouver une autre solution
-        onRemoveFilterType(machine.id, filterTypeId, newAssignedFilters);
+        // Appeler la fonction parent
+        onRemoveFilterType(machine.id, filterTypeId);
       },
     });
   };
