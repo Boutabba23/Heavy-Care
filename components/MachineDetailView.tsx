@@ -201,6 +201,16 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
           return newFilters;
         });
         
+        // Vérifier s'il reste d'autres instances du même type
+        const remainingInstances = localAssignedFilters.filter(
+          filter => filter.filterTypeId === filterTypeId
+        );
+        
+        // Si c'était la dernière instance de ce type, on appelle la fonction parent
+        if (remainingInstances.length <= 1) {
+          onRemoveFilterType(machine.id, filterTypeId);
+        }
+        
         // Afficher un toast pour confirmer la suppression
         addToast({
           type: "success",
