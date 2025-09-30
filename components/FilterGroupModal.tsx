@@ -324,7 +324,7 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
   );
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose}>
+    <Dialog isOpen={isOpen} onClose={onClose} closeOnOutsideClick={false} closeOnEscape={false}>
       <DialogHeader>
         <DialogTitle>
           {group
