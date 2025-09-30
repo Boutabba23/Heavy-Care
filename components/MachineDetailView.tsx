@@ -75,7 +75,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   onOpenMaintenanceModal,
   onDeleteMaintenance,
 }) => {
-  const [isAdding, setIsAdding] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
   const [selectedNewFilterType, setSelectedNewFilterType] =
     useState<string>("");
 
