@@ -163,11 +163,8 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
       // Appeler la fonction parent
       onAddFilterType(machine.id, selectedNewFilterType);
       
-      // Ajouter également à notre état local
-      setLocalAssignedFilters(prev => [
-        ...prev, 
-        { filterTypeId: selectedNewFilterType, filterGroupId: null }
-      ]);
+      // Ne pas ajouter manuellement à l'état local ici
+      // Le useEffect se chargera de synchroniser avec l'état parent
     }
   };
 
