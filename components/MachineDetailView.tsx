@@ -225,14 +225,21 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
         // Si c'était la dernière instance de ce type, on appelle la fonction parent
         if (remainingInstances.length === 0) {
           onRemoveFilterType(machine.id, filterTypeId);
+          
+          // Afficher un toast spécifique pour la suppression du type de filtre
+          addToast({
+            type: "success",
+            title: "Type de filtre supprimé",
+            description: "Le type de filtre a été complètement supprimé de cet engin."
+          });
+        } else {
+          // Afficher un toast pour la suppression d'une instance de filtre
+          addToast({
+            type: "success",
+            title: "Filtre supprimé",
+            description: "Le filtre a été supprimé avec succès."
+          });
         }
-
-        // Afficher un toast pour confirmer la suppression
-        addToast({
-          type: "success",
-          title: "Filtre supprimé",
-          description: "Le filtre a été supprimé avec succès."
-        });
       },
     });
   };
