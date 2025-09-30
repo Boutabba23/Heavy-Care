@@ -144,7 +144,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
     }
   };
 
-  const handleRemoveClick = (filterInstanceKey: string, filterTypeId: string) => {
+  const handleRemoveClick = (filterInstanceKey: string, filterTypeId: string, index: number) => {
     onOpenConfirmationDialog({
       title: "Supprimer le type de filtre",
       description:
@@ -157,8 +157,21 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
           return newState;
         });
         
-        // Appeler la fonction parent
-        onRemoveFilterType(machine.id, filterTypeId);
+        // Créer une nouvelle liste sans l'instance spécifique
+        const newAssignedFilters = [...machine.assignedFilters];
+        // Trouver et supprimer uniquement l'instance à l'index spécifié
+        // mais seulement si elle correspond au type de filtre
+        for (let i = 0; i < newAssignedFilters.length; i++) {
+          if (i === index && newAssignedFilters[i].filterTypeId === filterTypeId) {
+            newAssignedFilters.splice(i, 1);
+            break;
+          }
+        }
+        
+        // Appeler la fonction parent avec la nouvelle liste
+        // Note: Ceci suppose que le parent a une fonction pour mettre à jour toute la liste
+        // Si ce n'est pas le cas, nous devrons trouver une autre solution
+        onRemoveFilterType(machine.id, filterTypeId, newAssignedFilters);
       },
     });
   };
@@ -464,7 +477,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                       variant="ghost"
                       size="icon"
                       className="text-destructive hover:bg-destructive/10 -mt-2 -mr-2"
-                      onClick={() => handleRemoveClick(filterInstanceKey, filterType.id)}
+                      onClick={() => handleRemoveClick(filterInstanceKey, filterType.id, index)}
                     >
                       <TrashIcon className="h-5 w-5" />
                     </Button>
