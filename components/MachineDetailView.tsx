@@ -198,8 +198,8 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
           return newFilters;
         });
         
-        // Appeler la fonction parent pour supprimer le filtre
-        onRemoveFilterType(machine.id, filterTypeId);
+        // Ne pas appeler onRemoveFilterType car il supprime toutes les instances du même type
+        // Nous nous appuyons uniquement sur notre état local pour gérer les suppressions
         
         // Afficher un toast pour confirmer la suppression
         addToast({
