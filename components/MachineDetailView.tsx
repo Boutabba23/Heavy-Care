@@ -10,6 +10,7 @@ import {
   CardContent,
 } from "./ui/Card";
 import Select from "./ui/Select";
+import Autocomplete from "./ui/Autocomplete";
 import {
   Table,
   TableHeader,
@@ -493,17 +494,13 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
               </h4>
               {availableFilterTypes.length > 0 ? (
                 <div className="flex items-center gap-2">
-                  <Select
+                  <Autocomplete
                     value={selectedNewFilterType}
-                    onChange={(e) => setSelectedNewFilterType(e.target.value)}
+                    onChange={setSelectedNewFilterType}
+                    options={filterTypes.map(ft => ({ value: ft.id, label: ft.name }))}
+                    placeholder="Rechercher un type de filtre..."
                     className="flex-grow"
-                  >
-                    {filterTypes.map((ft) => (
-                      <option key={ft.id} value={ft.id}>
-                        {ft.name}
-                      </option>
-                    ))}
-                  </Select>
+                  />
                   <Button onClick={handleAddClick}>Ajouter</Button>
                 </div>
               ) : (
