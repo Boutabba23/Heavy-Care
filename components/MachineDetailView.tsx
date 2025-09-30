@@ -557,7 +557,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                     </Select>
                   </div>
 
-                  {assignedGroupId && (
+                  {(assignedFilterGroups[filterInstanceKey] || assignedFilter.filterGroupId) && (
                     <div className="mt-4 pt-4 border-t border-border">
                       {originalReference && (
                         <div className="mb-6">
