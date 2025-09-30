@@ -80,24 +80,34 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   const [selectedNewFilterType, setSelectedNewFilterType] =
     useState<string>("");
   const [assignedFilterGroups, setAssignedFilterGroups] = useState<Record<string, string>>({});
-  const [localAssignedFilters, setLocalAssignedFilters] = useState<AssignedFilter[]>([]);
+  const [localAssignedFilters, setLocalAssignedFilters] = useState<EnhancedAssignedFilter[]>([]);
   
-  // Initialiser les filtres assignés locaux
-  useEffect(() => {
-    // Ne synchroniser que si le nombre de filtres a augmenté (ajout)
-    if (machine.assignedFilters.length > localAssignedFilters.length) {
-      setLocalAssignedFilters(machine.assignedFilters);
-    }
-  }, [machine.assignedFilters, localAssignedFilters.length]);
+  // Create a local enhanced version of AssignedFilter with a unique ID
+  interface EnhancedAssignedFilter extends AssignedFilter {
+    uniqueId: string;
+  }
+
+  // Generate a unique ID for each assigned filter
+  const generateUniqueId = (): string => {
+    return Math.random().toString(36).substr(2, 9);
+  };
+
+  // Convert AssignedFilter to EnhancedAssignedFilter
+  const enhanceAssignedFilters = (filters: AssignedFilter[]): EnhancedAssignedFilter[] => {
+    return filters.map((filter, index) => ({
+      ...filter,
+      uniqueId: `${filter.filterTypeId}-${index}-${generateUniqueId()}`
+    }));
+  };
 
   // Synchroniser les filtres assignés locaux avec ceux du parent
   useEffect(() => {
-    setLocalAssignedFilters(machine.assignedFilters);
+    setLocalAssignedFilters(enhanceAssignedFilters(machine.assignedFilters));
   }, [machine.assignedFilters]);
   
   // Générer un identifiant unique pour chaque instance de filtre assigné
-  const getFilterInstanceKey = (filterTypeId: string, index: number) => {
-    return `${filterTypeId}-${index}`;
+  const getFilterInstanceKey = (assignedFilter: EnhancedAssignedFilter) => {
+    return assignedFilter.uniqueId;
   }
 
   const availableFilterTypes = useMemo(() => {
@@ -177,7 +187,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
     }
   };
 
-  const handleRemoveClick = (filterInstanceKey: string, filterTypeId: string, index: number) => {
+  const handleRemoveClick = (filterInstanceKey: string, filterTypeId: string) => {
     onOpenConfirmationDialog({
       title: "Supprimer le type de filtre",
       description:
@@ -191,8 +201,9 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
         });
 
         // Supprimer uniquement l'instance spécifique de notre état local
-        const newLocalAssignedFilters = [...localAssignedFilters];
-        newLocalAssignedFilters.splice(index, 1);
+        const newLocalAssignedFilters = localAssignedFilters.filter(
+          filter => filter.uniqueId !== filterInstanceKey
+        );
         setLocalAssignedFilters(newLocalAssignedFilters);
 
         // Vérifier s'il reste d'autres instances du même type
@@ -479,9 +490,9 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
             </div>
           )}
 
-          {sortedAssignedFilters.map((assignedFilter, index) => {
+          {sortedAssignedFilters.map((assignedFilter) => {
             // Créer une clé unique pour cette instance de filtre
-            const filterInstanceKey = getFilterInstanceKey(assignedFilter.filterTypeId, index);
+            const filterInstanceKey = getFilterInstanceKey(assignedFilter);
             const filterType = filterTypes.find(
               (ft) => ft.id === assignedFilter.filterTypeId
             );
@@ -516,7 +527,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                       variant="ghost"
                       size="icon"
                       className="text-destructive hover:bg-destructive/10 -mt-2 -mr-2"
-                      onClick={() => handleRemoveClick(filterInstanceKey, filterType.id, index)}
+                      onClick={() => handleRemoveClick(filterInstanceKey, filterType.id)}
                     >
                       <TrashIcon className="h-5 w-5" />
                     </Button>
