@@ -94,15 +94,18 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
 
   // Convert AssignedFilter to EnhancedAssignedFilter
   const enhanceAssignedFilters = (filters: AssignedFilter[]): EnhancedAssignedFilter[] => {
-    return filters.map((filter, index) => ({
+    return filters.map((filter) => ({
       ...filter,
-      uniqueId: `${filter.filterTypeId}-${index}-${generateUniqueId()}`
+      uniqueId: `${filter.filterTypeId}-${generateUniqueId()}`
     }));
   };
 
   // Synchroniser les filtres assignés locaux avec ceux du parent
   useEffect(() => {
-    setLocalAssignedFilters(enhanceAssignedFilters(machine.assignedFilters));
+    // Ne synchroniser que si les filtres locaux sont vides ou si le nombre de filtres a changé
+    if (localAssignedFilters.length === 0 || localAssignedFilters.length !== machine.assignedFilters.length) {
+      setLocalAssignedFilters(enhanceAssignedFilters(machine.assignedFilters));
+    }
   }, [machine.assignedFilters]);
   
   // Générer un identifiant unique pour chaque instance de filtre assigné
@@ -183,8 +186,15 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
       // Appeler la fonction parent
       onAddFilterType(machine.id, selectedNewFilterType);
       
-      // Ne pas ajouter manuellement à l'état local ici
-      // Le useEffect se chargera de synchroniser avec l'état parent
+      // Créer un nouveau filtre avec un ID unique
+      const newFilter: EnhancedAssignedFilter = {
+        filterTypeId: selectedNewFilterType,
+        filterGroupId: null,
+        uniqueId: `${selectedNewFilterType}-${generateUniqueId()}`
+      };
+      
+      // Ajouter le nouveau filtre à l'état local
+      setLocalAssignedFilters(prev => [...prev, newFilter]);
     }
   };
 
