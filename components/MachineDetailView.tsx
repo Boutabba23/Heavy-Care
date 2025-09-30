@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Machine, FilterType, FilterGroup, MaintenanceRecord } from "../types";
+import { Machine, FilterType, FilterGroup, MaintenanceRecord, AssignedFilter } from "../types";
 import Button from "./ui/Button";
 import { BackIcon, PlusIcon, TrashIcon, EyeIcon } from "../constants";
 import {
