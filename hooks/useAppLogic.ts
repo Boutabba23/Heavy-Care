@@ -363,13 +363,7 @@ export const useAppLogic = () => {
     filterTypeId: string
   ) => {
     const machineToUpdate = machines.find((m) => m.id === machineId);
-    if (
-      !machineToUpdate ||
-      machineToUpdate.assignedFilters.some(
-        (af) => af.filterTypeId === filterTypeId
-      )
-    )
-      return;
+    if (!machineToUpdate) return;
 
     const newAssignedFilters = [
       ...machineToUpdate.assignedFilters,
@@ -383,7 +377,20 @@ export const useAppLogic = () => {
     if (error) {
       addToast({ type: "error", title: "Erreur", description: error.message });
     } else {
-      fetchData();
+      addToast({
+        type: "success",
+        title: "Filtre ajouté",
+        description: "Le type de filtre a été ajouté avec succès.",
+      });
+      
+      // Mettre à jour seulement la machine concernée sans recharger toutes les données
+      const updatedMachines = machines.map(machine => 
+        machine.id === machineId 
+          ? { ...machine, assignedFilters: newAssignedFilters }
+          : machine
+      );
+      setMachines(updatedMachines);
+      
       if (selectedMachine?.id === machineId) {
         const updatedMachine = {
           ...machineToUpdate,

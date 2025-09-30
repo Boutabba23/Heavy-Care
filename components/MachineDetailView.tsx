@@ -75,23 +75,20 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   onOpenMaintenanceModal,
   onDeleteMaintenance,
 }) => {
-  const [isAdding, setIsAdding] = useState(false);
+  const [isAdding, setIsAdding] = useState(true);
   const [selectedNewFilterType, setSelectedNewFilterType] =
     useState<string>("");
 
   const availableFilterTypes = useMemo(() => {
-    return filterTypes.filter(
-      (ft) => !machine.assignedFilters.some((af) => af.filterTypeId === ft.id)
-    );
-  }, [filterTypes, machine.assignedFilters]);
+    return filterTypes;
+  }, [filterTypes]);
 
   useEffect(() => {
-    if (availableFilterTypes.length > 0 && !selectedNewFilterType) {
-      setSelectedNewFilterType(availableFilterTypes[0].id);
-    } else if (availableFilterTypes.length === 0) {
-      setSelectedNewFilterType("");
+    // Initialiser au premier chargement
+    if (filterTypes.length > 0 && !selectedNewFilterType) {
+      setSelectedNewFilterType(filterTypes[0].id);
     }
-  }, [availableFilterTypes, selectedNewFilterType]);
+  }, [filterTypes]); // Dépend de filterTypes pour se mettre à jour si la liste change
 
   const machineMaintenanceHistory = useMemo(() => {
     return maintenanceRecords
@@ -363,16 +360,16 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
               </CardDescription>
             </div>
             <Button
-              onClick={() => setIsAdding((prev) => !prev)}
+              onClick={() => setIsAdding(true)}
               className="flex-shrink-0"
             >
               <PlusIcon className="mr-2 h-5 w-5" />
-              <span>{isAdding ? "Annuler" : "Ajouter un type de filtre"}</span>
+              <span>Ajouter un type de filtre</span>
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isAdding && (
+          {true && (
             <div className="p-4 border rounded-lg bg-muted/50 animate-fadeIn">
               <h4 className="font-semibold mb-2">
                 Ajouter un nouveau type de filtre
@@ -384,7 +381,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                     onChange={(e) => setSelectedNewFilterType(e.target.value)}
                     className="flex-grow"
                   >
-                    {availableFilterTypes.map((ft) => (
+                    {filterTypes.map((ft) => (
                       <option key={ft.id} value={ft.id}>
                         {ft.name}
                       </option>
