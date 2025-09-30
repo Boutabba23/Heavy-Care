@@ -75,6 +75,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   onOpenMaintenanceModal,
   onDeleteMaintenance,
 }) => {
+  const { actions: { addToast } } = useAppLogic();
   const [isAdding, setIsAdding] = useState(false);
   const [selectedNewFilterType, setSelectedNewFilterType] =
     useState<string>("");
@@ -195,6 +196,16 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
             }
           }
           return newFilters;
+        });
+        
+        // Appeler la fonction parent pour supprimer le filtre
+        onRemoveFilterType(machine.id, filterTypeId);
+        
+        // Afficher un toast pour confirmer la suppression
+        addToast({
+          type: "success",
+          title: "Filtre supprimé",
+          description: "Le filtre a été supprimé avec succès."
         });
       },
     });
