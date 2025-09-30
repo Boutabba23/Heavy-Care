@@ -363,7 +363,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
               onClick={() => setIsAdding(!isAdding)}
               className="flex-shrink-0"
             >
-              {isAdding ? (
+              {!isAdding ? (
                 <>
                   <PlusIcon className="mr-2 h-5 w-5" />
                   <span>Ajouter un type de filtre</span>
