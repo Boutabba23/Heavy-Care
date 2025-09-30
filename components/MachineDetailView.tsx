@@ -84,8 +84,11 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   
   // Initialiser les filtres assignés locaux
   useEffect(() => {
-    setLocalAssignedFilters(machine.assignedFilters);
-  }, [machine.assignedFilters]);
+    // Ne synchroniser que si le nombre de filtres a augmenté (ajout)
+    if (machine.assignedFilters.length > localAssignedFilters.length) {
+      setLocalAssignedFilters(machine.assignedFilters);
+    }
+  }, [machine.assignedFilters, localAssignedFilters.length]);
   
   // Générer un identifiant unique pour chaque instance de filtre assigné
   const getFilterInstanceKey = (filterTypeId: string, index: number) => {
@@ -197,9 +200,6 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
           }
           return newFilters;
         });
-        
-        // Appeler la fonction parent pour supprimer le filtre
-        onRemoveFilterType(machine.id, filterTypeId);
         
         // Afficher un toast pour confirmer la suppression
         addToast({
