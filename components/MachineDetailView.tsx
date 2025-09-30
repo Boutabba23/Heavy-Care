@@ -435,7 +435,8 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
             );
             if (!filterType) return null;
 
-            const assignedGroupId = assignedFilter.filterGroupId;
+            // Utiliser la valeur de l'état local si elle existe, sinon la valeur originale
+            const assignedGroupId = assignedFilterGroups[filterInstanceKey] || assignedFilter.filterGroupId;
             const filterGroup = assignedGroupId
               ? filterGroups.find((fg) => fg.id === assignedGroupId)
               : null;
@@ -453,7 +454,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
 
             return (
               <Card
-                key={filterType.id}
+                key={filterInstanceKey}
                 className="border-border overflow-hidden"
               >
                 <CardHeader className="flex flex-row justify-between items-start">
