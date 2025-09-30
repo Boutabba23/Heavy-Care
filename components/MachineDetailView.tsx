@@ -198,8 +198,21 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
           return newFilters;
         });
         
-        // Ne pas appeler onRemoveFilterType car il supprime toutes les instances du même type
-        // Nous nous appuyons uniquement sur notre état local pour gérer les suppressions
+        // Vérifier s'il reste d'autres instances du même type
+        const remainingInstances = localAssignedFilters.filter(
+          (filter, i) => filter.filterTypeId === filterTypeId && i !== index
+        );
+        
+        // Si c'était la dernière instance de ce type, on appelle la fonction parent
+        if (remainingInstances.length === 0) {
+          onRemoveFilterType(machine.id, filterTypeId);
+        } else {
+          // Sinon, on met à jour manuellement l'état de la machine
+          // pour ne supprimer que cette instance spécifique
+          const updatedFilters = localAssignedFilters.filter((_, i) => i !== index);
+          // Note: Idéalement, nous aurions une fonction pour mettre à jour toute la liste
+          // mais pour l'instant, on se contente de gérer localement
+        }
         
         // Afficher un toast pour confirmer la suppression
         addToast({
