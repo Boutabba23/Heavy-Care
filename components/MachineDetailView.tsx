@@ -79,6 +79,12 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   const [selectedNewFilterType, setSelectedNewFilterType] =
     useState<string>("");
   const [assignedFilterGroups, setAssignedFilterGroups] = useState<Record<string, string>>({});
+  const [localAssignedFilters, setLocalAssignedFilters] = useState<AssignedFilter[]>([]);
+  
+  // Initialiser les filtres assignés locaux
+  useEffect(() => {
+    setLocalAssignedFilters(machine.assignedFilters);
+  }, [machine.assignedFilters]);
   
   // Générer un identifiant unique pour chaque instance de filtre assigné
   const getFilterInstanceKey = (filterTypeId: string, index: number) => {
@@ -130,6 +136,20 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
       [filterInstanceKey]: newFilterGroupId
     }));
     
+    // Mettre à jour également notre état local de filtres assignés
+    setLocalAssignedFilters(prev => {
+      return prev.map(filter => {
+        // Si le filtre correspond à l'instance en cours de modification
+        if (filter.filterTypeId === filterTypeId) {
+          return {
+            ...filter,
+            filterGroupId: newFilterGroupId === "none" ? null : newFilterGroupId
+          };
+        }
+        return filter;
+      });
+    });
+
     // Appeler la fonction parent
     onAssignFilter(
       machine.id,
@@ -140,7 +160,14 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
 
   const handleAddClick = () => {
     if (selectedNewFilterType) {
+      // Appeler la fonction parent
       onAddFilterType(machine.id, selectedNewFilterType);
+      
+      // Ajouter également à notre état local
+      setLocalAssignedFilters(prev => [
+        ...prev, 
+        { filterTypeId: selectedNewFilterType, filterGroupId: null }
+      ]);
     }
   };
 
@@ -159,13 +186,24 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
         
 
         
-        // Appeler la fonction parent
-        onRemoveFilterType(machine.id, filterTypeId);
+        // Supprimer uniquement l'instance spécifique de notre état local
+        setLocalAssignedFilters(prev => {
+          const newFilters = [...prev];
+          // Trouver et supprimer uniquement l'instance à l'index spécifié
+          // mais seulement si elle correspond au type de filtre
+          for (let i = 0; i < newFilters.length; i++) {
+            if (i === index && newFilters[i].filterTypeId === filterTypeId) {
+              newFilters.splice(i, 1);
+              break;
+            }
+          }
+          return newFilters;
+        });
       },
     });
   };
 
-  const sortedAssignedFilters = [...machine.assignedFilters].sort((a, b) => {
+  const sortedAssignedFilters = [...localAssignedFilters].sort((a, b) => {
     const nameA =
       filterTypes.find((ft) => ft.id === a.filterTypeId)?.name || "";
     const nameB =
