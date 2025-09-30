@@ -226,19 +226,25 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
         if (remainingInstances.length === 0) {
           onRemoveFilterType(machine.id, filterTypeId);
           
-          // Afficher un toast spécifique pour la suppression du type de filtre
-          addToast({
-            type: "success",
-            title: "Type de filtre supprimé",
-            description: "Le type de filtre a été complètement supprimé de cet engin."
-          });
+          // Utiliser setTimeout pour s'assurer que le toast s'affiche après la suppression
+          setTimeout(() => {
+            // Afficher un toast spécifique pour la suppression du type de filtre
+            addToast({
+              type: "success",
+              title: "Type de filtre supprimé",
+              description: "Le type de filtre a été complètement supprimé de cet engin."
+            });
+          }, 100);
         } else {
-          // Afficher un toast pour la suppression d'une instance de filtre
-          addToast({
-            type: "success",
-            title: "Filtre supprimé",
-            description: "Le filtre a été supprimé avec succès."
-          });
+          // Utiliser setTimeout pour s'assurer que le toast s'affiche après la suppression
+          setTimeout(() => {
+            // Afficher un toast pour la suppression d'une instance de filtre
+            addToast({
+              type: "success",
+              title: "Filtre supprimé",
+              description: "Le filtre a été supprimé avec succès."
+            });
+          }, 100);
         }
       },
     });
