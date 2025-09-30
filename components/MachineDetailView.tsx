@@ -156,10 +156,11 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
     }));
     
     // Mettre à jour également notre état local de filtres assignés
+    // Only update the specific filter instance, not all filters with the same type
     setLocalAssignedFilters(prev => {
       return prev.map(filter => {
         // Si le filtre correspond à l'instance en cours de modification
-        if (filter.filterTypeId === filterTypeId) {
+        if (filter.uniqueId === filterInstanceKey) {
           return {
             ...filter,
             filterGroupId: newFilterGroupId === "none" ? null : newFilterGroupId
@@ -539,7 +540,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                       Groupe de filtres assigné :
                     </span>
                     <Select
-                      value={assignedFilterGroups[filterInstanceKey] || assignedGroupId || "none"}
+                      value={assignedFilterGroups[filterInstanceKey] || assignedFilter.filterGroupId || "none"}
                       onChange={(e) =>
                         handleFilterChange(filterInstanceKey, filterType.id, e.target.value)
                       }
