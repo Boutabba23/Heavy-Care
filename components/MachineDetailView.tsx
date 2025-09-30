@@ -191,25 +191,15 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
         setLocalAssignedFilters(prev => {
           const newFilters = [...prev];
           // Trouver et supprimer uniquement l'instance à l'index spécifié
-          // mais seulement si elle correspond au type de filtre
-          for (let i = 0; i < newFilters.length; i++) {
-            if (i === index && newFilters[i].filterTypeId === filterTypeId) {
-              newFilters.splice(i, 1);
-              break;
-            }
+          // en utilisant directement l'index fourni
+          if (index >= 0 && index < newFilters.length) {
+            newFilters.splice(index, 1);
           }
           return newFilters;
         });
         
-        // Vérifier s'il reste d'autres instances du même type
-        const remainingInstances = localAssignedFilters.filter(
-          filter => filter.filterTypeId === filterTypeId
-        );
-        
-        // Si c'était la dernière instance de ce type, on appelle la fonction parent
-        if (remainingInstances.length <= 1) {
-          onRemoveFilterType(machine.id, filterTypeId);
-        }
+        // Appeler la fonction parent pour supprimer le filtre
+        onRemoveFilterType(machine.id, filterTypeId);
         
         // Afficher un toast pour confirmer la suppression
         addToast({
