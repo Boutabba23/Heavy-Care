@@ -78,6 +78,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   const [isAdding, setIsAdding] = useState(false);
   const [selectedNewFilterType, setSelectedNewFilterType] =
     useState<string>("");
+  const [assignedFilterGroups, setAssignedFilterGroups] = useState<Record<string, string>>({});
 
   const availableFilterTypes = useMemo(() => {
     return filterTypes;
@@ -117,6 +118,13 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
     filterTypeId: string,
     newFilterGroupId: string
   ) => {
+    // Mettre à jour l'état local
+    setAssignedFilterGroups(prev => ({
+      ...prev,
+      [filterTypeId]: newFilterGroupId
+    }));
+    
+    // Appeler la fonction parent
     onAssignFilter(
       machine.id,
       filterTypeId,
@@ -449,7 +457,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                       Groupe de filtres assigné :
                     </span>
                     <Select
-                      value={assignedGroupId || "none"}
+                      value={assignedFilterGroups[filterType.id] || assignedGroupId || "none"}
                       onChange={(e) =>
                         handleFilterChange(filterType.id, e.target.value)
                       }
