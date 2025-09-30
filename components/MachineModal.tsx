@@ -185,7 +185,7 @@ const MachineModal: React.FC<MachineModalProps> = ({
   };
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose}>
+    <Dialog isOpen={isOpen} onClose={onClose} closeOnOutsideClick={false} closeOnEscape={false}>
       <DialogHeader>
         <DialogTitle>
           {machine ? "Modifier l'engin" : "Nouvel Engin"}
