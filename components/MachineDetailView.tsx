@@ -89,6 +89,11 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
       setLocalAssignedFilters(machine.assignedFilters);
     }
   }, [machine.assignedFilters, localAssignedFilters.length]);
+
+  // Synchroniser les filtres assignés locaux avec ceux du parent
+  useEffect(() => {
+    setLocalAssignedFilters(machine.assignedFilters);
+  }, [machine.assignedFilters]);
   
   // Générer un identifiant unique pour chaque instance de filtre assigné
   const getFilterInstanceKey = (filterTypeId: string, index: number) => {
@@ -184,36 +189,22 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
           delete newState[filterInstanceKey];
           return newState;
         });
-        
 
-        
         // Supprimer uniquement l'instance spécifique de notre état local
-        setLocalAssignedFilters(prev => {
-          const newFilters = [...prev];
-          // Trouver et supprimer uniquement l'instance à l'index spécifié
-          // en utilisant directement l'index fourni
-          if (index >= 0 && index < newFilters.length) {
-            newFilters.splice(index, 1);
-          }
-          return newFilters;
-        });
-        
+        const newLocalAssignedFilters = [...localAssignedFilters];
+        newLocalAssignedFilters.splice(index, 1);
+        setLocalAssignedFilters(newLocalAssignedFilters);
+
         // Vérifier s'il reste d'autres instances du même type
-        const remainingInstances = localAssignedFilters.filter(
-          (filter, i) => filter.filterTypeId === filterTypeId && i !== index
+        const remainingInstances = newLocalAssignedFilters.filter(
+          filter => filter.filterTypeId === filterTypeId
         );
-        
+
         // Si c'était la dernière instance de ce type, on appelle la fonction parent
         if (remainingInstances.length === 0) {
           onRemoveFilterType(machine.id, filterTypeId);
-        } else {
-          // Sinon, on met à jour manuellement l'état de la machine
-          // pour ne supprimer que cette instance spécifique
-          const updatedFilters = localAssignedFilters.filter((_, i) => i !== index);
-          // Note: Idéalement, nous aurions une fonction pour mettre à jour toute la liste
-          // mais pour l'instant, on se contente de gérer localement
         }
-        
+
         // Afficher un toast pour confirmer la suppression
         addToast({
           type: "success",
