@@ -360,16 +360,22 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
               </CardDescription>
             </div>
             <Button
-              onClick={() => setIsAdding(true)}
+              onClick={() => setIsAdding(!isAdding)}
               className="flex-shrink-0"
             >
-              <PlusIcon className="mr-2 h-5 w-5" />
-              <span>Ajouter un type de filtre</span>
+              {isAdding ? (
+                <>
+                  <PlusIcon className="mr-2 h-5 w-5" />
+                  <span>Ajouter un type de filtre</span>
+                </>
+              ) : (
+                <span>Annuler</span>
+              )}
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {true && (
+          {isAdding && (
             <div className="p-4 border rounded-lg bg-muted/50 animate-fadeIn">
               <h4 className="font-semibold mb-2">
                 Ajouter un nouveau type de filtre
