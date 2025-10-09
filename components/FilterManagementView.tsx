@@ -417,8 +417,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                             <TableCell className="text-right w-24 flex flex-row gap-2 justify-end">
                               <Button
                                 size="sm"
-                                className="bg-green-500"
-
+                                variant="adding"
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, false)}
                               >
                                 <PlusIcon className="h-3 w-3" />
@@ -426,12 +425,12 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                               </Button>
                               <Button
                                 size="sm"
-                                className="h-3 w-3"
+                                className=""
 
                                 variant="destructive"
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, true)}
                               >
-                                <MinusIcon className="" />
+                                <MinusIcon className="h-3 w-3" />
 
                               </Button>
                             </TableCell>
