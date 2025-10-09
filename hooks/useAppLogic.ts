@@ -891,16 +891,16 @@ export const useAppLogic = () => {
 
   const addStock = async (quantity: number) => {
     if (!stockUpdateInfo) return;
-    const { filterReference, filterGroupId } = stockUpdateInfo;
+    const { filterReference, filterGroupId, isRemove } = stockUpdateInfo;
 
     const groupToUpdate = filterGroups.find((g) => g.id === filterGroupId);
     if (!groupToUpdate) return;
 
-    const newReferences = groupToUpdate.references.map((ref) =>
-      ref.id === filterReference.id
-        ? { ...ref, stock: ref.stock + quantity }
-        : ref
-    );
+    const newReferences = groupToUpdate.references.map((ref) => {
+      if (ref.id !== filterReference.id) return ref;
+      const newStock = isRemove ? ref.stock - quantity : ref.stock + quantity;
+      return { ...ref, stock: newStock };
+    });
 
     const { error } = await supabase
       .from("filter_groups")
@@ -913,8 +913,10 @@ export const useAppLogic = () => {
       fetchData();
       addToast({
         type: "success",
-        title: "Stock Ajouté",
-        description: `${quantity} unité(s) ajoutée(s) pour ${filterReference.reference}.`,
+        title: isRemove ? "Stock Consommé" : "Stock Ajouté",
+        description: isRemove
+          ? `${quantity} unité(s) consommée(s) pour ${filterReference.reference}.`
+          : `${quantity} unité(s) ajoutée(s) pour ${filterReference.reference}.`,
       });
     }
     closeAddStockModal();
