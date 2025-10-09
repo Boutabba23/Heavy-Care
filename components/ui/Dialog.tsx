@@ -46,7 +46,7 @@ const Dialog: React.FC<DialogProps> = ({
       onClick={closeOnOutsideClick ? onClose : undefined}
     >
       <div
-        className={`relative z-50 flex flex-col w-80% border bg-background shadow-lg duration-200 sm:rounded-xl max-h-[90vh] animate-slideInUp ${sizeClasses[size]}`}
+        className={`relative z-50 flex flex-col w-4/5 border bg-background shadow-lg duration-200 sm:rounded-xl max-h-[90vh] animate-slideInUp ${sizeClasses[size]}`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
