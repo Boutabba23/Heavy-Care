@@ -475,7 +475,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                   onClick={() => exportFiltersToCSV(props.filterGroups)}
                   variant="outline"
                 >
-                  <ArrowUpTrayIcon className="mr-2 h-5 w-5" />
+                  <ArrowUpTrayIcon className="h-5 w-5" />
                   
                 </Button>
               )}
