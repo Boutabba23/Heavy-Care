@@ -157,13 +157,15 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
     );
   };
 
-  const handleAddClick = (filterTypeId: string) => {
+  // Ajout d'un type de filtre avec libellé personnalisé (optionnel)
+  const handleAddClick = (filterTypeId: string, customLabel?: string) => {
     if (filterTypeId) {
       // Créer un nouveau filtre avec un ID unique
-      const newFilter: AssignedFilter = {
+      const newFilter: AssignedFilter & { customLabel?: string } = {
         id: generateUniqueId(),
         filterTypeId: filterTypeId,
-        filterGroupId: null
+        filterGroupId: null,
+        ...(customLabel ? { customLabel } : {})
       };
       // Appeler la fonction parent (doit accepter l'objet complet)
       onAddFilterType(machine.id, newFilter);
@@ -445,10 +447,15 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
 
           {sortedAssignedFilters.map((assignedFilter) => {
             const filterInstanceKey = getFilterInstanceKey(assignedFilter);
+
             const filterType = filterTypes.find(
               (ft) => ft.id === assignedFilter.filterTypeId
             );
             if (!filterType) return null;
+
+            // Afficher le libellé personnalisé si présent
+            // @ts-ignore: customLabel is injected by our modal, not in base AssignedFilter type
+            const customLabel = assignedFilter.customLabel as string | undefined;
 
             const assignedGroupId = assignedFilterGroups[filterInstanceKey] || assignedFilter.filterGroupId;
             const filterGroup = assignedGroupId
@@ -473,7 +480,18 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
               >
                 <CardHeader className="flex flex-row justify-between items-start">
                   <div className="flex flex-row justify-between w-full">
-                    <CardTitle className="text-xl">{filterType.name}</CardTitle>
+                    <div>
+                      <CardTitle className="text-xl">
+                        {customLabel ? (
+                          <>
+                            {filterType.name}
+                            <span className="block text-xs font-normal text-muted-foreground mt-1">{customLabel}</span>
+                          </>
+                        ) : (
+                          filterType.name
+                        )}
+                      </CardTitle>
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"

@@ -1,33 +1,49 @@
+
 import React, { useState, useEffect } from 'react';
 import { FilterType } from '../types';
-import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from './ui/Dialog';
+import {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogContent,
+  DialogFooter,
+} from './ui/Dialog';
 import Button from './ui/Button';
-import Autocomplete from './ui/Autocomplete';
+import Input from './ui/Input';
+import Label from './ui/Label';
+import Select from './ui/Select';
 
 interface AddFilterTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (filterTypeId: string) => void;
+  onAdd: (filterTypeId: string, customLabel?: string) => void;
   availableFilterTypes: FilterType[];
 }
 
 const AddFilterTypeModal: React.FC<AddFilterTypeModalProps> = ({ isOpen, onClose, onAdd, availableFilterTypes }) => {
   const [selectedFilterType, setSelectedFilterType] = useState('');
-  const [error, setError] = useState('');
+  const [customLabel, setCustomLabel] = useState('');
+  const [filterTypeError, setFilterTypeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setSelectedFilterType('');
-      setError('');
+      setCustomLabel('');
+      setFilterTypeError(null);
     }
   }, [isOpen]);
 
   const handleAdd = () => {
+    let hasError = false;
     if (!selectedFilterType) {
-      setError('Veuillez sélectionner un type de filtre.');
-      return;
+      setFilterTypeError('Le type de filtre est requis.');
+      hasError = true;
+    } else {
+      setFilterTypeError(null);
     }
-    onAdd(selectedFilterType);
+    if (hasError) return;
+    onAdd(selectedFilterType, customLabel.trim() ? customLabel.trim() : undefined);
     onClose();
   };
 
@@ -40,20 +56,32 @@ const AddFilterTypeModal: React.FC<AddFilterTypeModalProps> = ({ isOpen, onClose
         </DialogDescription>
       </DialogHeader>
       <DialogContent className="space-y-4">
-        {availableFilterTypes.length > 0 ? (
-          <Autocomplete
+        <div className="space-y-2">
+          <Label htmlFor="filterType">Type de filtre</Label>
+          <Select
+            id="filterType"
             value={selectedFilterType}
-            onChange={setSelectedFilterType}
-            options={availableFilterTypes.map(ft => ({ value: ft.id, label: ft.name }))}
-            placeholder="Rechercher un type de filtre..."
-            className="flex-grow"
+            onChange={e => setSelectedFilterType(e.target.value)}
+            className={filterTypeError ? 'border-destructive focus:ring-destructive' : ''}
+          >
+            <option value="">Sélectionnez un type de filtre</option>
+            {availableFilterTypes.map(ft => (
+              <option key={ft.id} value={ft.id}>{ft.name}</option>
+            ))}
+          </Select>
+          {filterTypeError && (
+            <p className="text-xs text-destructive mt-1">{filterTypeError}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="customLabel">Libellé personnalisé (optionnel)</Label>
+          <Input
+            id="customLabel"
+            value={customLabel}
+            onChange={e => setCustomLabel(e.target.value)}
+            placeholder="ex: Filtre hydraulique principal"
           />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Tous les types de filtres disponibles ont déjà été ajoutés.
-          </p>
-        )}
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
       </DialogContent>
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>Annuler</Button>
