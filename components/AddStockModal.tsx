@@ -34,12 +34,16 @@ const AddStockModal: React.FC<AddStockModalProps> = ({ isOpen, onClose, onAdd, s
 
   if (!stockInfo) return null;
 
+  const isRemove = stockInfo.isRemove;
   return (
     <Dialog isOpen={isOpen} onClose={onClose} closeOnOutsideClick={false} closeOnEscape={false}>
       <DialogHeader>
-        <DialogTitle>Ajouter du Stock</DialogTitle>
+        <DialogTitle>{isRemove ? 'Consommer du Stock' : 'Ajouter du Stock'}</DialogTitle>
         <DialogDescription>
-          Ajouter une nouvelle entrée de stock pour <span className="font-bold text-primary">{stockInfo.filterReference.reference}</span>.
+          {isRemove
+            ? <>Consommer une quantité de stock pour <span className="font-bold text-primary">{stockInfo.filterReference.reference}</span>.</>
+            : <>Ajouter une nouvelle entrée de stock pour <span className="font-bold text-primary">{stockInfo.filterReference.reference}</span>.</>
+          }
         </DialogDescription>
       </DialogHeader>
       <DialogContent className="space-y-4">
@@ -54,7 +58,7 @@ const AddStockModal: React.FC<AddStockModalProps> = ({ isOpen, onClose, onAdd, s
             </div>
         </div>
         <div className="space-y-2 pt-4">
-          <Label htmlFor="quantity">Quantité à ajouter</Label>
+          <Label htmlFor="quantity">{isRemove ? 'Quantité à Consommé' : 'Quantité à ajouter'}</Label>
           <Input 
             id="quantity" 
             type="number" 
@@ -68,7 +72,7 @@ const AddStockModal: React.FC<AddStockModalProps> = ({ isOpen, onClose, onAdd, s
       </DialogContent>
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>Annuler</Button>
-        <Button onClick={handleAdd}>Ajouter au Stock</Button>
+        <Button onClick={handleAdd}>{isRemove ? 'Consommer du Stock' : 'Ajouter au Stock'}</Button>
       </DialogFooter>
     </Dialog>
   );
