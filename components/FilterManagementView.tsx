@@ -235,8 +235,8 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
             >
               <CardHeader>
                 <div className="flex justify-between items-start gap-2">
-                  <div className="flex-1 mr-2 overflow-hidden">
-                    <div className="flex items-center gap-2 mb-1">
+                  <div className="flex-col mr-2 overflow-hidden">
+                    <div className="flex max-[1060px]:flex-col max-[1060px]:items-start   items-center gap-4 mb-4">
                       <CardTitle>{group.name}</CardTitle>
                       {group.filterType && (
                         <Badge
