@@ -348,16 +348,26 @@ export const useAppLogic = () => {
     }
   };
 
+
   const addFilterTypeToMachine = async (
     machineId: string,
     assignedFilter: AssignedFilter
+  ) => {
+    // Backward compatibility: single add
+    return addMultipleFilterTypesToMachine(machineId, [assignedFilter]);
+  };
+
+  // Batch add multiple filter types to a machine at once
+  const addMultipleFilterTypesToMachine = async (
+    machineId: string,
+    assignedFilters: AssignedFilter[]
   ) => {
     const machineToUpdate = machines.find((m) => m.id === machineId);
     if (!machineToUpdate) return;
 
     const newAssignedFilters = [
       ...machineToUpdate.assignedFilters,
-      assignedFilter,
+      ...assignedFilters,
     ];
     const { error } = await supabase
       .from("machines")
@@ -369,8 +379,8 @@ export const useAppLogic = () => {
     } else {
       addToast({
         type: "success",
-        title: "Filtre ajouté",
-        description: "Le type de filtre a été ajouté avec succès.",
+        title: "Filtres ajoutés",
+        description: `${assignedFilters.length} type(s) de filtre ajouté(s) avec succès.`,
       });
       // Mettre à jour seulement la machine concernée sans recharger toutes les données
       const updatedMachines = machines.map(machine => 
@@ -963,7 +973,8 @@ export const useAppLogic = () => {
     closeSidebar,
     selectMachine,
     assignFilterToMachine,
-    addFilterTypeToMachine,
+  addFilterTypeToMachine,
+  addMultipleFilterTypesToMachine,
     removeFilterTypeFromMachine,
     openConfirmationDialog,
     closeConfirmationDialog,

@@ -77,7 +77,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   onOpenMaintenanceModal,
   onDeleteMaintenance,
 }) => {
-  const { actions: { addToast } } = useAppLogic();
+  const { actions: { addToast, addMultipleFilterTypesToMachine } } = useAppLogic();
   const [isAddFilterTypeModalOpen, setIsAddFilterTypeModalOpen] = useState(false);
 
   const [assignedFilterGroups, setAssignedFilterGroups] = useState<Record<string, string>>({});
@@ -158,7 +158,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   };
 
   // Ajout de plusieurs types de filtre avec groupe assigné et libellé personnalisé
-  const handleAddMultiple = (filters: { filterTypeId: string; customLabel?: string; filterGroupId: string | null }[]) => {
+  const handleAddMultiple = async (filters: { filterTypeId: string; customLabel?: string; filterGroupId: string | null }[]) => {
     if (!filters || filters.length === 0) return;
     const newAssigned: (AssignedFilter & { customLabel?: string })[] = filters.map(f => ({
       id: generateUniqueId(),
@@ -166,9 +166,8 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
       filterGroupId: f.filterGroupId,
       ...(f.customLabel ? { customLabel: f.customLabel } : {})
     }));
-    newAssigned.forEach(af => {
-      onAddFilterType(machine.id, af);
-    });
+    // Batch add all at once
+    await addMultipleFilterTypesToMachine(machine.id, newAssigned);
     setLocalAssignedFilters(prev => [...prev, ...newAssigned]);
   };
 
