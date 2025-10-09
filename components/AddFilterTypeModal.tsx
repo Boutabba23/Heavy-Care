@@ -26,7 +26,6 @@ interface AddFilterTypeModalProps {
 
 const AddFilterTypeModal: React.FC<AddFilterTypeModalProps> = ({ isOpen, onClose, onAdd, availableFilterTypes, filterGroups }) => {
   const [selectedFilterType, setSelectedFilterType] = useState('');
-  const [customLabel, setCustomLabel] = useState('');
   const [selectedFilterGroup, setSelectedFilterGroup] = useState('');
   const [filterTypeError, setFilterTypeError] = useState<string | null>(null);
   const [filterGroupError, setFilterGroupError] = useState<string | null>(null);
@@ -35,7 +34,6 @@ const AddFilterTypeModal: React.FC<AddFilterTypeModalProps> = ({ isOpen, onClose
   useEffect(() => {
     if (isOpen) {
       setSelectedFilterType('');
-      setCustomLabel('');
       setSelectedFilterGroup('');
       setFilterTypeError(null);
       setFilterGroupError(null);
@@ -62,12 +60,10 @@ const AddFilterTypeModal: React.FC<AddFilterTypeModalProps> = ({ isOpen, onClose
       ...prev,
       {
         filterTypeId: selectedFilterType,
-        customLabel: customLabel.trim() ? customLabel.trim() : undefined,
         filterGroupId: selectedFilterGroup
       }
     ]);
     setSelectedFilterType('');
-    setCustomLabel('');
     setSelectedFilterGroup('');
   };
 
@@ -95,7 +91,7 @@ const AddFilterTypeModal: React.FC<AddFilterTypeModalProps> = ({ isOpen, onClose
         </DialogDescription>
       </DialogHeader>
       <DialogContent className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="filterType">Type de filtre</Label>
             <Select
@@ -112,15 +108,6 @@ const AddFilterTypeModal: React.FC<AddFilterTypeModalProps> = ({ isOpen, onClose
             {filterTypeError && (
               <p className="text-xs text-destructive mt-1">{filterTypeError}</p>
             )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="customLabel">Libellé personnalisé (optionnel)</Label>
-            <Input
-              id="customLabel"
-              value={customLabel}
-              onChange={e => setCustomLabel(e.target.value)}
-              placeholder="ex: Filtre hydraulique principal"
-            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="filterGroup">Groupe de filtres</Label>
@@ -152,7 +139,6 @@ const AddFilterTypeModal: React.FC<AddFilterTypeModalProps> = ({ isOpen, onClose
               <TableHeader>
                 <TableRow>
                   <TableHead>Type de filtre</TableHead>
-                  <TableHead>Libellé</TableHead>
                   <TableHead>Groupe assigné</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
@@ -164,7 +150,6 @@ const AddFilterTypeModal: React.FC<AddFilterTypeModalProps> = ({ isOpen, onClose
                   return (
                     <TableRow key={idx}>
                       <TableCell>{type?.name || ''}</TableCell>
-                      <TableCell>{item.customLabel || '-'}</TableCell>
                       <TableCell>{group?.name || ''}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" onClick={() => handleRemove(idx)}>
