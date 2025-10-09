@@ -23,6 +23,7 @@ import { useAppLogic } from "../hooks/useAppLogic";
 import Badge from "./ui/Badge";
 import { calculateNextMaintenance } from "../utils/maintenance";
 import { rangeColors, rangeTooltips } from "../utils/gamme";
+import AddFilterTypeModal from './AddFilterTypeModal';
 
 interface MachineDetailViewProps {
   machine: Machine;
@@ -77,9 +78,8 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   onDeleteMaintenance,
 }) => {
   const { actions: { addToast } } = useAppLogic();
-  const [isAdding, setIsAdding] = useState(false);
-  const [selectedNewFilterType, setSelectedNewFilterType] =
-    useState<string>("");
+  const [isAddFilterTypeModalOpen, setIsAddFilterTypeModalOpen] = useState(false);
+
   const [assignedFilterGroups, setAssignedFilterGroups] = useState<Record<string, string>>({});
   const [localAssignedFilters, setLocalAssignedFilters] = useState<EnhancedAssignedFilter[]>([]);
   
@@ -115,15 +115,9 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   }
 
   const availableFilterTypes = useMemo(() => {
-    return filterTypes;
-  }, [filterTypes]);
-
-  useEffect(() => {
-    // Initialiser au premier chargement
-    if (filterTypes.length > 0 && !selectedNewFilterType) {
-      setSelectedNewFilterType(filterTypes[0].id);
-    }
-  }, [filterTypes]); // Dépend de filterTypes pour se mettre à jour si la liste change
+    const assignedFilterTypeIds = new Set(localAssignedFilters.map(f => f.filterTypeId));
+    return filterTypes.filter((ft) => !assignedFilterTypeIds.has(ft.id));
+  }, [filterTypes, localAssignedFilters]);
 
   const machineMaintenanceHistory = useMemo(() => {
     return maintenanceRecords
@@ -182,16 +176,16 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
     );
   };
 
-  const handleAddClick = () => {
-    if (selectedNewFilterType) {
+  const handleAddClick = (filterTypeId: string) => {
+    if (filterTypeId) {
       // Appeler la fonction parent
-      onAddFilterType(machine.id, selectedNewFilterType);
+      onAddFilterType(machine.id, filterTypeId);
       
       // Créer un nouveau filtre avec un ID unique
       const newFilter: EnhancedAssignedFilter = {
-        filterTypeId: selectedNewFilterType,
+        filterTypeId: filterTypeId,
         filterGroupId: null,
-        uniqueId: `${selectedNewFilterType}-${generateUniqueId()}`
+        uniqueId: `${filterTypeId}-${generateUniqueId()}`
       };
       
       // Ajouter le nouveau filtre à l'état local
@@ -472,44 +466,21 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
               </CardDescription>
             </div>
             <Button
-              onClick={() => setIsAdding(!isAdding)}
+              onClick={() => setIsAddFilterTypeModalOpen(true)}
               className="flex-shrink-0"
             >
-              {!isAdding ? (
-                <>
-                  <PlusIcon className="mr-2 h-5 w-5" />
-                  <span>Ajouter un type de filtre</span>
-                </>
-              ) : (
-                <span>Annuler</span>
-              )}
+              <PlusIcon className="mr-2 h-5 w-5" />
+              <span>Ajouter un type de filtre</span>
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isAdding && (
-            <div className="p-4 border rounded-lg bg-muted/50 animate-fadeIn">
-              <h4 className="font-semibold mb-2">
-                Ajouter un nouveau type de filtre
-              </h4>
-              {availableFilterTypes.length > 0 ? (
-                <div className="flex items-center gap-2">
-                  <Autocomplete
-                    value={selectedNewFilterType}
-                    onChange={setSelectedNewFilterType}
-                    options={filterTypes.map(ft => ({ value: ft.id, label: ft.name }))}
-                    placeholder="Rechercher un type de filtre..."
-                    className="flex-grow"
-                  />
-                  <Button onClick={handleAddClick}>Ajouter</Button>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Tous les types de filtres disponibles ont déjà été ajoutés.
-                </p>
-              )}
-            </div>
-          )}
+          <AddFilterTypeModal
+            isOpen={isAddFilterTypeModalOpen}
+            onClose={() => setIsAddFilterTypeModalOpen(false)}
+            onAdd={handleAddClick}
+            availableFilterTypes={availableFilterTypes}
+          />
 
           {sortedAssignedFilters.map((assignedFilter) => {
             // Créer une clé unique pour cette instance de filtre
@@ -559,9 +530,9 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                     <span className="text-sm font-medium">
                       Groupe de filtres assigné :
                     </span>
-                    <Select
-                      value={assignedFilterGroups[filterInstanceKey] || assignedFilter.filterGroupId || "none"}
-                      onChange={(e) =>
+                    <Select 
+                      value={assignedFilterGroups[filterInstanceKey] || assignedFilter.filterGroupId || "none"} 
+                      onChange={(e) => 
                         handleFilterChange(filterInstanceKey, filterType.id, e.target.value)
                       }
                       className="max-w-xs"
