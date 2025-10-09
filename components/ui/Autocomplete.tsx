@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Input } from './Input';
-import { Popover, PopoverContent, PopoverTrigger } from './Popover';
+import   Input  from './Input';
+import Popover from './Popover';
+
 
 interface AutocompleteOption {
   value: string;
@@ -81,8 +82,10 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
 
   return (
     <div className={`relative ${className}`}>
-      <Popover open={showOptions} onOpenChange={setShowOptions}>
-        <PopoverTrigger asChild>
+      <Popover
+        isOpen={showOptions}
+        onClose={() => setShowOptions(false)}
+        trigger={
           <Input
             ref={inputRef}
             value={inputValue}
@@ -91,30 +94,26 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
             placeholder={placeholder}
             className="w-full"
           />
-        </PopoverTrigger>
-        <PopoverContent 
-          ref={popoverRef}
-          className="w-full p-0"
-          align="start"
-        >
-          <div className="max-h-60 overflow-auto p-1">
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <div
-                  key={option.value}
-                  className="px-3 py-2 cursor-pointer hover:bg-accent rounded-md"
-                  onClick={() => handleOptionClick(option)}
-                >
-                  {option.label}
-                </div>
-              ))
-            ) : (
-              <div className="px-3 py-2 text-muted-foreground">
-                Aucune option trouvée
+        }
+        contentClassName="w-full p-0"
+      >
+        <div ref={popoverRef} className="max-h-60 overflow-auto p-1">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((option) => (
+              <div
+                key={option.value}
+                className="px-3 py-2 cursor-pointer hover:bg-accent rounded-md"
+                onClick={() => handleOptionClick(option)}
+              >
+                {option.label}
               </div>
-            )}
-          </div>
-        </PopoverContent>
+            ))
+          ) : (
+            <div className="px-3 py-2 text-muted-foreground">
+              Aucune option trouvée
+            </div>
+          )}
+        </div>
       </Popover>
     </div>
   );
