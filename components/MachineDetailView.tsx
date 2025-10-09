@@ -212,35 +212,17 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
         );
         setLocalAssignedFilters(newLocalAssignedFilters);
 
-        // Vérifier s'il reste d'autres instances du même type
-        const remainingInstances = newLocalAssignedFilters.filter(
-          filter => filter.filterTypeId === filterTypeId
-        );
+        // Toujours supprimer le type de filtre de la machine dans la base de données
+        onRemoveFilterType(machine.id, filterTypeId);
 
-        // Si c'était la dernière instance de ce type, on appelle la fonction parent
-        if (remainingInstances.length === 0) {
-          onRemoveFilterType(machine.id, filterTypeId);
-          
-          // Utiliser setTimeout pour s'assurer que le toast s'affiche après la suppression
-          setTimeout(() => {
-            // Afficher un toast spécifique pour la suppression du type de filtre
-            addToast({
-              type: "success",
-              title: "Type de filtre supprimé",
-              description: "Le type de filtre a été complètement supprimé de cet engin."
-            });
-          }, 100);
-        } else {
-          // Utiliser setTimeout pour s'assurer que le toast s'affiche après la suppression
-          setTimeout(() => {
-            // Afficher un toast pour la suppression d'une instance de filtre
-            addToast({
-              type: "success",
-              title: "Filtre supprimé",
-              description: "Le filtre a été supprimé avec succès."
-            });
-          }, 100);
-        }
+        // Afficher un toast pour la suppression
+        setTimeout(() => {
+          addToast({
+            type: "success",
+            title: "Type de filtre supprimé",
+            description: "Le type de filtre a été supprimé de cet engin."
+          });
+        }, 100);
       },
     });
   };
