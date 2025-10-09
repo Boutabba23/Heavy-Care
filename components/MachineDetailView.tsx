@@ -505,22 +505,9 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                     <span className="text-sm font-medium">
                       Groupe de filtres assigné :
                     </span>
-                    <Select 
-                      value={assignedFilterGroups[filterInstanceKey] || assignedFilter.filterGroupId || "none"} 
-                      onChange={(e) => 
-                        handleFilterChange(filterInstanceKey, filterType.id, e.target.value)
-                      }
-                      className="max-w-xs"
-                    >
-                      <option value="none">-- Non assigné --</option>
-                      {filterGroups
-                        .filter((group) => group.filterType === filterType.id)
-                        .map((group) => (
-                          <option key={group.id} value={group.id}>
-                            {group.name}
-                          </option>
-                        ))}
-                    </Select>
+                    <span className="text-base font-semibold">
+                      {filterGroup ? filterGroup.name : <span className="text-muted-foreground">Non assigné</span>}
+                    </span>
                   </div>
 
                   {(assignedFilterGroups[filterInstanceKey] || assignedFilter.filterGroupId) && (
