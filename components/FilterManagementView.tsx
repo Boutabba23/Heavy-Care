@@ -326,7 +326,6 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                             <TableHead className="min-w-24">Fabricant</TableHead>
                             <TableHead className="min-w-16">Prix (DA)</TableHead>
                             <TableHead className="w-16">Stock</TableHead>
-                            <TableHead className="w-16">Quantité</TableHead>
                             <TableHead className="text-right w-24">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -351,10 +350,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 {originalReference.stock}
                               </Badge>
                             </TableCell>
-                            <TableCell className="w-16 text-sm text-center">
-                              {'-'}
-                            </TableCell>
-                            <TableCell className="text-right w-24 flex gap-2 justify-end">
+                            <TableCell className="text-right w-24 flex flex-col gap-2 justify-end">
                               <Button
                                 size="sm"
                                 onClick={(e) => handleAddStockClick(e, originalReference, group.id, false)}
@@ -389,7 +385,6 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                           <TableHead className="min-w-24">Fabricant</TableHead>
                           <TableHead className="min-w-16">Prix (DA)</TableHead>
                           <TableHead className="w-16">Stock</TableHead>
-                          <TableHead className="w-16">Quantité</TableHead>
                           <TableHead className="text-right w-24">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -415,10 +410,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 {ref.stock}
                               </Badge>
                             </TableCell>
-                            <TableCell className="w-16 text-sm text-center">
-                              {'-'}
-                            </TableCell>
-                            <TableCell className="text-right w-24 flex gap-2 justify-end">
+                            <TableCell className="text-right w-24 flex flex-col gap-2 justify-end">
                               <Button
                                 size="sm"
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, false)}
