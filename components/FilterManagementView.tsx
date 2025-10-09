@@ -356,7 +356,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 size="sm"
                                 onClick={(e) => handleAddStockClick(e, originalReference, group.id, false)}
                               >
-                                <PlusIcon className="" />
+                                <PlusIcon className="h-1 w-1 bg-green-500" />
 
                               </Button>
                               <Button
@@ -364,7 +364,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 variant="destructive"
                                 onClick={(e) => handleAddStockClick(e, originalReference, group.id, true)}
                               >
-                                <MinusIcon className="" />
+                                <MinusIcon className="h-1 w-1" />
                                 
                               </Button>
                             </TableCell>
@@ -417,7 +417,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 size="sm"
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, false)}
                               >
-                                <PlusIcon className="" />
+                                <PlusIcon className="h-1 w-1 bg-green-500" />
 
                               </Button>
                               <Button
@@ -425,7 +425,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 variant="destructive"
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, true)}
                               >
-                                <MinusIcon className="" />
+                                <MinusIcon className="h-1 w-1" />
 
                               </Button>
                             </TableCell>
