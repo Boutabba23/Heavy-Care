@@ -322,19 +322,12 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                         <TableHeader>
                           <TableRow>
                             <TableHead className="w-12">Image</TableHead>
-                            <TableHead className="min-w-20">
-                              Référence
-                            </TableHead>
-                            <TableHead className="min-w-24">
-                              Fabricant
-                            </TableHead>
-                            <TableHead className="min-w-16">
-                              Prix (DA)
-                            </TableHead>
+                            <TableHead className="min-w-20">Référence</TableHead>
+                            <TableHead className="min-w-24">Fabricant</TableHead>
+                            <TableHead className="min-w-16">Prix (DA)</TableHead>
                             <TableHead className="w-16">Stock</TableHead>
-                            <TableHead className="text-right w-24">
-                              Actions
-                            </TableHead>
+                            <TableHead className="w-16">Quantité</TableHead>
+                            <TableHead className="text-right w-24">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -347,40 +340,24 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                   className="h-10 w-10 object-contain rounded-sm bg-white p-1"
                                 />
                               ) : (
-                                <span className="text-xs text-muted-foreground">
-                                  N/A
-                                </span>
+                                <span className="text-xs text-muted-foreground">N/A</span>
                               )}
                             </TableCell>
-                            <TableCell className="min-w-20 text-sm">
-                              {originalReference.reference}
-                            </TableCell>
-                            <TableCell className="min-w-24 text-sm whitespace-nowrap">
-                              {originalReference.manufacturer}
-                            </TableCell>
-                            <TableCell className="min-w-16 text-sm">
-                              {originalReference.price.toLocaleString()}
-                            </TableCell>
-                            <TableCell className=" w-16">
-                              <Badge
-                                variant={getStockBadgeVariant(
-                                  originalReference.stock
-                                )}
-                              >
+                            <TableCell className="min-w-20 text-sm">{originalReference.reference}</TableCell>
+                            <TableCell className="min-w-24 text-sm whitespace-nowrap">{originalReference.manufacturer}</TableCell>
+                            <TableCell className="min-w-16 text-sm">{originalReference.price.toLocaleString()}</TableCell>
+                            <TableCell className="w-16">
+                              <Badge variant={getStockBadgeVariant(originalReference.stock)}>
                                 {originalReference.stock}
                               </Badge>
+                            </TableCell>
+                            <TableCell className="w-16 text-sm text-center">
+                              {'-'}
                             </TableCell>
                             <TableCell className="text-right w-24 flex gap-2 justify-end">
                               <Button
                                 size="sm"
-                                onClick={(e) =>
-                                  handleAddStockClick(
-                                    e,
-                                    originalReference,
-                                    group.id,
-                                    false
-                                  )
-                                }
+                                onClick={(e) => handleAddStockClick(e, originalReference, group.id, false)}
                               >
                                 <PlusIcon className="mr-1 h-5 w-5" />
                                 <span>Stock</span>
@@ -388,14 +365,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                               <Button
                                 size="sm"
                                 variant="destructive"
-                                onClick={(e) =>
-                                  handleAddStockClick(
-                                    e,
-                                    originalReference,
-                                    group.id,
-                                    true
-                                  )
-                                }
+                                onClick={(e) => handleAddStockClick(e, originalReference, group.id, true)}
                               >
                                 - Stock
                               </Button>
@@ -419,9 +389,8 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                           <TableHead className="min-w-24">Fabricant</TableHead>
                           <TableHead className="min-w-16">Prix (DA)</TableHead>
                           <TableHead className="w-16">Stock</TableHead>
-                          <TableHead className="text-right w-24">
-                            Actions
-                          </TableHead>
+                          <TableHead className="w-16">Quantité</TableHead>
+                          <TableHead className="text-right w-24">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -435,31 +404,24 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                   className="h-10 w-10 object-contain rounded-sm bg-white p-1"
                                 />
                               ) : (
-                                <span className="text-xs text-muted-foreground">
-                                  N/A
-                                </span>
+                                <span className="text-xs text-muted-foreground">N/A</span>
                               )}
                             </TableCell>
-                            <TableCell className="min-w-20 text-sm">
-                              {ref.reference}
-                            </TableCell>
-                            <TableCell className="min-w-24 text-sm whitespace-nowrap">
-                              {ref.manufacturer}
-                            </TableCell>
-                            <TableCell className="min-w-16 text-sm">
-                              {ref.price.toLocaleString()}
-                            </TableCell>
+                            <TableCell className="min-w-20 text-sm">{ref.reference}</TableCell>
+                            <TableCell className="min-w-24 text-sm whitespace-nowrap">{ref.manufacturer}</TableCell>
+                            <TableCell className="min-w-16 text-sm">{ref.price.toLocaleString()}</TableCell>
                             <TableCell className="w-16">
                               <Badge variant={getStockBadgeVariant(ref.stock)}>
                                 {ref.stock}
                               </Badge>
                             </TableCell>
+                            <TableCell className="w-16 text-sm text-center">
+                              {'-'}
+                            </TableCell>
                             <TableCell className="text-right w-24 flex gap-2 justify-end">
                               <Button
                                 size="sm"
-                                onClick={(e) =>
-                                  handleAddStockClick(e, ref, group.id, false)
-                                }
+                                onClick={(e) => handleAddStockClick(e, ref, group.id, false)}
                               >
                                 <PlusIcon className="mr-1 h-5 w-5" />
                                 <span>Stock</span>
@@ -467,9 +429,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                               <Button
                                 size="sm"
                                 variant="destructive"
-                                onClick={(e) =>
-                                  handleAddStockClick(e, ref, group.id, true)
-                                }
+                                onClick={(e) => handleAddStockClick(e, ref, group.id, true)}
                               >
                                 - Stock
                               </Button>
