@@ -320,31 +320,15 @@ export const useAppLogic = () => {
 
   const assignFilterToMachine = async (
     machineId: string,
-    filterTypeId: string,
+    assignedFilterId: string,
     filterGroupId: string | null
   ) => {
     const machineToUpdate = machines.find((m) => m.id === machineId);
     if (!machineToUpdate) return;
 
-    const newAssignedFilters = [...machineToUpdate.assignedFilters];
-    const existingIndex = newAssignedFilters.findIndex(
-      (af) => af.filterTypeId === filterTypeId
+    const newAssignedFilters = machineToUpdate.assignedFilters.map((af) =>
+      af.id === assignedFilterId ? { ...af, filterGroupId } : af
     );
-
-    if (existingIndex > -1) {
-      // Update group for existing instance
-      newAssignedFilters[existingIndex] = {
-        ...newAssignedFilters[existingIndex],
-        filterGroupId,
-      };
-    } else {
-      // Always add with a unique id
-      newAssignedFilters.push({
-        id: `af-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        filterTypeId,
-        filterGroupId
-      });
-    }
 
     const { error } = await supabase
       .from("machines")

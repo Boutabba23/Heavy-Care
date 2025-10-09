@@ -32,7 +32,7 @@ interface MachineDetailViewProps {
   maintenanceRecords: MaintenanceRecord[];
   onAssignFilter: (
     machineId: string,
-    filterTypeId: string,
+    assignedFilterId: string,
     filterGroupId: string | null
   ) => void;
   onAddFilterType: (machineId: string, assignedFilter: AssignedFilter) => void;
@@ -126,7 +126,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
 
   const handleFilterChange = (
     filterInstanceKey: string,
-    filterTypeId: string,
+    _filterTypeId: string,
     newFilterGroupId: string
   ) => {
     // Mettre à jour l'état local avec la clé unique
@@ -149,10 +149,10 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
       });
     });
 
-    // Appeler la fonction parent
+    // Appeler la fonction parent avec l'id d'instance unique
     onAssignFilter(
       machine.id,
-      filterTypeId,
+      filterInstanceKey,
       newFilterGroupId === "none" ? null : newFilterGroupId
     );
   };
