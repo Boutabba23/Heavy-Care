@@ -137,4 +137,5 @@ export interface Toast {
 export interface StockUpdateInfo {
   filterReference: FilterReference;
   filterGroupId: string;
+  isRemove?: boolean;
 }

@@ -131,10 +131,12 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
   const handleAddStockClick = (
     e: React.MouseEvent,
     filterReference: FilterReference,
-    filterGroupId: string
+    filterGroupId: string,
+    isRemove?: boolean
   ) => {
     e.stopPropagation();
-    props.onOpenAddStockModal({ filterReference, filterGroupId });
+    // Pass a flag or info for removal if needed
+    props.onOpenAddStockModal({ filterReference, filterGroupId, isRemove });
   };
 
   const filteredFilterGroups = props.filterGroups.filter((group) => {
@@ -368,19 +370,34 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 {originalReference.stock}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right w-24">
+                            <TableCell className="text-right w-24 flex gap-2 justify-end">
                               <Button
                                 size="sm"
                                 onClick={(e) =>
                                   handleAddStockClick(
                                     e,
                                     originalReference,
-                                    group.id
+                                    group.id,
+                                    false
                                   )
                                 }
                               >
                                 <PlusIcon className="mr-1 h-5 w-5" />
                                 <span>Stock</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={(e) =>
+                                  handleAddStockClick(
+                                    e,
+                                    originalReference,
+                                    group.id,
+                                    true
+                                  )
+                                }
+                              >
+                                - Stock
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -437,15 +454,24 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 {ref.stock}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right w-24">
+                            <TableCell className="text-right w-24 flex gap-2 justify-end">
                               <Button
                                 size="sm"
                                 onClick={(e) =>
-                                  handleAddStockClick(e, ref, group.id)
+                                  handleAddStockClick(e, ref, group.id, false)
                                 }
                               >
                                 <PlusIcon className="mr-1 h-5 w-5" />
                                 <span>Stock</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={(e) =>
+                                  handleAddStockClick(e, ref, group.id, true)
+                                }
+                              >
+                                - Stock
                               </Button>
                             </TableCell>
                           </TableRow>
