@@ -15,6 +15,7 @@ import {
   FilterIcon,
   ArrowDownTrayIcon,
   QrCodeIcon,
+  ArrowUpTrayIcon,
 } from "../constants";
 import {
   Card,
@@ -467,17 +468,20 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                 Créez et organisez vos groupes de filtres compatibles.
               </CardDescription>
             </div>
-            <div className="flex items-center flex-shrink-0 gap-2">
+            <div className="flex items-center justify-between flex-shrink-0 gap-2">
               {props.filterGroups.length > 0 && (
                 <Button
+                className="px-6"
                   onClick={() => exportFiltersToCSV(props.filterGroups)}
                   variant="outline"
                 >
-                  <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-                  Exporter
+                  <ArrowUpTrayIcon className="mr-2 h-5 w-5" />
+                  
                 </Button>
               )}
-              <Button onClick={() => props.onOpenFilterGroupModal(null)}>
+              <Button 
+              className="px-8"
+              onClick={() => props.onOpenFilterGroupModal(null)}>
                 <PlusIcon className="mr-2 h-5 w-5" />
                 <span>Nouveau Groupe</span>
               </Button>
