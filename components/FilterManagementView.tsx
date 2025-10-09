@@ -354,18 +354,20 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                             <TableCell className="text-right w-24 flex flex-row gap-2 justify-end">
                               <Button
                                 size="sm"
+                                className="h-1 w-1"
                                 onClick={(e) => handleAddStockClick(e, originalReference, group.id, false)}
                               >
-                                <PlusIcon className="h-1 w-1 bg-green-500" />
+                                <PlusIcon className="bg-green-500" />
 
                               </Button>
                               <Button
                                 size="sm"
+                                className="h-1 w-1"
                                 variant="destructive"
                                 onClick={(e) => handleAddStockClick(e, originalReference, group.id, true)}
                               >
-                                <MinusIcon className="h-1 w-1" />
-                                
+                                <MinusIcon className="" />
+
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -415,17 +417,21 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                             <TableCell className="text-right w-24 flex flex-col gap-2 justify-end">
                               <Button
                                 size="sm"
+                                className="h-1 w-1"
+
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, false)}
                               >
-                                <PlusIcon className="h-1 w-1 bg-green-500" />
+                                <PlusIcon className="bg-green-500" />
 
                               </Button>
                               <Button
                                 size="sm"
+                                className="h-1 w-1"
+
                                 variant="destructive"
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, true)}
                               >
-                                <MinusIcon className="h-1 w-1" />
+                                <MinusIcon className="" />
 
                               </Button>
                             </TableCell>
