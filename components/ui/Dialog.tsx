@@ -60,7 +60,7 @@ const DialogHeader: React.FC<{
   className?: string;
 }> = ({ children, className }) => (
   <div
-    className={`flex-shrink-0 flex flex-col space-y-1.5 text-center sm:text-left p-6 ${
+    className={`flex-shrink-0 flex flex-col gap-3 space-y-1.5 text-center sm:text-left p-6 ${
       className || ""
     }`}
   >
