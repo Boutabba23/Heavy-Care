@@ -35,8 +35,8 @@ interface MachineDetailViewProps {
     filterTypeId: string,
     filterGroupId: string | null
   ) => void;
-  onAddFilterType: (machineId: string, filterTypeId: string) => void;
-  onRemoveFilterType: (machineId: string, filterTypeId: string) => void;
+  onAddFilterType: (machineId: string, assignedFilter: AssignedFilter) => void;
+  onRemoveFilterType: (machineId: string, assignedFilterId: string) => void;
   onBack: () => void;
   onOpenConfirmationDialog: ReturnType<
     typeof useAppLogic
@@ -81,43 +81,25 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
   const [isAddFilterTypeModalOpen, setIsAddFilterTypeModalOpen] = useState(false);
 
   const [assignedFilterGroups, setAssignedFilterGroups] = useState<Record<string, string>>({});
-  const [localAssignedFilters, setLocalAssignedFilters] = useState<EnhancedAssignedFilter[]>([]);
+  const [localAssignedFilters, setLocalAssignedFilters] = useState<AssignedFilter[]>([]);
   
-  // Create a local enhanced version of AssignedFilter with a unique ID
-  interface EnhancedAssignedFilter extends AssignedFilter {
-    uniqueId: string;
-  }
-
   // Generate a unique ID for each assigned filter
   const generateUniqueId = (): string => {
-    return Math.random().toString(36).substr(2, 9);
-  };
-
-  // Convert AssignedFilter to EnhancedAssignedFilter
-  const enhanceAssignedFilters = (filters: AssignedFilter[]): EnhancedAssignedFilter[] => {
-    return filters.map((filter) => ({
-      ...filter,
-      uniqueId: `${filter.filterTypeId}-${generateUniqueId()}`
-    }));
+    return `af-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   };
 
   // Synchroniser les filtres assignés locaux avec ceux du parent
   useEffect(() => {
-    // Ne synchroniser que si les filtres locaux sont vides ou si le nombre de filtres a changé
-    if (localAssignedFilters.length === 0 || localAssignedFilters.length !== machine.assignedFilters.length) {
-      setLocalAssignedFilters(enhanceAssignedFilters(machine.assignedFilters));
-    }
+    setLocalAssignedFilters(machine.assignedFilters);
   }, [machine.assignedFilters]);
-  
-  // Générer un identifiant unique pour chaque instance de filtre assigné
-  const getFilterInstanceKey = (assignedFilter: EnhancedAssignedFilter) => {
-    return assignedFilter.uniqueId;
+
+  // Utiliser l'id comme clé d'instance
+  const getFilterInstanceKey = (assignedFilter: AssignedFilter) => {
+    return assignedFilter.id;
   }
 
-  const availableFilterTypes = useMemo(() => {
-    const assignedFilterTypeIds = new Set(localAssignedFilters.map(f => f.filterTypeId));
-    return filterTypes.filter((ft) => !assignedFilterTypeIds.has(ft.id));
-  }, [filterTypes, localAssignedFilters]);
+  // Allow adding the same filter type multiple times
+  const availableFilterTypes = useMemo(() => filterTypes, [filterTypes]);
 
   const machineMaintenanceHistory = useMemo(() => {
     return maintenanceRecords
@@ -157,8 +139,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
     // Only update the specific filter instance, not all filters with the same type
     setLocalAssignedFilters(prev => {
       return prev.map(filter => {
-        // Si le filtre correspond à l'instance en cours de modification
-        if (filter.uniqueId === filterInstanceKey) {
+        if (filter.id === filterInstanceKey) {
           return {
             ...filter,
             filterGroupId: newFilterGroupId === "none" ? null : newFilterGroupId
@@ -178,22 +159,20 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
 
   const handleAddClick = (filterTypeId: string) => {
     if (filterTypeId) {
-      // Appeler la fonction parent
-      onAddFilterType(machine.id, filterTypeId);
-      
       // Créer un nouveau filtre avec un ID unique
-      const newFilter: EnhancedAssignedFilter = {
+      const newFilter: AssignedFilter = {
+        id: generateUniqueId(),
         filterTypeId: filterTypeId,
-        filterGroupId: null,
-        uniqueId: `${filterTypeId}-${generateUniqueId()}`
+        filterGroupId: null
       };
-      
-      // Ajouter le nouveau filtre à l'état local
+      // Appeler la fonction parent (doit accepter l'objet complet)
+      onAddFilterType(machine.id, newFilter);
+      // Ajouter le nouveau filtre à l'état local (optimiste)
       setLocalAssignedFilters(prev => [...prev, newFilter]);
     }
   };
 
-  const handleRemoveClick = (filterInstanceKey: string, filterTypeId: string) => {
+  const handleRemoveClick = (filterInstanceKey: string) => {
     onOpenConfirmationDialog({
       title: "Supprimer le type de filtre",
       description:
@@ -208,12 +187,12 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
 
         // Supprimer uniquement l'instance spécifique de notre état local
         const newLocalAssignedFilters = localAssignedFilters.filter(
-          filter => filter.uniqueId !== filterInstanceKey
+          filter => filter.id !== filterInstanceKey
         );
         setLocalAssignedFilters(newLocalAssignedFilters);
 
-        // Toujours supprimer le type de filtre de la machine dans la base de données
-        onRemoveFilterType(machine.id, filterTypeId);
+        // Supprimer l'instance spécifique dans la base de données
+        onRemoveFilterType(machine.id, filterInstanceKey);
 
         // Afficher un toast pour la suppression
         setTimeout(() => {
@@ -465,14 +444,12 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
           />
 
           {sortedAssignedFilters.map((assignedFilter) => {
-            // Créer une clé unique pour cette instance de filtre
             const filterInstanceKey = getFilterInstanceKey(assignedFilter);
             const filterType = filterTypes.find(
               (ft) => ft.id === assignedFilter.filterTypeId
             );
             if (!filterType) return null;
 
-            // Utiliser la valeur de l'état local si elle existe, sinon la valeur originale
             const assignedGroupId = assignedFilterGroups[filterInstanceKey] || assignedFilter.filterGroupId;
             const filterGroup = assignedGroupId
               ? filterGroups.find((fg) => fg.id === assignedGroupId)
@@ -501,7 +478,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
                       variant="ghost"
                       size="icon"
                       className="text-destructive hover:bg-destructive/10 -mt-2 -mr-2"
-                      onClick={() => handleRemoveClick(filterInstanceKey, filterType.id)}
+                      onClick={() => handleRemoveClick(filterInstanceKey)}
                     >
                       <TrashIcon className="h-5 w-5" />
                     </Button>

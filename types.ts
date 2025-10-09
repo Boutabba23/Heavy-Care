@@ -57,6 +57,7 @@ export interface FilterType {
 }
 
 export interface AssignedFilter {
+  id: string; // unique instance id
   filterTypeId: string;
   filterGroupId: string | null; // Can be unassigned
 }

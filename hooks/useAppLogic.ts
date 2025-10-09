@@ -332,12 +332,18 @@ export const useAppLogic = () => {
     );
 
     if (existingIndex > -1) {
+      // Update group for existing instance
       newAssignedFilters[existingIndex] = {
         ...newAssignedFilters[existingIndex],
         filterGroupId,
       };
     } else {
-      newAssignedFilters.push({ filterTypeId, filterGroupId });
+      // Always add with a unique id
+      newAssignedFilters.push({
+        id: `af-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        filterTypeId,
+        filterGroupId
+      });
     }
 
     const { error } = await supabase
@@ -360,14 +366,14 @@ export const useAppLogic = () => {
 
   const addFilterTypeToMachine = async (
     machineId: string,
-    filterTypeId: string
+    assignedFilter: AssignedFilter
   ) => {
     const machineToUpdate = machines.find((m) => m.id === machineId);
     if (!machineToUpdate) return;
 
     const newAssignedFilters = [
       ...machineToUpdate.assignedFilters,
-      { filterTypeId, filterGroupId: null },
+      assignedFilter,
     ];
     const { error } = await supabase
       .from("machines")
@@ -382,7 +388,6 @@ export const useAppLogic = () => {
         title: "Filtre ajouté",
         description: "Le type de filtre a été ajouté avec succès.",
       });
-      
       // Mettre à jour seulement la machine concernée sans recharger toutes les données
       const updatedMachines = machines.map(machine => 
         machine.id === machineId 
@@ -390,7 +395,6 @@ export const useAppLogic = () => {
           : machine
       );
       setMachines(updatedMachines);
-      
       if (selectedMachine?.id === machineId) {
         const updatedMachine = {
           ...machineToUpdate,
@@ -403,13 +407,13 @@ export const useAppLogic = () => {
 
   const removeFilterTypeFromMachine = async (
     machineId: string,
-    filterTypeId: string
+    assignedFilterId: string
   ) => {
     const machineToUpdate = machines.find((m) => m.id === machineId);
     if (!machineToUpdate) return;
 
     const newAssignedFilters = machineToUpdate.assignedFilters.filter(
-      (af) => af.filterTypeId !== filterTypeId
+      (af) => af.id !== assignedFilterId
     );
     const { error } = await supabase
       .from("machines")
