@@ -356,7 +356,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 size="sm"
                                 onClick={(e) => handleAddStockClick(e, originalReference, group.id, false)}
                               >
-                                <PlusIcon className="mr-1 h-5 w-5" />
+                                <PlusIcon className="" />
 
                               </Button>
                               <Button
@@ -364,8 +364,8 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 variant="destructive"
                                 onClick={(e) => handleAddStockClick(e, originalReference, group.id, true)}
                               >
-                                <MinusIcon className="mr-1 h-5 w-5" />
-                                -
+                                <MinusIcon className="" />
+                                
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -417,7 +417,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 size="sm"
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, false)}
                               >
-                                <PlusIcon className="mr-1 h-5 w-5" />
+                                <PlusIcon className="" />
 
                               </Button>
                               <Button
@@ -425,7 +425,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 variant="destructive"
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, true)}
                               >
-                                <MinusIcon className="mr-1 h-5 w-5" />
+                                <MinusIcon className="" />
 
                               </Button>
                             </TableCell>
