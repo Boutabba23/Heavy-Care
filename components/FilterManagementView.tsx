@@ -65,17 +65,17 @@ const getStockBadgeVariant = (
 // Function to get badge variant based on filter type
 const getFilterTypeBadgeVariant = (
   filterTypeId: string
-): "default" | "destructive" | "warning" | "success" => {
+): "default" | "destructive" | "warning" | "success" | "info" | "customInfo" => {
   // Define color mapping for different filter types based on actual IDs in the database
   const filterTypeColorMap: Record<
     string,
-    "default" | "destructive" | "warning" | "success"
+    "default" | "destructive" | "warning" | "success" | "info" | "customInfo"
   > = {
     "ft-oil": "success", // Green for oil filters
     "ft-air": "warning", // Yellow for air filters
     "ft-fuel": "destructive", // Red for fuel filters
-    "ft-hydraulic": "default", // Blue for hydraulic filters
-    "ft-transmission": "default", // Blue for transmission filters
+    "ft-hydraulic": "info", // Custom blue for hydraulic filters
+    "ft-transmission": "customInfo", // Custom blue for transmission filters
     // Add more mappings as needed
   };
 
@@ -237,7 +237,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex-col mr-2 overflow-hidden">
                     <div className="flex max-[1060px]:flex-col max-[1060px]:items-start   items-center gap-4 mb-4">
-                      <CardTitle>{group.name}</CardTitle>
+                      <CardTitle className="max-[1060px]:text-xl max-[1060px]:w-full">{group.name}</CardTitle>
                       {group.filterType && (
                         <Badge
                           variant={getFilterTypeBadgeVariant(group.filterType)}

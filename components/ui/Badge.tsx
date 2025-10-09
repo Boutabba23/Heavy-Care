@@ -1,7 +1,7 @@
 import React from "react";
 
 interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "destructive" | "warning" | "success";
+  variant?: "default" | "destructive" | "warning" | "success" | "info" | "customInfo";
 }
 
 const Badge: React.FC<BadgeProps> = ({
@@ -16,6 +16,10 @@ const Badge: React.FC<BadgeProps> = ({
     warning: "border-transparent bg-warning/20 text-warning-foreground",
     success:
       "border-transparent bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
+    info:
+      "border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
+    customInfo:
+      "border-transparent bg-yellow-200 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
   };
 
   const badgeClasses = `inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
