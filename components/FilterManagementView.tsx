@@ -38,6 +38,7 @@ import { useAppLogic } from "../hooks/useAppLogic";
 import Badge from "./ui/Badge";
 import { exportFiltersToCSV } from "../utils/export";
 import QRCodeModal from "./QRCodeModal";
+import { MinusIcon } from "lucide-react";
 
 interface FilterManagementViewProps {
   filterGroups: FilterGroup[];
@@ -213,8 +214,8 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
         {filteredFilterGroups.map((group) => {
           const originalReference = group.originalReferenceId
             ? group.references.find(
-                (ref) => ref.id === group.originalReferenceId
-              )
+              (ref) => ref.id === group.originalReferenceId
+            )
             : null;
 
           const compatibleReferences = originalReference
@@ -356,14 +357,15 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 onClick={(e) => handleAddStockClick(e, originalReference, group.id, false)}
                               >
                                 <PlusIcon className="mr-1 h-5 w-5" />
-                                <span>+</span>
+
                               </Button>
                               <Button
                                 size="sm"
                                 variant="destructive"
                                 onClick={(e) => handleAddStockClick(e, originalReference, group.id, true)}
                               >
-                                - 
+                                <MinusIcon className="mr-1 h-5 w-5" />
+                                -
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -416,14 +418,15 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, false)}
                               >
                                 <PlusIcon className="mr-1 h-5 w-5" />
-                                <span>Stock</span>
+
                               </Button>
                               <Button
                                 size="sm"
                                 variant="destructive"
                                 onClick={(e) => handleAddStockClick(e, ref, group.id, true)}
                               >
-                                - Stock
+                                <MinusIcon className="mr-1 h-5 w-5" />
+
                               </Button>
                             </TableCell>
                           </TableRow>
