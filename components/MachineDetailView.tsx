@@ -157,21 +157,19 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
     );
   };
 
-  // Ajout d'un type de filtre avec libellé personnalisé (optionnel)
-  const handleAddClick = (filterTypeId: string, customLabel?: string) => {
-    if (filterTypeId) {
-      // Créer un nouveau filtre avec un ID unique
-      const newFilter: AssignedFilter & { customLabel?: string } = {
-        id: generateUniqueId(),
-        filterTypeId: filterTypeId,
-        filterGroupId: null,
-        ...(customLabel ? { customLabel } : {})
-      };
-      // Appeler la fonction parent (doit accepter l'objet complet)
-      onAddFilterType(machine.id, newFilter);
-      // Ajouter le nouveau filtre à l'état local (optimiste)
-      setLocalAssignedFilters(prev => [...prev, newFilter]);
-    }
+  // Ajout de plusieurs types de filtre avec groupe assigné et libellé personnalisé
+  const handleAddMultiple = (filters: { filterTypeId: string; customLabel?: string; filterGroupId: string | null }[]) => {
+    if (!filters || filters.length === 0) return;
+    const newAssigned: (AssignedFilter & { customLabel?: string })[] = filters.map(f => ({
+      id: generateUniqueId(),
+      filterTypeId: f.filterTypeId,
+      filterGroupId: f.filterGroupId,
+      ...(f.customLabel ? { customLabel: f.customLabel } : {})
+    }));
+    newAssigned.forEach(af => {
+      onAddFilterType(machine.id, af);
+    });
+    setLocalAssignedFilters(prev => [...prev, ...newAssigned]);
   };
 
   const handleRemoveClick = (filterInstanceKey: string) => {
@@ -441,8 +439,9 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
           <AddFilterTypeModal
             isOpen={isAddFilterTypeModalOpen}
             onClose={() => setIsAddFilterTypeModalOpen(false)}
-            onAdd={handleAddClick}
+            onAdd={handleAddMultiple}
             availableFilterTypes={availableFilterTypes}
+            filterGroups={filterGroups}
           />
 
           {sortedAssignedFilters.map((assignedFilter) => {
