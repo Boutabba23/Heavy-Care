@@ -87,11 +87,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signInWithGoogle = async () => {
+      const redirectTo =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000/"
+      : "https://your-vercel-app.vercel.app/";
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
+      options: {redirectTo},
+        //redirectTo: `${window.location.origin}/`,
+      
     });
     return { error };
   };
