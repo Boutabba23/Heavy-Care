@@ -28,7 +28,7 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ isOpen, onClose, on
   const [filtersUsed, setFiltersUsed] = useState<UsedFilter[]>([]);
   const [error, setError] = useState('');
 
-  const [newFilter, setNewFilter] = useState({ typeId: '', refId: '', quantity: '1' });
+    const [newFilter, setNewFilter] = useState({ typeId: '', refId: '', quantity: '1' });
   const [addFilterErrors, setAddFilterErrors] = useState<{ refId?: string; quantity?: string }>({});
   
   // fix: Correctly determine if editing an existing record by checking for the presence of an ID.
@@ -52,7 +52,7 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ isOpen, onClose, on
       setDate(record?.date ? new Date(record.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
       setFiltersUsed(record?.filtersUsed || []);
       
-      setNewFilter({ typeId: '', refId: '', quantity: '1' });
+    setNewFilter({ typeId: '', refId: '', quantity: '1' });
       setError('');
       setAddFilterErrors({});
     }
@@ -60,27 +60,45 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ isOpen, onClose, on
 
   const selectedMachine = useMemo(() => machines.find(m => m.id === machineId), [machineId, machines]);
 
-  const availableFilterTypesForMachine = useMemo(() => {
-    return selectedMachine
-      ? selectedMachine.assignedFilters
-          .filter(af => af.filterGroupId)
-          .map(af => filterTypes.find(ft => ft.id === af.filterTypeId))
-          .filter((ft): ft is FilterType => !!ft)
-          .sort((a,b) => a.name.localeCompare(b.name))
-      : [];
-  }, [selectedMachine, filterTypes]);
 
-  const availableReferencesForType = useMemo((): FilterReference[] => {
-    if (!selectedMachine || !newFilter.typeId) return [];
-    const assignedFilter = selectedMachine.assignedFilters.find(af => af.filterTypeId === newFilter.typeId);
-    if (!assignedFilter || !assignedFilter.filterGroupId) return [];
-    const filterGroup = filterGroups.find(fg => fg.id === assignedFilter.filterGroupId);
-    return filterGroup ? filterGroup.references : [];
-  }, [selectedMachine, newFilter.typeId, filterGroups]);
+        const availableFilterTypesForMachine = useMemo(() => {
+            if (!selectedMachine) return [];
+            const types = selectedMachine.assignedFilters
+                .filter(af => af.filterGroupId)
+                .map(af => filterTypes.find(ft => ft.id === af.filterTypeId))
+                .filter((ft): ft is FilterType => !!ft);
+            // Remove duplicates by id
+            return types.filter((ft, idx, arr) => arr.findIndex(t => t.id === ft.id) === idx)
+                .sort((a, b) => a.name.localeCompare(b.name));
+        }, [selectedMachine, filterTypes]);
 
-  useEffect(() => {
-    setNewFilter(prev => ({ ...prev, refId: '' }));
-  }, [newFilter.typeId]);
+    // Show all references for the selected type (from all groups)
+    const availableReferencesForType = useMemo((): FilterReference[] => {
+        if (!selectedMachine || !newFilter.typeId) return [];
+        const assignedFilters = selectedMachine.assignedFilters.filter(af => af.filterTypeId === newFilter.typeId && af.filterGroupId);
+        let allReferences: FilterReference[] = [];
+        assignedFilters.forEach(af => {
+            const group = filterGroups.find(fg => fg.id === af.filterGroupId);
+            if (group) {
+                allReferences = allReferences.concat(group.references);
+            }
+        });
+        // Exclude references already used for this type
+        const usedReferenceIds = filtersUsed
+            .filter(f => f.filterTypeId === newFilter.typeId)
+            .map(f => f.referenceId);
+        // Remove duplicates by id
+        const uniqueReferences = allReferences.filter((ref, idx, arr) => arr.findIndex(r => r.id === ref.id) === idx);
+        return uniqueReferences.filter(ref => !usedReferenceIds.includes(ref.id));
+    }, [selectedMachine, newFilter.typeId, filterGroups, filtersUsed]);
+
+
+
+
+
+    useEffect(() => {
+        setNewFilter(prev => ({ ...prev, refId: '' }));
+    }, [newFilter.typeId]);
   
   const getUsedFilterDetails = useCallback((usedFilter: UsedFilter) => {
     const type = filterTypes.find(ft => ft.id === usedFilter.filterTypeId)?.name || 'Inconnu';
@@ -138,7 +156,6 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ isOpen, onClose, on
         referenceId: newFilter.refId!,
         quantity: qty,
     }]);
-    
     setNewFilter({ typeId: newFilter.typeId, refId: '', quantity: '1' });
   };
   
@@ -276,13 +293,13 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ isOpen, onClose, on
                         <div className="pt-4 border-t">
                             <h4 className="font-semibold text-sm mb-2">Ajouter un filtre utilisé</h4>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start sm:items-end">
-                                <div className="space-y-1">
-                                    <Label htmlFor="new-filter-type" className="text-xs">Type de filtre</Label>
-                                    <Select id="new-filter-type" value={newFilter.typeId} onChange={e => setNewFilter({...newFilter, typeId: e.target.value})}>
-                                        <option value="">Sélectionnez un type</option>
-                                        {availableFilterTypesForMachine.map(ft => <option key={ft.id} value={ft.id}>{ft.name}</option>)}
-                                    </Select>
-                                </div>
+                                                                <div className="space-y-1">
+                                                                        <Label htmlFor="new-filter-type" className="text-xs">Type de filtre</Label>
+                                                                        <Select id="new-filter-type" value={newFilter.typeId} onChange={e => setNewFilter({...newFilter, typeId: e.target.value})}>
+                                                                                <option value="">Sélectionnez un type</option>
+                                                                                {availableFilterTypesForMachine.map(ft => <option key={ft.id} value={ft.id}>{ft.name}</option>)}
+                                                                        </Select>
+                                                                </div>
                                 <div className="space-y-1">
                                     <Label htmlFor="new-filter-ref" className="text-xs">Référence</Label>
                                     <Select 
