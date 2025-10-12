@@ -20,7 +20,7 @@ WHERE name LIKE '%air%';
 
 UPDATE public.filter_groups 
 SET filter_type = 'ft-fuel' 
-WHERE name LIKE '%carburant%' OR name LIKE '%fuel%';
+WHERE name LIKE '%gasoil%' OR name LIKE '%fuel%';
 
 UPDATE public.filter_groups 
 SET filter_type = 'ft-hydraulic' 
@@ -38,11 +38,11 @@ UPDATE public.filter_groups SET filter_type = 'ft-hydraulic' WHERE id = 'fg-004'
 
 -- Add sample filter groups for missing filter types if they don't exist
 INSERT INTO public.filter_groups (id, name, filter_type, original_reference_id, "references") VALUES 
-    ('fg-005', 'Filtres à Carburant CAT', 'ft-fuel', 'CAT-FUEL-001', '[
+    ('fg-005', 'Filtres à Gasoil CAT', 'ft-fuel', 'CAT-FUEL-001', '[
         {"id": "CAT-FUEL-001", "reference": "CAT-326-1641", "manufacturer": "Caterpillar", "stock": 30, "price": 28.75},
         {"id": "ALT-FUEL-001", "reference": "ALT-FUEL-001", "manufacturer": "Aftermarket", "stock": 20, "price": 22.50}
     ]'),
-    ('fg-006', 'Filtres à Carburant Komatsu', 'ft-fuel', 'KOM-FUEL-001', '[
+    ('fg-006', 'Filtres à Gasoil Komatsu', 'ft-fuel', 'KOM-FUEL-001', '[
         {"id": "KOM-FUEL-001", "reference": "KOM-600-319-3610", "manufacturer": "Komatsu", "stock": 15, "price": 32.00},
         {"id": "KOM-FUEL-ALT", "reference": "KOM-FUEL-ALT", "manufacturer": "Aftermarket", "stock": 25, "price": 24.75}
     ]'),

@@ -91,7 +91,7 @@ INSERT INTO filter_groups (name, filter_type, ...) VALUES
 
 - Filter groups are organized by type during creation
 - Filter assignment is filtered by type, preventing mistakes
-- Clear separation between different filter types (huile, air, carburant, etc.)
+- Clear separation between different filter types (huile, air, gasoil, Séparateur d'eau, etc.)
 - Improved data integrity and user experience
 
 ## Migration Instructions

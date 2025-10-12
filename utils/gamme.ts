@@ -9,8 +9,8 @@ export const rangeColors = {
 
 export const rangeTooltips = {
   C: "Maintenance légère (250h) : Vidange moteur, remplacement filtre à huile.",
-  D: "Maintenance intermédiaire (500h) : Inclut Gamme C + filtres à carburant.",
-  E: "Maintenance moyenne (1000h) : Inclut Gamme D + filtres hydrauliques et à air.",
+  D: "Maintenance intermédiaire (500h) : Inclut Gamme C + Filtres à gasoil.",
+  E: "Maintenance moyenne (1000h) : Inclut Gamme D + filtres hydrauliques, à air et Séparateur d'eau.",
   F: "Maintenance majeure (2000h) : Inclut Gamme E + inspection complète et autres remplacements.",
 } as const;
 
