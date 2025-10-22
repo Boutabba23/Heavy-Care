@@ -385,13 +385,44 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
         )}
 
         <SectionDivider>Références Compatibles</SectionDivider>
-        {compatibleReferences.length > 0 ? (
-          <ReferenceTable refs={compatibleReferences} />
-        ) : (
-          <p className="text-center text-sm text-muted-foreground">
-            Aucune référence compatible ajoutée.
-          </p>
-        )}
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Select
+              className="flex-1"
+              value=""
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                const selectedRef = references.find((ref: FilterReference) => ref.id === e.target.value);
+                if (selectedRef && originalReferenceId && selectedRef.id !== originalReferenceId) {
+                  setRefInput({
+                    id: selectedRef.id,
+                    reference: selectedRef.reference,
+                    manufacturer: selectedRef.manufacturer,
+                    price: String(selectedRef.price),
+                    stock: String(selectedRef.stock),
+                    image: selectedRef.image,
+                  });
+                }
+              }}
+            >
+              <option value="">Sélectionner une référence existante</option>
+              {references
+                .filter((ref: FilterReference) => ref.id !== originalReferenceId)
+                .map((ref: FilterReference) => (
+                  <option key={ref.id} value={ref.id}>
+                    {ref.reference} - {ref.manufacturer}
+                  </option>
+                ))
+              }
+            </Select>
+          </div>
+          {compatibleReferences.length > 0 ? (
+            <ReferenceTable refs={compatibleReferences} />
+          ) : (
+            <p className="text-center text-sm text-muted-foreground">
+              Aucune référence compatible ajoutée.
+            </p>
+          )}
+        </div>
 
         <div
           id="add-reference-form"
