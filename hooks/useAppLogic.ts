@@ -727,7 +727,7 @@ export const useAppLogic = () => {
 
   // La fonction importMaintenanceRecords est déjà définie plus haut
 
-  const openFilterGroupModal = (group: FilterGroup | null) => {
+  const openFilterGroupModal = (group: FilterGroup | null, allGroups?: FilterGroup[]) => {
     setEditingFilterGroup(group);
     setIsFilterGroupModalOpen(true);
   };

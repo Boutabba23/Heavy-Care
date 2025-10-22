@@ -29,8 +29,8 @@ interface FilterGroupModalProps {
   onClose: () => void;
   onSave: (group: FilterGroup | Omit<FilterGroup, "id">) => void;
   group: FilterGroup | null;
-  filterTypes: FilterType[]; // Add filterTypes prop
-  allFilterGroups: FilterGroup[]; // Add allFilterGroups prop
+  filterTypes: FilterType[];
+  allFilterGroups: FilterGroup[];
 }
 
 const SectionDivider: React.FC<{ children: React.ReactNode }> = ({
@@ -66,35 +66,10 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
 }) => {
   const [name, setName] = useState("");
   const [filterType, setFilterType] = useState("");
-
-  // Get all compatible references from groups of the same type
-  const availableCompatibleReferences = useMemo(() => {
-    if (!filterType) return [];
-    
-    const compatibleRefs: FilterReference[] = [];
-    const seenRefs = new Set<string>(); // To prevent duplicates
-
-    allFilterGroups
-      .filter(g => g.filterType === filterType && g.id !== group?.id)
-      .forEach(g => {
-        g.references.forEach(ref => {
-          // Use reference+manufacturer as unique key to prevent duplicates
-          const key = `${ref.reference}-${ref.manufacturer}`;
-          if (!seenRefs.has(key)) {
-            seenRefs.add(key);
-            compatibleRefs.push(ref);
-          }
-        });
-      });
-
-    return compatibleRefs;
-  }, [filterType, allFilterGroups, group?.id]);
   const [nameError, setNameError] = useState<string | null>(null);
   const [filterTypeError, setFilterTypeError] = useState<string | null>(null);
   const [references, setReferences] = useState<FilterReference[]>([]);
-  const [originalReferenceId, setOriginalReferenceId] = useState<string | null>(
-    null
-  );
+  const [originalReferenceId, setOriginalReferenceId] = useState<string | null>(null);
 
   const [refInput, setRefInput] = useState({
     id: "",
@@ -102,7 +77,7 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
     manufacturer: "",
     price: "",
     stock: "",
-    image: undefined as string | null | undefined,
+    image: undefined as string | undefined | null,
   });
   const [refErrors, setRefErrors] = useState<{
     reference?: string;
@@ -189,16 +164,12 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
       price?: string;
       stock?: string;
     } = {};
-    if (!refInput.reference.trim())
-      errors.reference = "La référence est requise.";
-    if (!refInput.manufacturer.trim())
-      errors.manufacturer = "Le fabricant est requis.";
-    const price = parseFloat(refInput.price);
-    if (!refInput.price || isNaN(price) || price <= 0)
-      errors.price = "Le prix doit être un nombre positif.";
-    const stock = parseInt(refInput.stock, 10);
-    if (refInput.stock === "" || isNaN(stock) || stock < 0)
-      errors.stock = "Le stock doit être un nombre positif ou nul.";
+    if (!refInput.reference.trim()) errors.reference = "La référence est requise.";
+    if (!refInput.manufacturer.trim()) errors.manufacturer = "Le fabricant est requis.";
+    const price = parseFloat(refInput.price as string);
+    if (!refInput.price || isNaN(price) || price <= 0) errors.price = "Le prix doit être un nombre positif.";
+    const stock = parseInt(refInput.stock as string, 10);
+    if (refInput.stock === "" || isNaN(stock) || stock < 0) errors.stock = "Le stock doit être un nombre positif ou nul.";
     setRefErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -247,7 +218,7 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
       price: String(ref.price),
       stock: String(ref.stock),
       image: ref.image,
-    });
+    } as any);
     setRefErrors({});
     window.document
       .getElementById("add-reference-form")
@@ -289,6 +260,28 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
       ? references.filter((r) => r.id !== originalReferenceId)
       : [];
   }, [references, originalReferenceId]);
+
+  // Build availableCompatibleReferences from allFilterGroups based on filterType
+  const availableCompatibleReferences = useMemo(() => {
+    if (!filterType) return [] as FilterReference[];
+
+    const out: FilterReference[] = [];
+    const seen = new Set<string>();
+
+    allFilterGroups
+      .filter((g) => g.filterType === filterType && g.id !== group?.id)
+      .forEach((g) => {
+        g.references.forEach((r) => {
+          const key = `${r.reference}-${r.manufacturer}`;
+          if (!seen.has(key) && !references.some((rr) => rr.reference === r.reference && rr.manufacturer === r.manufacturer)) {
+            seen.add(key);
+            out.push({ ...r, id: `ext-${r.reference}-${r.manufacturer}` });
+          }
+        });
+      });
+
+    return out;
+  }, [filterType, allFilterGroups, group?.id, references]);
 
   const ReferenceTable: React.FC<{ refs: FilterReference[] }> = ({ refs }) => (
     <div className="relative w-full border rounded-md max-h-60 overflow-y-auto">
@@ -352,9 +345,7 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
     <Dialog isOpen={isOpen} onClose={onClose} closeOnOutsideClick={false} closeOnEscape={false}>
       <DialogHeader>
         <DialogTitle>
-          {group
-            ? "Modifier le groupe de filtres"
-            : "Nouveau groupe de filtres"}
+          {group ? "Modifier le groupe de filtres" : "Nouveau groupe de filtres"}
         </DialogTitle>
         <DialogDescription>
           Remplissez les informations du groupe et gérez ses références.
@@ -368,13 +359,9 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
             value={name}
             onChange={handleNameChange}
             placeholder="ex: Filtre à huile standard"
-            className={
-              nameError ? "border-destructive focus:ring-destructive" : ""
-            }
+            className={nameError ? "border-destructive focus:ring-destructive" : ""}
           />
-          {nameError && (
-            <p className="text-xs text-destructive mt-1">{nameError}</p>
-          )}
+          {nameError && <p className="text-xs text-destructive mt-1">{nameError}</p>}
         </div>
 
         <div className="space-y-2">
@@ -383,9 +370,7 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
             id="filterType"
             value={filterType}
             onChange={handleFilterTypeChange}
-            className={
-              filterTypeError ? "border-destructive focus:ring-destructive" : ""
-            }
+            className={filterTypeError ? "border-destructive focus:ring-destructive" : ""}
           >
             <option value="">Sélectionnez un type de filtre</option>
             {filterTypes.map((type) => (
@@ -394,19 +379,12 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
               </option>
             ))}
           </Select>
-          {filterTypeError && (
-            <p className="text-xs text-destructive mt-1">{filterTypeError}</p>
-          )}
+          {filterTypeError && <p className="text-xs text-destructive mt-1">{filterTypeError}</p>}
         </div>
 
         <SectionDivider>Référence Originale</SectionDivider>
-        {originalReference ? (
-          <ReferenceTable refs={[originalReference]} />
-        ) : (
-          <p className="text-center text-sm text-muted-foreground">
-            Aucune référence originale. Ajoutez une référence ci-dessous pour
-            commencer.
-          </p>
+        {originalReference ? <ReferenceTable refs={[originalReference]} /> : (
+          <p className="text-center text-sm text-muted-foreground">Aucune référence originale. Ajoutez une référence ci-dessous pour commencer.</p>
         )}
 
         <SectionDivider>Références Compatibles</SectionDivider>
@@ -416,11 +394,9 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
               className="flex-1"
               value=""
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                const { reference, manufacturer } = JSON.parse(e.target.value);
-                const selectedRef = availableCompatibleReferences.find(
-                  (ref: FilterReference) => ref.reference === reference && ref.manufacturer === manufacturer
-                );
-                if (selectedRef && originalReferenceId && selectedRef.id !== originalReferenceId) {
+                if (!e.target.value) return;
+                const selectedRef = availableCompatibleReferences.find((ref) => ref.id === e.target.value);
+                if (selectedRef && selectedRef.id !== originalReferenceId) {
                   setRefInput({
                     id: selectedRef.id,
                     reference: selectedRef.reference,
@@ -433,174 +409,60 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
               }}
             >
               <option value="">Sélectionner une référence existante</option>
-              {availableCompatibleReferences
-                .filter((ref: FilterReference) => !references.some(r => r.reference === ref.reference && r.manufacturer === ref.manufacturer))
-                .map((ref: FilterReference) => (
-                  <option key={`${ref.reference}-${ref.manufacturer}`} value={JSON.stringify({ reference: ref.reference, manufacturer: ref.manufacturer })}>
-                    {ref.reference} - {ref.manufacturer}
-                  </option>
-                ))
-              }
+              {availableCompatibleReferences.map((ref) => (
+                <option key={ref.id} value={ref.id}>{ref.reference} - {ref.manufacturer} ({ref.price} DA)</option>
+              ))}
             </Select>
           </div>
           {compatibleReferences.length > 0 ? (
             <ReferenceTable refs={compatibleReferences} />
           ) : (
-            <p className="text-center text-sm text-muted-foreground">
-              Aucune référence compatible ajoutée.
-            </p>
+            <p className="text-center text-sm text-muted-foreground">Aucune référence compatible ajoutée.</p>
           )}
         </div>
 
-        <div
-          id="add-reference-form"
-          className="space-y-4 p-4 border rounded-lg bg-muted/30 pt-6"
-        >
-          <h3 className="font-semibold text-sm">
-            {isEditingRef
-              ? "Modifier la Référence"
-              : "Ajouter une Nouvelle Référence"}
-          </h3>
+        <div id="add-reference-form" className="space-y-4 p-4 border rounded-lg bg-muted/30 pt-6">
+          <h3 className="font-semibold text-sm">{isEditingRef ? "Modifier la Référence" : "Ajouter une Nouvelle Référence"}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="image" className="text-xs">
-                Image
-              </Label>
-              <ImageInput
-                value={refInput.image}
-                onChange={(base64) =>
-                  setRefInput({ ...refInput, image: base64 })
-                }
-              />
+              <Label htmlFor="image" className="text-xs">Image</Label>
+              <ImageInput value={refInput.image} onChange={(base64) => setRefInput({ ...refInput, image: base64 })} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reference" className="text-xs">
-                Référence
-              </Label>
-              <Input
-                id="reference"
-                value={refInput.reference}
-                onChange={(e) => handleInputChange("reference", e.target.value)}
-                placeholder="P551670"
-                className={
-                  refErrors.reference
-                    ? "border-destructive focus:ring-destructive"
-                    : ""
-                }
-              />
-              {refErrors.reference && (
-                <p className="text-xs text-destructive mt-1">
-                  {refErrors.reference}
-                </p>
-              )}
+              <Label htmlFor="reference" className="text-xs">Référence</Label>
+              <Input id="reference" value={refInput.reference} onChange={(e) => handleInputChange("reference", e.target.value)} placeholder="P551670" className={refErrors.reference ? "border-destructive focus:ring-destructive" : ""} />
+              {refErrors.reference && <p className="text-xs text-destructive mt-1">{refErrors.reference}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="manufacturer" className="text-xs">
-                Fabricant
-              </Label>
-              <Input
-                id="manufacturer"
-                value={refInput.manufacturer}
-                onChange={(e) =>
-                  handleInputChange("manufacturer", e.target.value)
-                }
-                placeholder="Donaldson"
-                className={
-                  refErrors.manufacturer
-                    ? "border-destructive focus:ring-destructive"
-                    : ""
-                }
-              />
-              {refErrors.manufacturer && (
-                <p className="text-xs text-destructive mt-1">
-                  {refErrors.manufacturer}
-                </p>
-              )}
+              <Label htmlFor="manufacturer" className="text-xs">Fabricant</Label>
+              <Input id="manufacturer" value={refInput.manufacturer} onChange={(e) => handleInputChange("manufacturer", e.target.value)} placeholder="Donaldson" className={refErrors.manufacturer ? "border-destructive focus:ring-destructive" : ""} />
+              {refErrors.manufacturer && <p className="text-xs text-destructive mt-1">{refErrors.manufacturer}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price" className="text-xs">
-                Prix (DA)
-              </Label>
-              <Input
-                id="price"
-                type="number"
-                value={refInput.price}
-                onChange={(e) => handleInputChange("price", e.target.value)}
-                placeholder="1500"
-                className={
-                  refErrors.price
-                    ? "border-destructive focus:ring-destructive"
-                    : ""
-                }
-              />
-              {refErrors.price && (
-                <p className="text-xs text-destructive mt-1">
-                  {refErrors.price}
-                </p>
-              )}
+              <Label htmlFor="price" className="text-xs">Prix (DA)</Label>
+              <Input id="price" type="number" value={refInput.price} onChange={(e) => handleInputChange("price", e.target.value)} placeholder="1500" className={refErrors.price ? "border-destructive focus:ring-destructive" : ""} />
+              {refErrors.price && <p className="text-xs text-destructive mt-1">{refErrors.price}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="stock" className="text-xs">
-                Stock
-              </Label>
-              <Input
-                id="stock"
-                type="number"
-                value={refInput.stock}
-                onChange={(e) => handleInputChange("stock", e.target.value)}
-                placeholder="50"
-                className={
-                  refErrors.stock
-                    ? "border-destructive focus:ring-destructive"
-                    : ""
-                }
-              />
-              {refErrors.stock && (
-                <p className="text-xs text-destructive mt-1">
-                  {refErrors.stock}
-                </p>
-              )}
+              <Label htmlFor="stock" className="text-xs">Stock</Label>
+              <Input id="stock" type="number" value={refInput.stock} onChange={(e) => handleInputChange("stock", e.target.value)} placeholder="50" className={refErrors.stock ? "border-destructive focus:ring-destructive" : ""} />
+              {refErrors.stock && <p className="text-xs text-destructive mt-1">{refErrors.stock}</p>}
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleAddOrUpdateReference}>
-              {isEditingRef ? (
-                <PencilIcon className="mr-2 h-4 w-4" />
-              ) : (
-                <PlusIcon className="mr-2 h-5 w-5" />
-              )}
-              {isEditingRef
-                ? "Mettre à jour"
-                : !originalReference
-                ? "Ajouter comme Originale"
-                : "Ajouter Compatible"}
-            </Button>
+            <Button onClick={handleAddOrUpdateReference}>{isEditingRef ? <PencilIcon className="mr-2 h-4 w-4" /> : <PlusIcon className="mr-2 h-5 w-5" />}{isEditingRef ? "Mettre à jour" : !originalReference ? "Ajouter comme Originale" : "Ajouter Compatible"}</Button>
             {isEditingRef && (
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setIsEditingRef(false);
-                  setRefInput({
-                    id: "",
-                    reference: "",
-                    manufacturer: "",
-                    price: "",
-                    stock: "",
-                    image: undefined,
-                  });
-                  setRefErrors({});
-                }}
-              >
-                Annuler
-              </Button>
+              <Button variant="ghost" onClick={() => {
+                setIsEditingRef(false);
+                setRefInput({ id: "", reference: "", manufacturer: "", price: "", stock: "", image: undefined });
+                setRefErrors({});
+              }}>Annuler</Button>
             )}
           </div>
         </div>
       </DialogContent>
       <DialogFooter>
-        <Button variant="outline" onClick={onClose}>
-          Annuler
-        </Button>
+        <Button variant="outline" onClick={onClose}>Annuler</Button>
         <Button onClick={handleSave}>Enregistrer</Button>
       </DialogFooter>
     </Dialog>
@@ -608,3 +470,4 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
 };
 
 export default FilterGroupModal;
+ 

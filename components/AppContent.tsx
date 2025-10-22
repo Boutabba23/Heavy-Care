@@ -323,6 +323,7 @@ const AppContent: React.FC = () => {
           onSave={actions.saveFilterGroup}
           group={state.editingFilterGroup}
           filterTypes={state.filterTypes}
+          allFilterGroups={state.filterGroups}
         />
       )}
       {state.isMaintenanceModalOpen && (

@@ -45,7 +45,7 @@ interface FilterManagementViewProps {
   filterGroups: FilterGroup[];
   filterTypes: FilterType[];
   onDeleteGroup: (groupId: string) => void;
-  onOpenFilterGroupModal: (group: FilterGroup | null) => void;
+  onOpenFilterGroupModal: (group: FilterGroup | null, allGroups: FilterGroup[]) => void;
   onOpenConfirmationDialog: ReturnType<
     typeof useAppLogic
   >["actions"]["openConfirmationDialog"];
@@ -166,7 +166,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
           title="Aucun groupe de filtres créé"
           description="Commencez par créer votre premier groupe pour organiser vos références de filtres compatibles."
           action={
-            <Button onClick={() => props.onOpenFilterGroupModal(null)}>
+            <Button onClick={() => props.onOpenFilterGroupModal(null, props.filterGroups)}>
               <PlusIcon className="mr-2 h-5 w-5" />
               Créer un groupe de filtres
             </Button>
@@ -285,7 +285,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                props.onOpenFilterGroupModal(group);
+                                props.onOpenFilterGroupModal(group, props.filterGroups);
                                 setOpenGroupMenuId(null);
                               }}
                               className="w-full text-left flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted"
@@ -481,7 +481,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
               )}
               <Button 
               className="px-8"
-              onClick={() => props.onOpenFilterGroupModal(null)}>
+              onClick={() => props.onOpenFilterGroupModal(null, props.filterGroups)}>
                 <PlusIcon className="mr-2 h-5 w-5" />
                 <span>Nouveau Groupe</span>
               </Button>
