@@ -30,6 +30,7 @@ interface FilterGroupModalProps {
   onSave: (group: FilterGroup | Omit<FilterGroup, "id">) => void;
   group: FilterGroup | null;
   filterTypes: FilterType[]; // Add filterTypes prop
+  allFilterGroups: FilterGroup[]; // Add allFilterGroups prop
 }
 
 const SectionDivider: React.FC<{ children: React.ReactNode }> = ({
@@ -61,9 +62,33 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
   onSave,
   group,
   filterTypes,
+  allFilterGroups,
 }) => {
   const [name, setName] = useState("");
   const [filterType, setFilterType] = useState("");
+
+  // Get all compatible references from groups of the same type
+  const availableCompatibleReferences = useMemo(() => {
+    if (!filterType) return [];
+    
+    const compatibleRefs: FilterReference[] = [];
+    const seenRefs = new Set<string>(); // To prevent duplicates
+
+    allFilterGroups
+      .filter(g => g.filterType === filterType && g.id !== group?.id)
+      .forEach(g => {
+        g.references.forEach(ref => {
+          // Use reference+manufacturer as unique key to prevent duplicates
+          const key = `${ref.reference}-${ref.manufacturer}`;
+          if (!seenRefs.has(key)) {
+            seenRefs.add(key);
+            compatibleRefs.push(ref);
+          }
+        });
+      });
+
+    return compatibleRefs;
+  }, [filterType, allFilterGroups, group?.id]);
   const [nameError, setNameError] = useState<string | null>(null);
   const [filterTypeError, setFilterTypeError] = useState<string | null>(null);
   const [references, setReferences] = useState<FilterReference[]>([]);
@@ -391,7 +416,10 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
               className="flex-1"
               value=""
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                const selectedRef = references.find((ref: FilterReference) => ref.id === e.target.value);
+                const { reference, manufacturer } = JSON.parse(e.target.value);
+                const selectedRef = availableCompatibleReferences.find(
+                  (ref: FilterReference) => ref.reference === reference && ref.manufacturer === manufacturer
+                );
                 if (selectedRef && originalReferenceId && selectedRef.id !== originalReferenceId) {
                   setRefInput({
                     id: selectedRef.id,
@@ -405,10 +433,10 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
               }}
             >
               <option value="">Sélectionner une référence existante</option>
-              {references
-                .filter((ref: FilterReference) => ref.id !== originalReferenceId)
+              {availableCompatibleReferences
+                .filter((ref: FilterReference) => !references.some(r => r.reference === ref.reference && r.manufacturer === ref.manufacturer))
                 .map((ref: FilterReference) => (
-                  <option key={ref.id} value={ref.id}>
+                  <option key={`${ref.reference}-${ref.manufacturer}`} value={JSON.stringify({ reference: ref.reference, manufacturer: ref.manufacturer })}>
                     {ref.reference} - {ref.manufacturer}
                   </option>
                 ))
