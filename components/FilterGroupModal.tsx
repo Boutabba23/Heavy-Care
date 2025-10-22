@@ -397,14 +397,7 @@ const FilterGroupModal: React.FC<FilterGroupModalProps> = ({
                 if (!e.target.value) return;
                 const selectedRef = availableCompatibleReferences.find((ref) => ref.id === e.target.value);
                 if (selectedRef && selectedRef.id !== originalReferenceId) {
-                  setRefInput({
-                    id: selectedRef.id,
-                    reference: selectedRef.reference,
-                    manufacturer: selectedRef.manufacturer,
-                    price: String(selectedRef.price),
-                    stock: String(selectedRef.stock),
-                    image: selectedRef.image,
-                  });
+                  setReferences(refs => [...refs, selectedRef]); // Directly add the reference
                 }
               }}
             >
