@@ -893,32 +893,59 @@ export const useAppLogic = () => {
     if (!stockUpdateInfo) return;
     const { filterReference, filterGroupId, isRemove } = stockUpdateInfo;
 
-    const groupToUpdate = filterGroups.find((g) => g.id === filterGroupId);
-    if (!groupToUpdate) return;
+    // Find all groups that have this reference (matching by reference number and manufacturer)
+    const groupsToUpdate = filterGroups.map(group => {
+      const hasMatchingReference = group.references.some(ref => 
+        ref.reference === filterReference.reference && 
+        ref.manufacturer === filterReference.manufacturer
+      );
+      
+      if (!hasMatchingReference) return null;
 
-    const newReferences = groupToUpdate.references.map((ref) => {
-      if (ref.id !== filterReference.id) return ref;
-      const newStock = isRemove ? ref.stock - quantity : ref.stock + quantity;
-      return { ...ref, stock: newStock };
-    });
-
-    const { error } = await supabase
-      .from("filter_groups")
-      .update({ references: newReferences as any })
-      .eq("id", filterGroupId);
-
-    if (error) {
-      addToast({ type: "error", title: "Erreur", description: error.message });
-    } else {
-      fetchData();
-      addToast({
-        type: "success",
-        title: isRemove ? "Stock Consommé" : "Stock Ajouté",
-        description: isRemove
-          ? `${quantity} unité(s) consommée(s) pour ${filterReference.reference}.`
-          : `${quantity} unité(s) ajoutée(s) pour ${filterReference.reference}.`,
+      const newReferences = group.references.map(ref => {
+        if (ref.reference !== filterReference.reference || ref.manufacturer !== filterReference.manufacturer) return ref;
+        const newStock = isRemove ? ref.stock - quantity : ref.stock + quantity;
+        return { ...ref, stock: newStock };
       });
+
+      return {
+        id: group.id,
+        references: newReferences,
+      };
+    }).filter((g): g is { id: string; references: FilterReference[] } => g !== null);
+
+    if (groupsToUpdate.length === 0) return;
+
+    // Update all groups that have matching references
+    const updates = groupsToUpdate.map(group => 
+      supabase
+        .from("filter_groups")
+        .update({ references: group.references as any })
+        .eq("id", group.id)
+    );
+
+    try {
+      const results = await Promise.all(updates);
+      const errors = results.filter(r => r.error).map(r => r.error);
+      
+      if (errors.length > 0) {
+        console.error("Errors updating stock:", errors);
+        addToast({ type: "error", title: "Erreur", description: "Erreur lors de la mise à jour du stock dans certains groupes." });
+      } else {
+        fetchData();
+        addToast({
+          type: "success",
+          title: isRemove ? "Stock Consommé" : "Stock Ajouté",
+          description: isRemove
+            ? `${quantity} unité(s) consommée(s) pour ${filterReference.reference} (mis à jour dans ${groupsToUpdate.length} groupe(s)).`
+            : `${quantity} unité(s) ajoutée(s) pour ${filterReference.reference} (mis à jour dans ${groupsToUpdate.length} groupe(s)).`,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating stock:", error);
+      addToast({ type: "error", title: "Erreur", description: "Une erreur est survenue lors de la mise à jour du stock." });
     }
+    
     closeAddStockModal();
   };
 
