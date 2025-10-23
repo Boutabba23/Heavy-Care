@@ -88,6 +88,17 @@ export interface MaintenanceRecord {
   serviceHours: number;
   date: string; // ISO String
   filtersUsed: UsedFilter[];
+  downtimeHours?: number; // hours of idle time recorded for this maintenance
+  panneHours?: number; // hours of breakdown recorded for this maintenance
+}
+
+export interface DailyAdjustment {
+  id: string;
+  machineId: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  downtimeHours: number;
+  panneHours: number;
+  notes?: string;
 }
 
 // --- AI Assistant Types ---

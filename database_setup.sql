@@ -46,6 +46,20 @@ CREATE TABLE IF NOT EXISTS public.maintenance_records (
     service_hours INTEGER NOT NULL,
     maintenance_range TEXT NOT NULL CHECK (maintenance_range IN ('C', 'D', 'E', 'F')),
     filters_used JSONB NOT NULL DEFAULT '[]'::jsonb,
+    downtime_hours INTEGER NOT NULL DEFAULT 0,
+    panne_hours INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Create monthly_daily_adjustments table to persist manual per-day adjustments
+CREATE TABLE IF NOT EXISTS public.monthly_daily_adjustments (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    machine_id TEXT REFERENCES public.machines(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    downtime_hours INTEGER NOT NULL DEFAULT 0,
+    panne_hours INTEGER NOT NULL DEFAULT 0,
+    notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -59,6 +73,9 @@ CREATE INDEX IF NOT EXISTS idx_maintenance_records_machine_id ON public.maintena
 CREATE INDEX IF NOT EXISTS idx_maintenance_records_date ON public.maintenance_records(date);
 CREATE INDEX IF NOT EXISTS idx_filter_groups_name ON public.filter_groups(name);
 CREATE INDEX IF NOT EXISTS idx_filter_groups_filter_type ON public.filter_groups(filter_type);
+-- Indexes for monthly/daily adjustments
+CREATE INDEX IF NOT EXISTS idx_monthly_daily_adjustments_machine_id ON public.monthly_daily_adjustments(machine_id);
+CREATE INDEX IF NOT EXISTS idx_monthly_daily_adjustments_date ON public.monthly_daily_adjustments(date);
 
 -- Create functions for updating timestamps
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
@@ -90,11 +107,18 @@ CREATE TRIGGER handle_updated_at_maintenance_records
     FOR EACH ROW
     EXECUTE FUNCTION public.handle_updated_at();
 
+-- Trigger for monthly_daily_adjustments
+CREATE TRIGGER handle_updated_at_monthly_daily_adjustments
+    BEFORE UPDATE ON public.monthly_daily_adjustments
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_updated_at();
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.machines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.filter_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.filter_groups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.maintenance_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.monthly_daily_adjustments ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for authenticated users
 -- Machines policies
@@ -120,6 +144,12 @@ CREATE POLICY "Users can view all maintenance_records" ON public.maintenance_rec
 CREATE POLICY "Users can insert maintenance_records" ON public.maintenance_records FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Users can update maintenance_records" ON public.maintenance_records FOR UPDATE TO authenticated USING (true);
 CREATE POLICY "Users can delete maintenance_records" ON public.maintenance_records FOR DELETE TO authenticated USING (true);
+
+-- Monthly / Daily adjustments policies
+CREATE POLICY "Users can view all monthly_daily_adjustments" ON public.monthly_daily_adjustments FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Users can insert monthly_daily_adjustments" ON public.monthly_daily_adjustments FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Users can update monthly_daily_adjustments" ON public.monthly_daily_adjustments FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Users can delete monthly_daily_adjustments" ON public.monthly_daily_adjustments FOR DELETE TO authenticated USING (true);
 
 -- Insert sample data for testing
 -- Sample filter types
