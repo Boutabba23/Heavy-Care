@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = (props) => {
       >
         <MenuIcon className="h-6 w-6" />
       </button>
-      <div className="flex items-center text-lg">
+      <div className="flex items-center text-lg max-sm:text-sm">
        
         <span className="font-bold text-foreground">{getTitle()}</span>
       </div>
