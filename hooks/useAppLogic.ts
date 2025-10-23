@@ -804,7 +804,6 @@ export const useAppLogic = () => {
     setIsMaintenanceModalOpen(true);
   };
   const closeMaintenanceModal = () => setIsMaintenanceModalOpen(false);
-
   const saveMaintenanceRecord = async (
     recordData: MaintenanceRecord | Omit<MaintenanceRecord, "id">
   ) => {
@@ -826,6 +825,7 @@ export const useAppLogic = () => {
             maintenance_range: recordData.maintenanceRange,
             filters_used: recordData.filtersUsed,
           };
+
     const { error } = await supabase
       .from("maintenance_records")
       .upsert(recordToSave as any);
@@ -833,6 +833,7 @@ export const useAppLogic = () => {
     if (error) {
       addToast({ type: "error", title: "Erreur", description: error.message });
     } else {
+      // Update machine service hours if needed
       const machine = machines.find((m) => m.id === recordData.machineId);
       if (machine && recordData.serviceHours > machine.serviceHours) {
         await supabase
@@ -840,6 +841,69 @@ export const useAppLogic = () => {
           .update({ service_hours: recordData.serviceHours })
           .eq("id", machine.id);
       }
+
+      // If the maintenance record includes used filters, decrement stock for those references
+      // across all filter groups that contain the same reference (matching by reference + manufacturer).
+      const usedFilters = (recordData as any).filtersUsed as
+        | { filterTypeId: string; referenceId: string; quantity: number }[]
+        | undefined;
+
+      if (usedFilters && usedFilters.length > 0) {
+        const updatesMap = new Map<string, FilterReference[]>();
+
+        usedFilters.forEach((uf) => {
+          const qty = uf.quantity || 0;
+          if (qty <= 0) return;
+
+          // locate origin reference by id to get its reference/manufacturer keys
+          const origin = filterGroups
+            .map((g) => g.references.map((r) => ({ ...r, __groupId: g.id } as any)))
+            .flat()
+            .find((r: any) => r.id === uf.referenceId);
+
+          if (!origin) return;
+          const referenceKey = origin.reference;
+          const manufacturerKey = origin.manufacturer;
+
+          filterGroups.forEach((g) => {
+            const hasMatching = g.references.some(
+              (r) => r.reference === referenceKey && r.manufacturer === manufacturerKey
+            );
+            if (!hasMatching) return;
+
+            const currentRefs = updatesMap.get(g.id) || g.references;
+            const updatedRefs = currentRefs.map((r) => {
+              if (r.reference === referenceKey && r.manufacturer === manufacturerKey) {
+                const newStock = Math.max(0, r.stock - qty);
+                return { ...r, stock: newStock };
+              }
+              return r;
+            });
+
+            updatesMap.set(g.id, updatedRefs);
+          });
+        });
+
+        if (updatesMap.size > 0) {
+          const updates = Array.from(updatesMap.entries()).map(([grpId, refs]) =>
+            supabase.from("filter_groups").update({ references: refs as any }).eq("id", grpId)
+          );
+
+          try {
+            const results = await Promise.all(updates);
+            const errors = results.filter((r) => r.error).map((r) => r.error);
+            if (errors.length > 0) {
+              console.error("Errors updating stock after maintenance:", errors);
+              addToast({ type: "error", title: "Erreur", description: "Erreur lors de la mise à jour du stock." });
+            }
+          } catch (e) {
+            console.error("Error updating stock after maintenance:", e);
+            addToast({ type: "error", title: "Erreur", description: "Erreur lors de la mise à jour du stock." });
+          }
+        }
+      }
+
+      // Refresh data and notify success
       fetchData();
       const successMessage =
         "id" in recordData && recordData.id
