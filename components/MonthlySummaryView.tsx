@@ -195,7 +195,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
 
         
 
-        <h4 className="font-semibold">Synthèse journalière</h4>
+  <h4 className="font-semibold">Synthèse journalière</h4>
+  <div className="mb-2 text-sm text-muted-foreground">Engin sélectionné: <span className="font-medium">{selectedMachine ? `${selectedMachine.code} - ${selectedMachine.designation}` : '—'}</span></div>
         <Table>
           <TableHeader>
             <TableRow>
