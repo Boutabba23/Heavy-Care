@@ -40,8 +40,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
     const [year, monthNum] = month.split("-").map(Number);
     if (!year || !monthNum) return { periodStart: null as null | Date, periodEnd: null as null | Date, dateRange: [] as string[] };
     // selected month is YYYY-MM, we want period from (month-1)-21 to month-20
-    const start = new Date(year, monthNum - 2, 21); // JS months 0-indexed: monthNum-2 is previous month
-    const end = new Date(year, monthNum - 1, 20);
+    const start = new Date(year, monthNum - 2, 22); // JS months 0-indexed: monthNum-2 is previous month
+    const end = new Date(year, monthNum - 1, 21);
     const range: string[] = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       range.push(d.toISOString().slice(0,10));
