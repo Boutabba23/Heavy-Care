@@ -33,7 +33,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
   const [optimisticEdits, setOptimisticEdits] = useState<Record<string, { workHours: number; downtimeHours: number; panneHours: number; pending: boolean; id?: string }>>({});
   // handlers will be set by parent via props; they exist on props via closure below
   const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0]?.id || "");
-  const [month, setMonth] = useState<string>(new Date().toISOString().slice(0,7)); // YYYY-MM
+  const [month, setMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM
 
   const selectedMachine = machines.find(m => m.id === selectedMachineId) || null;
   const formatMonth = (monthString: string) => {
@@ -51,7 +51,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
     const end = new Date(year, monthNum - 1, 21);
     const range: string[] = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      range.push(d.toISOString().slice(0,10));
+      range.push(d.toISOString().slice(0, 10));
     }
     return { periodStart: start, periodEnd: end, dateRange: range };
   }, [month]);
@@ -69,12 +69,12 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
   // This is a heuristic: real data may need explicit fields for downtime/panne hours.
   const dailySummary = useMemo(() => {
     const [year, monthNum] = month.split("-").map(Number);
-  if (!selectedMachine || !year || !monthNum) return [] as { date: string; workHours: number; downtimeHours: number; panneHours: number }[];
+    if (!selectedMachine || !year || !monthNum) return [] as { date: string; workHours: number; downtimeHours: number; panneHours: number }[];
 
     // Build a map of records by ISO date string
     const recMap: Record<string, MaintenanceRecord[]> = {};
     recordsForMachineAndMonth.forEach(r => {
-      const iso = new Date(r.date).toISOString().slice(0,10);
+      const iso = new Date(r.date).toISOString().slice(0, 10);
       if (!recMap[iso]) recMap[iso] = [];
       recMap[iso].push(r);
     });
@@ -83,7 +83,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
     const adjMap: Record<string, { work_hours?: number; downtime_hours: number; panne_hours: number }[]> = {};
     (adjustments || []).forEach((adj: any) => {
       if (adj.machine_id !== selectedMachineId) return;
-      const iso = new Date(adj.date).toISOString().slice(0,10);
+      const iso = new Date(adj.date).toISOString().slice(0, 10);
       // ensure adjustment is within period
       if (!dateRange.includes(iso)) return;
       if (!adjMap[iso]) adjMap[iso] = [];
@@ -102,17 +102,17 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       let panneHours = 0;
 
       if (recs.length >= 2) {
-        recs.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        recs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         const first = recs[0];
         const last = recs[recs.length - 1];
         workHours = last.serviceHours - first.serviceHours;
         if (workHours < 0) workHours = 0;
       }
 
-  const dayAdj = adjMap[dateIso] || [];
-  const adjWork = dayAdj.reduce((s,a) => s + (a.work_hours || 0), 0);
-  const adjDowntime = dayAdj.reduce((s,a) => s + (a.downtime_hours || 0), 0);
-  const adjPanne = dayAdj.reduce((s,a) => s + (a.panne_hours || 0), 0);
+      const dayAdj = adjMap[dateIso] || [];
+      const adjWork = dayAdj.reduce((s, a) => s + (a.work_hours || 0), 0);
+      const adjDowntime = dayAdj.reduce((s, a) => s + (a.downtime_hours || 0), 0);
+      const adjPanne = dayAdj.reduce((s, a) => s + (a.panne_hours || 0), 0);
 
       const recDowntime = recs.reduce((s, r) => s + ((r as any).downtimeHours || 0), 0);
       const recPanne = recs.reduce((s, r) => s + ((r as any).panneHours || 0), 0);
@@ -154,7 +154,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
         if (r.machineId !== machine.id) return false;
         const d = new Date(r.date);
         return periodStart && periodEnd ? (d >= periodStart && d <= periodEnd) : false;
-      }).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
       let workHours = 0;
       let downtimeHours = 0;
@@ -170,7 +170,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       // include adjustments for this machine in the month
       const machineAdjustments = (adjustments || []).filter((adj: any) => {
         if (adj.machine_id !== machine.id) return false;
-        const iso = new Date(adj.date).toISOString().slice(0,10);
+        const iso = new Date(adj.date).toISOString().slice(0, 10);
         return dateRange.includes(iso);
       });
       const adjWork = machineAdjustments.reduce((s: number, a: any) => s + (a.work_hours || 0), 0);
@@ -215,7 +215,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       content: (
         <>
           <div className="mb-2 text-sm text-muted-foreground">Engin sélectionné: <span className="font-medium">{selectedMachine ? `${selectedMachine.code} - ${selectedMachine.designation}` : '—'}</span></div>
-          <Table>
+          <Table className="table-zebra"
+          >
             <TableHeader>
               <TableRow>
                 <TableHead>Jour</TableHead>
@@ -227,7 +228,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
             </TableHeader>
             <TableBody>
               {displayedDailySummary.map((row: any) => {
-                const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && new Date(a.date).toISOString().slice(0,10) === row.date);
+                const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && new Date(a.date).toISOString().slice(0, 10) === row.date);
                 const dayLabel = new Date(row.date + 'T00:00:00Z').getDate();
                 return (
                   <TableRow key={row.date}>
@@ -320,7 +321,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       label: "Synthèse Mensuelle",
       content: (
         <div className="mb-4 mt-4">
-          <Table>
+          <Table className="table-zebra"
+          >
             <TableHeader>
               <TableRow>
                 <TableHead>Engin</TableHead>
