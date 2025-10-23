@@ -317,7 +317,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       ),
     },
     {
-      label: "Totaux par Engin",
+      label: "Synthèse Mensuelle",
       content: (
         <div className="mb-4 mt-4">
           <Table>
