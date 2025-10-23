@@ -10,6 +10,7 @@ import Label from "./ui/Label";
 
 // ConfirmationDialog removed: inline editing replaces separate adjustments UI
 import { Toast } from "../types";
+import { PencilIcon } from "@/constants";
 
 interface Props {
   machines: Machine[];
@@ -309,7 +310,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
                         <Button size="sm" variant="ghost" onClick={() => {
                           setEditingKey(row.date);
                           setEditValues({ workHours: row.workHours, downtimeHours: row.downtimeHours, panneHours: row.panneHours });
-                        }}>Modifier</Button>
+                        }}>                              <PencilIcon className="h-4 w-4" />
+                        </Button>
                       </div>
                     )}
                   </TableCell>
