@@ -34,6 +34,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
   // handlers will be set by parent via props; they exist on props via closure below
   const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0]?.id || "");
   const [month, setMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [machineSearch, setMachineSearch] = useState('');
+
 
   const selectedMachine = machines.find(m => m.id === selectedMachineId) || null;
   const formatMonth = (monthString: string) => {
@@ -201,13 +203,23 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
     });
   }, [machines, maintenanceRecords, month, periodStart, periodEnd, dateRange, selectedMachineId, optimisticEdits]);
 
+  const filteredPerMachineTotals = useMemo(() => {
+    if (!machineSearch) {
+      return perMachineTotals;
+    }
+    return perMachineTotals.filter(m =>
+      m.code.toLowerCase().includes(machineSearch.toLowerCase()) ||
+      m.designation.toLowerCase().includes(machineSearch.toLowerCase())
+    );
+  }, [perMachineTotals, machineSearch]);
+
   const grandTotals = useMemo(() => {
-    return perMachineTotals.reduce((acc, cur) => ({
+    return filteredPerMachineTotals.reduce((acc, cur) => ({
       workHours: acc.workHours + cur.workHours,
       downtimeHours: acc.downtimeHours + cur.downtimeHours,
       panneHours: acc.panneHours + cur.panneHours,
     }), { workHours: 0, downtimeHours: 0, panneHours: 0 });
-  }, [perMachineTotals]);
+  }, [filteredPerMachineTotals]);
 
   const summaryTabs = [
     {
@@ -321,6 +333,13 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       label: "Synthèse Mensuelle",
       content: (
         <div className="mb-4 mt-4">
+          <Input
+            type="text"
+            placeholder="Rechercher par code ou désignation..."
+            value={machineSearch}
+            onChange={e => setMachineSearch(e.target.value)}
+            className="mb-4"
+          />
           <Table className="table-zebra"
           >
             <TableHeader>
@@ -332,7 +351,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
               </TableRow>
             </TableHeader>
             <TableBody>
-              {perMachineTotals.map(m => (
+              {filteredPerMachineTotals.map(m => (
                 <TableRow key={m.machineId}>
                   <TableCell>{m.code} - {m.designation}</TableCell>
                   <TableCell>{m.workHours}</TableCell>
