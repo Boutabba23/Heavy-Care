@@ -7,6 +7,7 @@ import Input from "./ui/Input";
 import Button from "./ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import Label from "./ui/Label";
+import Tabs from "./ui/Tabs"; // Import Tabs
 
 // ConfirmationDialog removed: inline editing replaces separate adjustments UI
 import { Toast } from "../types";
@@ -198,7 +199,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
 
       return { machineId: machine.id, code: machine.code, designation: machine.designation, workHours, downtimeHours, panneHours };
     });
-  }, [machines, maintenanceRecords, month]);
+  }, [machines, maintenanceRecords, month, periodStart, periodEnd, dateRange, selectedMachineId, optimisticEdits]);
 
   const grandTotals = useMemo(() => {
     return perMachineTotals.reduce((acc, cur) => ({
@@ -208,134 +209,117 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
     }), { workHours: 0, downtimeHours: 0, panneHours: 0 });
   }, [perMachineTotals]);
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-end gap-4">
-        <div>
-          <Label>Engin</Label>
-          <Select value={selectedMachineId} onChange={e => setSelectedMachineId(e.target.value)}>
-            {machines.map(m => <option key={m.id} value={m.id}>{m.code} - {m.designation}</option>)}
-          </Select>
-        </div>
-        <div>
-          <Label>Mois</Label>
-          <Input type="month" value={month} onChange={e => setMonth(e.target.value)} />
-        </div>
-        
-         
-      </div>
-
-      <div className="p-4 border rounded">
-        <h3 className="font-semibold">Synthèse Mensuelle - {formatMonth(month)}</h3>
-
-        {/* Adjustments UI removed — inline editing is available in the daily summary table below */}
-
-        
-
-  <h4 className="font-semibold">Synthèse journalière</h4>
-  <div className="mb-2 text-sm text-muted-foreground">Engin sélectionné: <span className="font-medium">{selectedMachine ? `${selectedMachine.code} - ${selectedMachine.designation}` : '—'}</span></div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Jour</TableHead>
-              <TableHead>Heures service</TableHead>
-              <TableHead>Heures chômage</TableHead>
-              <TableHead>Heures panne</TableHead>
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {displayedDailySummary.map((row: any) => {
-              const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && new Date(a.date).toISOString().slice(0,10) === row.date);
-              const dayLabel = new Date(row.date + 'T00:00:00Z').getDate();
-              return (
-                <TableRow key={row.date}>
-                  <TableCell>{dayLabel}</TableCell>
-                  <TableCell>
-                    {editingKey === row.date ? (
-                      <Input type="number" value={String(editValues.workHours)} onChange={e => setEditValues(v => ({ ...v, workHours: e.target.value }))} />
-                    ) : (
-                      row.workHours
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingKey === row.date ? (
-                      <Input type="number" value={String(editValues.downtimeHours)} onChange={e => setEditValues(v => ({ ...v, downtimeHours: e.target.value }))} />
-                    ) : (
-                      row.downtimeHours
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingKey === row.date ? (
-                      <Input type="number" value={String(editValues.panneHours)} onChange={e => setEditValues(v => ({ ...v, panneHours: e.target.value }))} />
-                    ) : (
-                      row.panneHours
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {editingKey === row.date ? (
-                      <div className="flex gap-2 justify-end">
-                        <Button size="sm" disabled={isSavingAdj} onClick={async () => {
-                          if (!selectedMachine) return;
-                          // apply optimistic edit keyed by ISO date
-                          const optimistic = { workHours: Number(editValues.workHours || 0), downtimeHours: Number(editValues.downtimeHours || 0), panneHours: Number(editValues.panneHours || 0), pending: true, id: adjForDay ? (adjForDay as any).id : undefined };
-                          setOptimisticEdits(o => ({ ...o, [row.date]: optimistic }));
-                          setEditingKey(null);
-                          try {
-                            const dateStr = row.date;
-                            const payload = { machineId: selectedMachine.id, date: dateStr, workHours: optimistic.workHours, downtimeHours: optimistic.downtimeHours, panneHours: optimistic.panneHours };
-                            if (adjForDay && onUpdateAdjustment) {
-                              await onUpdateAdjustment((adjForDay as any).id, payload as any);
-                              setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
-                            } else if (onCreateAdjustment) {
-                              const res = await onCreateAdjustment(payload as any);
-                              if (res && (res as any).id) {
-                                setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false, id: (res as any).id } }));
+  const summaryTabs = [
+    {
+      label: "Synthèse journalière",
+      content: (
+        <>
+          <div className="mb-2 text-sm text-muted-foreground">Engin sélectionné: <span className="font-medium">{selectedMachine ? `${selectedMachine.code} - ${selectedMachine.designation}` : '—'}</span></div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Jour</TableHead>
+                <TableHead>Heures service</TableHead>
+                <TableHead>Heures chômage</TableHead>
+                <TableHead>Heures panne</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {displayedDailySummary.map((row: any) => {
+                const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && new Date(a.date).toISOString().slice(0,10) === row.date);
+                const dayLabel = new Date(row.date + 'T00:00:00Z').getDate();
+                return (
+                  <TableRow key={row.date}>
+                    <TableCell>{dayLabel}</TableCell>
+                    <TableCell>
+                      {editingKey === row.date ? (
+                        <Input type="number" value={String(editValues.workHours)} onChange={e => setEditValues(v => ({ ...v, workHours: e.target.value }))} />
+                      ) : (
+                        row.workHours
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingKey === row.date ? (
+                        <Input type="number" value={String(editValues.downtimeHours)} onChange={e => setEditValues(v => ({ ...v, downtimeHours: e.target.value }))} />
+                      ) : (
+                        row.downtimeHours
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingKey === row.date ? (
+                        <Input type="number" value={String(editValues.panneHours)} onChange={e => setEditValues(v => ({ ...v, panneHours: e.target.value }))} />
+                      ) : (
+                        row.panneHours
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {editingKey === row.date ? (
+                        <div className="flex gap-2 justify-end">
+                          <Button size="sm" disabled={isSavingAdj} onClick={async () => {
+                            if (!selectedMachine) return;
+                            // apply optimistic edit keyed by ISO date
+                            const optimistic = { workHours: Number(editValues.workHours || 0), downtimeHours: Number(editValues.downtimeHours || 0), panneHours: Number(editValues.panneHours || 0), pending: true, id: adjForDay ? (adjForDay as any).id : undefined };
+                            setOptimisticEdits(o => ({ ...o, [row.date]: optimistic }));
+                            setEditingKey(null);
+                            try {
+                              const dateStr = row.date;
+                              const payload = { machineId: selectedMachine.id, date: dateStr, workHours: optimistic.workHours, downtimeHours: optimistic.downtimeHours, panneHours: optimistic.panneHours };
+                              if (adjForDay && onUpdateAdjustment) {
+                                await onUpdateAdjustment((adjForDay as any).id, payload as any);
+                                setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
+                              } else if (onCreateAdjustment) {
+                                const res = await onCreateAdjustment(payload as any);
+                                if (res && (res as any).id) {
+                                  setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false, id: (res as any).id } }));
+                                } else {
+                                  setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
+                                }
                               } else {
                                 setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
                               }
-                            } else {
-                              setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
+                              if (addToast) addToast({ type: 'success', title: 'Ajustement sauvegardé', description: '' });
+                            } catch (e) {
+                              // revert optimistic edit on failure
+                              setOptimisticEdits(o => {
+                                const copy = { ...o };
+                                delete copy[row.date];
+                                return copy;
+                              });
+                              if (addToast) addToast({ type: 'error', title: 'Erreur', description: 'Erreur lors de la sauvegarde' });
                             }
-                            if (addToast) addToast({ type: 'success', title: 'Ajustement sauvegardé', description: '' });
-                          } catch (e) {
-                            // revert optimistic edit on failure
-                            setOptimisticEdits(o => {
-                              const copy = { ...o };
-                              delete copy[row.date];
-                              return copy;
-                            });
-                            if (addToast) addToast({ type: 'error', title: 'Erreur', description: 'Erreur lors de la sauvegarde' });
-                          }
-                        }}>Enregistrer</Button>
-                        <Button size="sm" variant="ghost" onClick={() => { setEditingKey(null); }}>Annuler</Button>
-                      </div>
-                    ) : (
-                      <div className="flex justify-end">
-                        <Button size="sm" variant="ghost" onClick={() => {
-                          setEditingKey(row.date);
-                          setEditValues({ workHours: row.workHours, downtimeHours: row.downtimeHours, panneHours: row.panneHours });
-                        }}>                              <PencilIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            <TableRow>
-              <TableCell className="font-bold">Total</TableCell>
-              <TableCell className="font-bold">{totals.workHours}</TableCell>
-              <TableCell className="font-bold">{totals.downtimeHours}</TableCell>
-              <TableCell className="font-bold">{totals.panneHours}</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-
-        {/* Totals per machine moved below daily summary */}
+                          }}>Enregistrer</Button>
+                          <Button size="sm" variant="ghost" onClick={() => { setEditingKey(null); }}>Annuler</Button>
+                        </div>
+                      ) : (
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="ghost" onClick={() => {
+                            setEditingKey(row.date);
+                            setEditValues({ workHours: row.workHours, downtimeHours: row.downtimeHours, panneHours: row.panneHours });
+                          }}>                              <PencilIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              <TableRow>
+                <TableCell className="font-bold">Total</TableCell>
+                <TableCell className="font-bold">{totals.workHours}</TableCell>
+                <TableCell className="font-bold">{totals.downtimeHours}</TableCell>
+                <TableCell className="font-bold">{totals.panneHours}</TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </>
+      ),
+    },
+    {
+      label: "Totaux par Engin",
+      content: (
         <div className="mb-4 mt-4">
-          <h4 className="font-medium mb-2">Totaux par Engin</h4>
           <Table>
             <TableHeader>
               <TableRow>
@@ -363,6 +347,28 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
             </TableBody>
           </Table>
         </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-end gap-4">
+        <div>
+          <Label>Engin</Label>
+          <Select value={selectedMachineId} onChange={e => setSelectedMachineId(e.target.value)}>
+            {machines.map(m => <option key={m.id} value={m.id}>{m.code} - {m.designation}</option>)}
+          </Select>
+        </div>
+        <div>
+          <Label>Mois</Label>
+          <Input type="month" value={month} onChange={e => setMonth(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="p-4 border rounded">
+        <h3 className="font-semibold">Synthèse Mensuelle - {formatMonth(month)}</h3>
+        <Tabs tabs={summaryTabs} />
       </div>
 
       <div className="text-sm text-muted-foreground">Note: Cette synthèse utilise les heures de service reportées dans les enregistrements de maintenance. Pour des mesures précises de chômage/panne, ajoutez des champs explicites ou ajustements manuels.</div>
