@@ -86,6 +86,41 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords }) =
     }), { workHours: 0, downtimeHours: 0, panneHours: 0 });
   }, [dailySummary]);
 
+  // Compute totals per machine for the selected month
+  const perMachineTotals = useMemo(() => {
+    const [y, m] = month.split("-").map(Number);
+    if (!y || !m) return [] as { machineId: string; code: string; designation: string; workHours: number; downtimeHours: number; panneHours: number }[];
+
+    return machines.map(machine => {
+      const records = maintenanceRecords.filter(r => {
+        if (r.machineId !== machine.id) return false;
+        const d = new Date(r.date);
+        return d.getFullYear() === y && (d.getMonth() + 1) === m;
+      }).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      let workHours = 0;
+      let downtimeHours = 0;
+      let panneHours = 0;
+
+      if (records.length >= 2) {
+        // approximate total work hours by difference between last and first serviceHours
+        const first = records[0];
+        const last = records[records.length - 1];
+        workHours = Math.max(0, last.serviceHours - first.serviceHours);
+      }
+
+      return { machineId: machine.id, code: machine.code, designation: machine.designation, workHours, downtimeHours, panneHours };
+    });
+  }, [machines, maintenanceRecords, month]);
+
+  const grandTotals = useMemo(() => {
+    return perMachineTotals.reduce((acc, cur) => ({
+      workHours: acc.workHours + cur.workHours,
+      downtimeHours: acc.downtimeHours + cur.downtimeHours,
+      panneHours: acc.panneHours + cur.panneHours,
+    }), { workHours: 0, downtimeHours: 0, panneHours: 0 });
+  }, [perMachineTotals]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-end gap-4">
@@ -105,7 +140,39 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords }) =
       </div>
 
       <div className="p-4 border rounded">
-        <h3 className="font-semibold">Synthèse journalière - {month}</h3>
+        <h3 className="font-semibold">Synthèse Mensuelle - {month}</h3>
+
+        <div className="mb-4">
+          <h4 className="font-medium mb-2">Totaux par Engin</h4>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Engin</TableHead>
+                <TableHead>Heures travail</TableHead>
+                <TableHead>Heures chômage</TableHead>
+                <TableHead>Heures panne</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {perMachineTotals.map(m => (
+                <TableRow key={m.machineId}>
+                  <TableCell>{m.code} - {m.designation}</TableCell>
+                  <TableCell>{m.workHours}</TableCell>
+                  <TableCell>{m.downtimeHours}</TableCell>
+                  <TableCell>{m.panneHours}</TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell className="font-bold">Total Général</TableCell>
+                <TableCell className="font-bold">{grandTotals.workHours}</TableCell>
+                <TableCell className="font-bold">{grandTotals.downtimeHours}</TableCell>
+                <TableCell className="font-bold">{grandTotals.panneHours}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+
+        <h4 className="font-semibold">Synthèse journalière</h4>
         <Table>
           <TableHeader>
             <TableRow>
