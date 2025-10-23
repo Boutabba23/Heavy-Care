@@ -215,9 +215,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
           <Label>Mois</Label>
           <Input type="month" value={month} onChange={e => setMonth(e.target.value)} />
         </div>
-        <div>
-          <Button onClick={() => { /* nothing for now */ }}>Actualiser</Button>
-        </div>
+        
+         
       </div>
 
       <div className="p-4 border rounded">
