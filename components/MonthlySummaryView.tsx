@@ -232,7 +232,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
           <TableHeader>
             <TableRow>
               <TableHead>Jour</TableHead>
-              <TableHead>Heures travail</TableHead>
+              <TableHead>Heures service</TableHead>
               <TableHead>Heures chômage</TableHead>
               <TableHead>Heures panne</TableHead>
               <TableHead></TableHead>
@@ -333,7 +333,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
             <TableHeader>
               <TableRow>
                 <TableHead>Engin</TableHead>
-                <TableHead>Heures travail</TableHead>
+                <TableHead>Heures service</TableHead>
                 <TableHead>Heures chômage</TableHead>
                 <TableHead>Heures panne</TableHead>
               </TableRow>
