@@ -8,7 +8,7 @@ import Button from "./ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import Label from "./ui/Label";
 
-import ConfirmationDialog from "./ConfirmationDialog";
+// ConfirmationDialog removed: inline editing replaces separate adjustments UI
 import { Toast } from "../types";
 
 interface Props {
@@ -23,18 +23,10 @@ interface Props {
 
 // This view computes a daily summary for a given machine and month.
 const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adjustments, onCreateAdjustment, onUpdateAdjustment, onDeleteAdjustment, addToast }) => {
-  const [newAdjDay, setNewAdjDay] = useState<number | string>('1');
-  const [newAdjDowntime, setNewAdjDowntime] = useState<number | string>(0);
-  const [newAdjPanne, setNewAdjPanne] = useState<number | string>(0);
-  const [newAdjWork, setNewAdjWork] = useState<number | string>(0);
-  const [newAdjNotes, setNewAdjNotes] = useState<string>('');
-  const [editingAdjId, setEditingAdjId] = useState<string | null>(null);
-  const [editingAdjValues, setEditingAdjValues] = useState<{ downtimeHours: number | string; panneHours: number | string; notes?: string }>({ downtimeHours: 0, panneHours: 0 });
-  // include work hours in editing values
-  const [editingAdjValuesExtended, setEditingAdjValuesExtended] = useState<{ workHours?: number | string; downtimeHours: number | string; panneHours: number | string; notes?: string }>({ workHours: 0, downtimeHours: 0, panneHours: 0 });
+  // Inline editing state for daily rows
+  const [editingDay, setEditingDay] = useState<number | null>(null);
+  const [editValues, setEditValues] = useState<{ workHours: number | string; downtimeHours: number | string; panneHours: number | string }>({ workHours: 0, downtimeHours: 0, panneHours: 0 });
   const [isSavingAdj, setIsSavingAdj] = useState(false);
-  const [isDeletingAdjId, setIsDeletingAdjId] = useState<string | null>(null);
-  const [confirmDeleteAdjId, setConfirmDeleteAdjId] = useState<string | null>(null);
   // handlers will be set by parent via props; they exist on props via closure below
   const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0]?.id || "");
   const [month, setMonth] = useState<string>(new Date().toISOString().slice(0,7)); // YYYY-MM
@@ -199,126 +191,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       <div className="p-4 border rounded">
         <h3 className="font-semibold">Synthèse Mensuelle - {month}</h3>
 
-        <div className="mt-4 mb-4">
-          <h4 className="font-medium mb-2">Ajustements journaliers (chômage / panne)</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
-            <div>
-              <Label>Jour</Label>
-              <Select value={String(newAdjDay)} onChange={e => setNewAdjDay(e.target.value)}>
-                {Array.from({ length: daysInMonth }).map((_, i) => (
-                  <option key={i+1} value={i+1}>{i+1}</option>
-                ))}
-              </Select>
-            </div>
-            <div>
-              <Label>Heures chômage</Label>
-              <Input type="number" min="0" value={String(newAdjDowntime)} onChange={e => setNewAdjDowntime(e.target.value)} />
-            </div>
-            <div>
-              <Label>Heures travail</Label>
-              <Input type="number" min="0" value={String(newAdjWork)} onChange={e => setNewAdjWork(e.target.value)} />
-            </div>
-            <div>
-              <Label>Heures panne</Label>
-              <Input type="number" min="0" value={String(newAdjPanne)} onChange={e => setNewAdjPanne(e.target.value)} />
-            </div>
-            <div className="col-span-1 sm:col-span-2">
-              <Label>Notes</Label>
-              <Input value={newAdjNotes} onChange={e => setNewAdjNotes(e.target.value)} />
-            </div>
-            <div className="sm:col-span-5 text-right">
-              <Button disabled={isSavingAdj} onClick={async () => {
-                if (!selectedMachine) return;
-                setIsSavingAdj(true);
-                try {
-                  const day = parseInt(String(newAdjDay), 10);
-                  const dateStr = `${month}-${String(day).padStart(2, '0')}`;
-                  if (onCreateAdjustment) {
-                    await onCreateAdjustment({ machineId: selectedMachine.id, date: dateStr, workHours: Number(newAdjWork || 0), downtimeHours: Number(newAdjDowntime || 0), panneHours: Number(newAdjPanne || 0), notes: newAdjNotes || undefined });
-                    if (addToast) addToast({ type: 'success', title: "Ajustement ajouté" , description: `Ajustement pour le ${dateStr} ajouté.` });
-                  }
-                  // reset
-                  setNewAdjDowntime(0); setNewAdjPanne(0); setNewAdjNotes('');
-                } catch (e) {
-                  if (addToast) addToast({ type: 'error', title: 'Erreur', description: 'Erreur lors de l\'ajout' });
-                } finally {
-                  setIsSavingAdj(false);
-                }
-              }}>Ajouter l'ajustement</Button>
-            </div>
-          </div>
-
-          {/* List existing adjustments for this machine/month */}
-          <div className="mt-4">
-            <Table>
-                <TableHeader>
-                <TableRow>
-                  <TableHead>Jour</TableHead>
-                  <TableHead>Travail</TableHead>
-                  <TableHead>Chômage</TableHead>
-                  <TableHead>Panne</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(adjustments || []).filter(a => a.machine_id === selectedMachineId && new Date(a.date).toISOString().startsWith(month)).map(adj => (
-                  <TableRow key={adj.id}>
-                    <TableCell>{new Date(adj.date).getDate()}</TableCell>
-                    <TableCell>{(adj as any).work_hours ?? 0}</TableCell>
-                    <TableCell>{adj.downtime_hours}</TableCell>
-                    <TableCell>{adj.panne_hours}</TableCell>
-                    <TableCell>{adj.notes || ''}</TableCell>
-                    <TableCell className="text-right">
-                      {editingAdjId === adj.id ? (
-                        <div className="flex gap-2 items-center justify-end">
-                          <Button size="sm" disabled={isSavingAdj} onClick={async () => {
-                            // save
-                            if (!onUpdateAdjustment) return;
-                            setIsSavingAdj(true);
-                            try {
-                              const ok = await onUpdateAdjustment(adj.id, { workHours: Number(editingAdjValuesExtended.workHours || 0), downtimeHours: Number(editingAdjValuesExtended.downtimeHours || 0), panneHours: Number(editingAdjValuesExtended.panneHours || 0), notes: editingAdjValuesExtended.notes });
-                              if (ok && addToast) addToast({ type: 'success', title: 'Ajustement modifié', description: '' });
-                              setEditingAdjId(null);
-                            } catch (e) {
-                              if (addToast) addToast({ type: 'error', title: 'Erreur', description: 'Erreur lors de la modification' });
-                            } finally {
-                              setIsSavingAdj(false);
-                            }
-                          }}>Enregistrer</Button>
-                          <Button size="sm" variant="ghost" onClick={() => { setEditingAdjId(null); setEditingAdjValuesExtended({ workHours: 0, downtimeHours: 0, panneHours: 0, notes: '' }); }}>Annuler</Button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-2 items-center justify-end">
-                          <Button size="sm" variant="ghost" onClick={() => { setEditingAdjId(adj.id); setEditingAdjValuesExtended({ workHours: (adj as any).work_hours ?? 0, downtimeHours: (adj as any).downtime_hours ?? 0, panneHours: (adj as any).panne_hours ?? 0, notes: (adj as any).notes ?? '' }); }}>Modifier</Button>
-                          <Button variant="ghost" size="icon" disabled={!!isDeletingAdjId} onClick={() => { setConfirmDeleteAdjId(adj.id); }}>
-                            Suppr
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          {/* Confirmation dialog for delete */}
-          <ConfirmationDialog isOpen={!!confirmDeleteAdjId} onClose={() => setConfirmDeleteAdjId(null)} title="Confirmer la suppression" description="Voulez-vous vraiment supprimer cet ajustement ?" onConfirm={async () => {
-            if (!confirmDeleteAdjId) return;
-            setIsDeletingAdjId(confirmDeleteAdjId);
-            try {
-              if (onDeleteAdjustment) {
-                const ok = await onDeleteAdjustment(confirmDeleteAdjId);
-                if (ok && addToast) addToast({ type: 'success', title: 'Ajustement supprimé' , description: '' });
-              }
-            } catch (e) {
-              if (addToast) addToast({ type: 'error', title: 'Erreur', description: 'Erreur lors de la suppression' });
-            } finally {
-              setIsDeletingAdjId(null);
-              setConfirmDeleteAdjId(null);
-            }
-          }} />
-        </div>
+        {/* Adjustments UI removed — inline editing is available in the daily summary table below */}
 
         <div className="mb-4">
           <h4 className="font-medium mb-2">Totaux par Engin</h4>
@@ -358,25 +231,112 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
               <TableHead>Heures travail</TableHead>
               <TableHead>Heures chômage</TableHead>
               <TableHead>Heures panne</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {dailySummary.map(row => (
-              <TableRow key={row.day}>
-                <TableCell>{row.day}</TableCell>
-                <TableCell>{row.workHours}</TableCell>
-                <TableCell>{row.downtimeHours}</TableCell>
-                <TableCell>{row.panneHours}</TableCell>
-              </TableRow>
-            ))}
+            {dailySummary.map(row => {
+              const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && new Date(a.date).getDate() === row.day && new Date(a.date).toISOString().startsWith(month));
+              return (
+                <TableRow key={row.day}>
+                  <TableCell>{row.day}</TableCell>
+                  <TableCell>
+                    {editingDay === row.day ? (
+                      <Input type="number" value={String(editValues.workHours)} onChange={e => setEditValues(v => ({ ...v, workHours: e.target.value }))} />
+                    ) : (
+                      row.workHours
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingDay === row.day ? (
+                      <Input type="number" value={String(editValues.downtimeHours)} onChange={e => setEditValues(v => ({ ...v, downtimeHours: e.target.value }))} />
+                    ) : (
+                      row.downtimeHours
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingDay === row.day ? (
+                      <Input type="number" value={String(editValues.panneHours)} onChange={e => setEditValues(v => ({ ...v, panneHours: e.target.value }))} />
+                    ) : (
+                      row.panneHours
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {editingDay === row.day ? (
+                      <div className="flex gap-2 justify-end">
+                        <Button size="sm" disabled={isSavingAdj} onClick={async () => {
+                          if (!selectedMachine) return;
+                          setIsSavingAdj(true);
+                          try {
+                            const dateStr = `${month}-${String(row.day).padStart(2, '0')}`;
+                            const payload = { machineId: selectedMachine.id, date: dateStr, workHours: Number(editValues.workHours || 0), downtimeHours: Number(editValues.downtimeHours || 0), panneHours: Number(editValues.panneHours || 0) };
+                            if (adjForDay && onUpdateAdjustment) {
+                              await onUpdateAdjustment((adjForDay as any).id, payload as any);
+                            } else if (onCreateAdjustment) {
+                              await onCreateAdjustment(payload as any);
+                            }
+                            if (addToast) addToast({ type: 'success', title: 'Ajustement sauvegardé', description: '' });
+                            setEditingDay(null);
+                          } catch (e) {
+                            if (addToast) addToast({ type: 'error', title: 'Erreur', description: 'Erreur lors de la sauvegarde' });
+                          } finally {
+                            setIsSavingAdj(false);
+                          }
+                        }}>Enregistrer</Button>
+                        <Button size="sm" variant="ghost" onClick={() => { setEditingDay(null); }}>Annuler</Button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-end">
+                        <Button size="sm" variant="ghost" onClick={() => {
+                          setEditingDay(row.day);
+                          setEditValues({ workHours: row.workHours, downtimeHours: row.downtimeHours, panneHours: row.panneHours });
+                        }}>Modifier</Button>
+                      </div>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
             <TableRow>
               <TableCell className="font-bold">Total</TableCell>
               <TableCell className="font-bold">{totals.workHours}</TableCell>
               <TableCell className="font-bold">{totals.downtimeHours}</TableCell>
               <TableCell className="font-bold">{totals.panneHours}</TableCell>
+              <TableCell></TableCell>
             </TableRow>
           </TableBody>
         </Table>
+
+        {/* Totals per machine moved below daily summary */}
+        <div className="mb-4 mt-4">
+          <h4 className="font-medium mb-2">Totaux par Engin</h4>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Engin</TableHead>
+                <TableHead>Heures travail</TableHead>
+                <TableHead>Heures chômage</TableHead>
+                <TableHead>Heures panne</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {perMachineTotals.map(m => (
+                <TableRow key={m.machineId}>
+                  <TableCell>{m.code} - {m.designation}</TableCell>
+                  <TableCell>{m.workHours}</TableCell>
+                  <TableCell>{m.downtimeHours}</TableCell>
+                  <TableCell>{m.panneHours}</TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell className="font-bold">Total Général</TableCell>
+                <TableCell className="font-bold">{grandTotals.workHours}</TableCell>
+                <TableCell className="font-bold">{grandTotals.downtimeHours}</TableCell>
+                <TableCell className="font-bold">{grandTotals.panneHours}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <div className="text-sm text-muted-foreground">Note: Cette synthèse utilise les heures de service reportées dans les enregistrements de maintenance. Pour des mesures précises de chômage/panne, ajoutez des champs explicites ou ajustements manuels.</div>
