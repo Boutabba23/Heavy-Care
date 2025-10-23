@@ -266,21 +266,36 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
                       <div className="flex gap-2 justify-end">
                         <Button size="sm" disabled={isSavingAdj} onClick={async () => {
                           if (!selectedMachine) return;
-                          setIsSavingAdj(true);
+                          // apply optimistic edit
+                          const optimistic = { workHours: Number(editValues.workHours || 0), downtimeHours: Number(editValues.downtimeHours || 0), panneHours: Number(editValues.panneHours || 0), pending: true, id: adjForDay ? (adjForDay as any).id : undefined };
+                          setOptimisticEdits(o => ({ ...o, [row.day]: optimistic }));
+                          setEditingDay(null);
                           try {
                             const dateStr = `${month}-${String(row.day).padStart(2, '0')}`;
-                            const payload = { machineId: selectedMachine.id, date: dateStr, workHours: Number(editValues.workHours || 0), downtimeHours: Number(editValues.downtimeHours || 0), panneHours: Number(editValues.panneHours || 0) };
+                            const payload = { machineId: selectedMachine.id, date: dateStr, workHours: optimistic.workHours, downtimeHours: optimistic.downtimeHours, panneHours: optimistic.panneHours };
                             if (adjForDay && onUpdateAdjustment) {
                               await onUpdateAdjustment((adjForDay as any).id, payload as any);
                             } else if (onCreateAdjustment) {
-                              await onCreateAdjustment(payload as any);
+                              const res = await onCreateAdjustment(payload as any);
+                              // If create returns the new id, attach it
+                              if (res && (res as any).id) {
+                                setOptimisticEdits(o => ({ ...o, [row.day]: { ...o[row.day], pending: false, id: (res as any).id } }));
+                              } else {
+                                setOptimisticEdits(o => ({ ...o, [row.day]: { ...o[row.day], pending: false } }));
+                              }
+                            } else {
+                              // mark not pending
+                              setOptimisticEdits(o => ({ ...o, [row.day]: { ...o[row.day], pending: false } }));
                             }
                             if (addToast) addToast({ type: 'success', title: 'Ajustement sauvegardé', description: '' });
-                            setEditingDay(null);
                           } catch (e) {
+                            // revert optimistic edit on failure
+                            setOptimisticEdits(o => {
+                              const copy = { ...o };
+                              delete copy[row.day];
+                              return copy;
+                            });
                             if (addToast) addToast({ type: 'error', title: 'Erreur', description: 'Erreur lors de la sauvegarde' });
-                          } finally {
-                            setIsSavingAdj(false);
                           }
                         }}>Enregistrer</Button>
                         <Button size="sm" variant="ghost" onClick={() => { setEditingDay(null); }}>Annuler</Button>
