@@ -27,6 +27,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [editValues, setEditValues] = useState<{ workHours: number | string; downtimeHours: number | string; panneHours: number | string }>({ workHours: 0, downtimeHours: 0, panneHours: 0 });
   const [isSavingAdj, setIsSavingAdj] = useState(false);
+  // optimistic edits keyed by day number
+  const [optimisticEdits, setOptimisticEdits] = useState<Record<number, { workHours: number; downtimeHours: number; panneHours: number; pending: boolean; id?: string }>>({});
   // handlers will be set by parent via props; they exist on props via closure below
   const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0]?.id || "");
   const [month, setMonth] = useState<string>(new Date().toISOString().slice(0,7)); // YYYY-MM
@@ -113,13 +115,22 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
     return results;
   }, [recordsForMachineAndMonth, selectedMachine, daysInMonth, adjustments]);
 
+  // Apply optimistic edits to the daily summary for display/totals
+  const displayedDailySummary = useMemo(() => {
+    return dailySummary.map(d => {
+      const o = optimisticEdits[d.day];
+      if (o) return { day: d.day, workHours: o.workHours, downtimeHours: o.downtimeHours, panneHours: o.panneHours };
+      return d;
+    });
+  }, [dailySummary, optimisticEdits]);
+
   const totals = useMemo(() => {
-    return dailySummary.reduce((acc, cur) => ({
+    return displayedDailySummary.reduce((acc, cur) => ({
       workHours: acc.workHours + cur.workHours,
       downtimeHours: acc.downtimeHours + cur.downtimeHours,
       panneHours: acc.panneHours + cur.panneHours,
     }), { workHours: 0, downtimeHours: 0, panneHours: 0 });
-  }, [dailySummary]);
+  }, [displayedDailySummary]);
 
   // Compute totals per machine for the selected month
   const perMachineTotals = useMemo(() => {
@@ -157,6 +168,22 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       workHours = workHours + adjWork;
       downtimeHours = downtimeHours + adjDowntime;
       panneHours = panneHours + adjPanne;
+
+      // include optimistic edits if they belong to the currently selected machine
+      if (machine.id === selectedMachineId) {
+        const optimisticSum = Object.entries(optimisticEdits).reduce((s, [dayStr, o]) => {
+          // ensure the optimistic edit is within the current month (we keyed by day so just add)
+          return {
+            workHours: s.workHours + o.workHours,
+            downtimeHours: s.downtimeHours + o.downtimeHours,
+            panneHours: s.panneHours + o.panneHours,
+          };
+        }, { workHours: 0, downtimeHours: 0, panneHours: 0 });
+
+        workHours += optimisticSum.workHours;
+        downtimeHours += optimisticSum.downtimeHours;
+        panneHours += optimisticSum.panneHours;
+      }
 
       return { machineId: machine.id, code: machine.code, designation: machine.designation, workHours, downtimeHours, panneHours };
     });
