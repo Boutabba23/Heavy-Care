@@ -14,9 +14,9 @@ import { Toast } from "../types";
 interface Props {
   machines: Machine[];
   maintenanceRecords: MaintenanceRecord[];
-  adjustments?: { id: string; machine_id: string; date: string; downtime_hours: number; panne_hours: number; notes?: string | null }[];
-  onCreateAdjustment?: (adj: { machineId: string; date: string; downtimeHours: number; panneHours: number; notes?: string }) => Promise<any> | any;
-  onUpdateAdjustment?: (id: string, changes: Partial<{ downtimeHours: number; panneHours: number; notes?: string }>) => Promise<boolean> | boolean;
+  adjustments?: { id: string; machine_id: string; date: string; work_hours?: number; downtime_hours: number; panne_hours: number; notes?: string | null }[];
+  onCreateAdjustment?: (adj: { machineId: string; date: string; workHours?: number; downtimeHours: number; panneHours: number; notes?: string }) => Promise<any> | any;
+  onUpdateAdjustment?: (id: string, changes: Partial<{ workHours?: number; downtimeHours: number; panneHours: number; notes?: string }>) => Promise<boolean> | boolean;
   onDeleteAdjustment?: (id: string) => Promise<boolean> | boolean;
   addToast?: (t: Omit<Toast, 'id'>) => void;
 }
@@ -26,9 +26,12 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
   const [newAdjDay, setNewAdjDay] = useState<number | string>('1');
   const [newAdjDowntime, setNewAdjDowntime] = useState<number | string>(0);
   const [newAdjPanne, setNewAdjPanne] = useState<number | string>(0);
+  const [newAdjWork, setNewAdjWork] = useState<number | string>(0);
   const [newAdjNotes, setNewAdjNotes] = useState<string>('');
   const [editingAdjId, setEditingAdjId] = useState<string | null>(null);
   const [editingAdjValues, setEditingAdjValues] = useState<{ downtimeHours: number | string; panneHours: number | string; notes?: string }>({ downtimeHours: 0, panneHours: 0 });
+  // include work hours in editing values
+  const [editingAdjValuesExtended, setEditingAdjValuesExtended] = useState<{ workHours?: number | string; downtimeHours: number | string; panneHours: number | string; notes?: string }>({ workHours: 0, downtimeHours: 0, panneHours: 0 });
   const [isSavingAdj, setIsSavingAdj] = useState(false);
   const [isDeletingAdjId, setIsDeletingAdjId] = useState<string | null>(null);
   const [confirmDeleteAdjId, setConfirmDeleteAdjId] = useState<string | null>(null);
@@ -69,15 +72,15 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       map[day].push(r);
     });
 
-    // Build a map of adjustments for this machine and month
-    const adjMap: Record<number, { downtime_hours: number; panne_hours: number }[]> = {};
+    // Build a map of adjustments for this machine and month (including work hours)
+    const adjMap: Record<number, { work_hours?: number; downtime_hours: number; panne_hours: number }[]> = {};
     (adjustments || []).forEach((adj: any) => {
       if (adj.machine_id !== selectedMachineId) return;
       const d = new Date(adj.date);
       if (d.getFullYear() !== year || (d.getMonth() + 1) !== monthNum) return;
       const day = d.getDate();
       if (!adjMap[day]) adjMap[day] = [];
-      adjMap[day].push({ downtime_hours: adj.downtime_hours || 0, panne_hours: adj.panne_hours || 0 });
+      adjMap[day].push({ work_hours: adj.work_hours || 0, downtime_hours: adj.downtime_hours || 0, panne_hours: adj.panne_hours || 0 });
     });
 
     const results = [] as { day: number; workHours: number; downtimeHours: number; panneHours: number }[];
@@ -98,15 +101,18 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
         workHours = last.serviceHours - first.serviceHours;
         if (workHours < 0) workHours = 0;
       }
-      // Sum adjustments (if any) for the day
-      const dayAdjustments = adjMap[d] || [];
-      const adjDowntime = dayAdjustments.reduce((s, a) => s + (a.downtime_hours || 0), 0);
-      const adjPanne = dayAdjustments.reduce((s, a) => s + (a.panne_hours || 0), 0);
+  // Sum adjustments (if any) for the day
+  const dayAdjustments = adjMap[d] || [];
+  const adjWork = dayAdjustments.reduce((s, a) => s + (a.work_hours || 0), 0);
+  const adjDowntime = dayAdjustments.reduce((s, a) => s + (a.downtime_hours || 0), 0);
+  const adjPanne = dayAdjustments.reduce((s, a) => s + (a.panne_hours || 0), 0);
 
       // Also include downtime/panne reported directly on maintenance records for the day
       const recDowntime = recs.reduce((s, r) => s + ((r as any).downtimeHours || 0), 0);
       const recPanne = recs.reduce((s, r) => s + ((r as any).panneHours || 0), 0);
 
+      // include adjustments into totals
+      workHours = workHours + adjWork;
       downtimeHours = adjDowntime + recDowntime;
       panneHours = adjPanne + recPanne;
       results.push({ day: d, workHours, downtimeHours, panneHours });
@@ -145,6 +151,20 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
         const last = records[records.length - 1];
         workHours = Math.max(0, last.serviceHours - first.serviceHours);
       }
+
+      // include adjustments for this machine in the month
+      const machineAdjustments = (adjustments || []).filter((adj: any) => {
+        if (adj.machine_id !== machine.id) return false;
+        const d = new Date(adj.date);
+        return d.getFullYear() === y && (d.getMonth() + 1) === m;
+      });
+      const adjWork = machineAdjustments.reduce((s: number, a: any) => s + (a.work_hours || 0), 0);
+      const adjDowntime = machineAdjustments.reduce((s: number, a: any) => s + (a.downtime_hours || 0), 0);
+      const adjPanne = machineAdjustments.reduce((s: number, a: any) => s + (a.panne_hours || 0), 0);
+
+      workHours = workHours + adjWork;
+      downtimeHours = downtimeHours + adjDowntime;
+      panneHours = panneHours + adjPanne;
 
       return { machineId: machine.id, code: machine.code, designation: machine.designation, workHours, downtimeHours, panneHours };
     });
@@ -195,6 +215,10 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
               <Input type="number" min="0" value={String(newAdjDowntime)} onChange={e => setNewAdjDowntime(e.target.value)} />
             </div>
             <div>
+              <Label>Heures travail</Label>
+              <Input type="number" min="0" value={String(newAdjWork)} onChange={e => setNewAdjWork(e.target.value)} />
+            </div>
+            <div>
               <Label>Heures panne</Label>
               <Input type="number" min="0" value={String(newAdjPanne)} onChange={e => setNewAdjPanne(e.target.value)} />
             </div>
@@ -210,7 +234,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
                   const day = parseInt(String(newAdjDay), 10);
                   const dateStr = `${month}-${String(day).padStart(2, '0')}`;
                   if (onCreateAdjustment) {
-                    await onCreateAdjustment({ machineId: selectedMachine.id, date: dateStr, downtimeHours: Number(newAdjDowntime || 0), panneHours: Number(newAdjPanne || 0), notes: newAdjNotes || undefined });
+                    await onCreateAdjustment({ machineId: selectedMachine.id, date: dateStr, workHours: Number(newAdjWork || 0), downtimeHours: Number(newAdjDowntime || 0), panneHours: Number(newAdjPanne || 0), notes: newAdjNotes || undefined });
                     if (addToast) addToast({ type: 'success', title: "Ajustement ajouté" , description: `Ajustement pour le ${dateStr} ajouté.` });
                   }
                   // reset
@@ -227,9 +251,10 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
           {/* List existing adjustments for this machine/month */}
           <div className="mt-4">
             <Table>
-              <TableHeader>
+                <TableHeader>
                 <TableRow>
                   <TableHead>Jour</TableHead>
+                  <TableHead>Travail</TableHead>
                   <TableHead>Chômage</TableHead>
                   <TableHead>Panne</TableHead>
                   <TableHead>Notes</TableHead>
@@ -240,6 +265,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
                 {(adjustments || []).filter(a => a.machine_id === selectedMachineId && new Date(a.date).toISOString().startsWith(month)).map(adj => (
                   <TableRow key={adj.id}>
                     <TableCell>{new Date(adj.date).getDate()}</TableCell>
+                    <TableCell>{(adj as any).work_hours ?? 0}</TableCell>
                     <TableCell>{adj.downtime_hours}</TableCell>
                     <TableCell>{adj.panne_hours}</TableCell>
                     <TableCell>{adj.notes || ''}</TableCell>
@@ -251,7 +277,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
                             if (!onUpdateAdjustment) return;
                             setIsSavingAdj(true);
                             try {
-                              const ok = await onUpdateAdjustment(adj.id, { downtimeHours: Number(editingAdjValues.downtimeHours || 0), panneHours: Number(editingAdjValues.panneHours || 0), notes: editingAdjValues.notes });
+                              const ok = await onUpdateAdjustment(adj.id, { workHours: Number(editingAdjValuesExtended.workHours || 0), downtimeHours: Number(editingAdjValuesExtended.downtimeHours || 0), panneHours: Number(editingAdjValuesExtended.panneHours || 0), notes: editingAdjValuesExtended.notes });
                               if (ok && addToast) addToast({ type: 'success', title: 'Ajustement modifié', description: '' });
                               setEditingAdjId(null);
                             } catch (e) {
@@ -260,11 +286,11 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
                               setIsSavingAdj(false);
                             }
                           }}>Enregistrer</Button>
-                          <Button size="sm" variant="ghost" onClick={() => { setEditingAdjId(null); setEditingAdjValues({ downtimeHours: 0, panneHours: 0, notes: '' }); }}>Annuler</Button>
+                          <Button size="sm" variant="ghost" onClick={() => { setEditingAdjId(null); setEditingAdjValuesExtended({ workHours: 0, downtimeHours: 0, panneHours: 0, notes: '' }); }}>Annuler</Button>
                         </div>
                       ) : (
                         <div className="flex gap-2 items-center justify-end">
-                          <Button size="sm" variant="ghost" onClick={() => { setEditingAdjId(adj.id); setEditingAdjValues({ downtimeHours: (adj as any).downtime_hours ?? 0, panneHours: (adj as any).panne_hours ?? 0, notes: (adj as any).notes ?? '' }); }}>Modifier</Button>
+                          <Button size="sm" variant="ghost" onClick={() => { setEditingAdjId(adj.id); setEditingAdjValuesExtended({ workHours: (adj as any).work_hours ?? 0, downtimeHours: (adj as any).downtime_hours ?? 0, panneHours: (adj as any).panne_hours ?? 0, notes: (adj as any).notes ?? '' }); }}>Modifier</Button>
                           <Button variant="ghost" size="icon" disabled={!!isDeletingAdjId} onClick={() => { setConfirmDeleteAdjId(adj.id); }}>
                             Suppr
                           </Button>
