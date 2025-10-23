@@ -35,13 +35,13 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
 
   const selectedMachine = machines.find(m => m.id === selectedMachineId) || null;
 
-  // Period runs from 21st of previous month to 20th of selected month
+  // Period runs from 20th of previous month to 19th of selected month
   const { periodStart, periodEnd, dateRange } = useMemo(() => {
     const [year, monthNum] = month.split("-").map(Number);
     if (!year || !monthNum) return { periodStart: null as null | Date, periodEnd: null as null | Date, dateRange: [] as string[] };
-    // selected month is YYYY-MM, we want period from (month-1)-21 to month-20
-    const start = new Date(year, monthNum - 2, 21); // JS months 0-indexed: monthNum-2 is previous month
-    const end = new Date(year, monthNum - 1, 20);
+    // selected month is YYYY-MM, we want period from (month-1)-20 to month-19
+    const start = new Date(year, monthNum - 2, 20); // JS months 0-indexed: monthNum-2 is previous month
+    const end = new Date(year, monthNum - 1, 19);
     const range: string[] = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       range.push(d.toISOString().slice(0,10));
