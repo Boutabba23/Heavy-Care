@@ -15,6 +15,7 @@ import SettingsView from "./ThemeSettingsView";
 import MachineModal from "./MachineModal";
 import { MaintenanceView } from "./MaintenanceView";
 import DashboardView, { AnalyticsView } from "./DashboardView";
+import MonthlySummaryView from "./MonthlySummaryView";
 import FilterGroupModal from "./FilterGroupModal";
 import MaintenanceModal from "./MaintenanceModal";
 import ConfirmationDialog from "./ConfirmationDialog";
@@ -239,6 +240,13 @@ const AppContent: React.FC = () => {
         );
       case View.USER_PROFILE:
         return <UserProfile />;
+      case View.MONTHLY_SUMMARY:
+        return (
+          <MonthlySummaryView
+            machines={state.machines}
+            maintenanceRecords={state.maintenanceRecords}
+          />
+        );
       default:
         return (
           <DashboardView

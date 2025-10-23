@@ -140,6 +140,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             icon={<ChartBarIcon className="h-5 w-5" />}
           />
           <NavItem
+            view={View.MONTHLY_SUMMARY}
+            label="Synthese Mensuelle"
+            icon={<ChartBarIcon className="h-5 w-5" />}
+          />
+          <NavItem
             view={View.SETTINGS}
             label="Paramètres"
             icon={<SettingsIcon className="h-5 w-5" />}
