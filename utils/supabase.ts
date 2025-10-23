@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { Database } from "../types/supabase";
+import type { Database } from "../types/supabase";
 
 // IMPORTANT: Replace with your actual Supabase URL and Anon Key
 // You can find these in your Supabase project settings under "API"
@@ -17,4 +17,4 @@ if (
   );
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey) as any;

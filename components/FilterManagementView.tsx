@@ -39,7 +39,7 @@ import { useAppLogic } from "../hooks/useAppLogic";
 import Badge from "./ui/Badge";
 import { exportFiltersToCSV } from "../utils/export";
 import QRCodeModal from "./QRCodeModal";
-import { MinusIcon } from "lucide-react";
+import { MinusIcon } from "../constants";
 
 interface FilterManagementViewProps {
   filterGroups: FilterGroup[];

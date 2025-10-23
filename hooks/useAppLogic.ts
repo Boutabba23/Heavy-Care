@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+
+import type { Database } from '../types/supabase';
 import {
   Machine,
   FilterGroup,
@@ -18,6 +20,10 @@ import {
 } from "../types";
 import { calculateNextMaintenance } from "../utils/maintenance";
 import { supabase } from "../utils/supabase";
+// Type definitions for monthly daily adjustments
+type MonthlyDailyAdjustmentInsert = Database['public']['Tables']['monthly_daily_adjustments']['Insert'];
+type MonthlyDailyAdjustmentUpdate = Database['public']['Tables']['monthly_daily_adjustments']['Update'];
+type MonthlyDailyAdjustmentRow = Database['public']['Tables']['monthly_daily_adjustments']['Row'];
 
 interface ConfirmationDialogConfig {
   isOpen: boolean;
@@ -52,6 +58,7 @@ const loadFromStorage = <T>(key: string, defaultValue: T): T => {
 };
 
 export const defaultCustomColors: CustomColors = {
+
   background: "#f8fafc",
   foreground: "#0f172a",
   foregroundSecondary: "#64748b",
@@ -95,18 +102,19 @@ export const useAppLogic = () => {
     created_at?: string | null;
     updated_at?: string | null;
   }[]>([]);
-
   // Daily adjustment helpers (declare here so they can be referenced in actions)
   async function createDailyAdjustment(adj: { machineId: string; date: string; downtimeHours: number; panneHours: number; notes?: string }) {
-    const payload: import("../types/supabase").Database['public']['Tables']['monthly_daily_adjustments']['Insert'] = {
-      id: `adj-${Date.now()}-${Math.random().toString(36).substr(2,6)}`,
+    const payload: MonthlyDailyAdjustmentInsert = {
       machine_id: adj.machineId,
       date: adj.date,
       downtime_hours: adj.downtimeHours || 0,
       panne_hours: adj.panneHours || 0,
       notes: adj.notes || null,
     };
-    const { data, error } = await supabase.from('monthly_daily_adjustments').insert(payload).select('*');
+    const { data, error } = await supabase
+      .from('monthly_daily_adjustments')
+      .insert(payload)
+      .select();
     if (error) {
       addToast({ type: 'error', title: 'Erreur', description: error.message });
       return null;
@@ -116,11 +124,15 @@ export const useAppLogic = () => {
   }
 
   async function updateDailyAdjustment(id: string, changes: Partial<{ downtimeHours: number; panneHours: number; notes?: string }>) {
-    const payload: Partial<import("../types/supabase").Database['public']['Tables']['monthly_daily_adjustments']['Update']> = {};
-    if (changes.downtimeHours !== undefined) payload.downtime_hours = changes.downtimeHours;
-    if (changes.panneHours !== undefined) payload.panne_hours = changes.panneHours;
-    if (changes.notes !== undefined) payload.notes = changes.notes;
-    const { error } = await supabase.from('monthly_daily_adjustments').update(payload).eq('id', id);
+    const payload: MonthlyDailyAdjustmentUpdate = {
+      downtime_hours: changes.downtimeHours,
+      panne_hours: changes.panneHours,
+      notes: changes.notes || null,
+    };
+    const { error } = await supabase
+      .from('monthly_daily_adjustments')
+      .update(payload)
+      .eq('id', id);
     if (error) {
       addToast({ type: 'error', title: 'Erreur', description: error.message });
       return false;
@@ -130,7 +142,10 @@ export const useAppLogic = () => {
   }
 
   async function deleteDailyAdjustment(id: string) {
-    const { error } = await supabase.from('monthly_daily_adjustments').delete().eq('id', id);
+    const { error } = await supabase
+      .from('monthly_daily_adjustments')
+      .delete()
+      .eq('id', id);
     if (error) {
       addToast({ type: 'error', title: 'Erreur', description: error.message });
       return false;
@@ -200,6 +215,7 @@ export const useAppLogic = () => {
     setToasts((prev) => [...prev, { id, ...toast }]);
   }, []);
 
+
   const fetchData = useCallback(async () => {
     try {
       const [
@@ -218,6 +234,11 @@ export const useAppLogic = () => {
 
       if (machinesRes.error) throw machinesRes.error;
       if (filterGroupsRes.error) throw filterGroupsRes.error;
+  // Define database types
+  type Tables = Database['public']['Tables'];
+  type MonthlyDailyAdjustmentInsert = Tables['monthly_daily_adjustments']['Insert'];
+  type MonthlyDailyAdjustmentUpdate = Tables['monthly_daily_adjustments']['Update'];
+  type MonthlyDailyAdjustmentRow = Tables['monthly_daily_adjustments']['Row'];
       if (filterTypesRes.error) throw filterTypesRes.error;
       if (maintenanceRecordsRes.error) throw maintenanceRecordsRes.error;
 
@@ -436,7 +457,7 @@ export const useAppLogic = () => {
 
     const { error } = await supabase
       .from("machines")
-      .update({ assigned_filters: newAssignedFilters as any })
+      .update({ assigned_filters: newAssignedFilters } as any)
       .eq("id", machineId);
     if (error) {
       addToast({ type: "error", title: "Erreur", description: error.message });
@@ -475,7 +496,7 @@ export const useAppLogic = () => {
     ];
     const { error } = await supabase
       .from("machines")
-      .update({ assigned_filters: newAssignedFilters as any })
+      .update({ assigned_filters: newAssignedFilters } as any)
       .eq("id", machineId);
 
     if (error) {
@@ -515,7 +536,7 @@ export const useAppLogic = () => {
     );
     const { error } = await supabase
       .from("machines")
-      .update({ assigned_filters: newAssignedFilters as any })
+      .update({ assigned_filters: newAssignedFilters } as any)
       .eq("id", machineId);
 
     if (error) {
@@ -890,8 +911,8 @@ export const useAppLogic = () => {
           );
           await supabase
             .from("machines")
-            .update({ assigned_filters: newAssigned as any })
-            .eq("id", m.id);
+              .update({ assigned_filters: newAssigned } as any)
+              .eq("id", m.id);
         }
       });
       fetchData();
@@ -946,7 +967,7 @@ export const useAppLogic = () => {
       if (machine && recordData.serviceHours > machine.serviceHours) {
         await supabase
           .from("machines")
-          .update({ service_hours: recordData.serviceHours })
+          .update({ service_hours: recordData.serviceHours } as any)
           .eq("id", machine.id);
       }
 
@@ -994,7 +1015,7 @@ export const useAppLogic = () => {
 
         if (updatesMap.size > 0) {
           const updates = Array.from(updatesMap.entries()).map(([grpId, refs]) =>
-            supabase.from("filter_groups").update({ references: refs as any }).eq("id", grpId)
+            supabase.from("filter_groups").update({ references: refs } as any).eq("id", grpId)
           );
 
           try {
@@ -1094,7 +1115,7 @@ export const useAppLogic = () => {
     const updates = groupsToUpdate.map(group => 
       supabase
         .from("filter_groups")
-        .update({ references: group.references as any })
+  .update({ references: group.references } as any)
         .eq("id", group.id)
     );
 

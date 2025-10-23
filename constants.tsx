@@ -34,6 +34,7 @@ import {
   Menu,
   LayoutGrid,
   AlertTriangle,
+  Minus,
 } from "lucide-react";
 
 // Custom byPrefixAndName helper object for the exact syntax you requested
@@ -362,6 +363,11 @@ export const DocumentTextIcon: React.FC<{ className?: string }> = ({
   className,
 }) => {
   const IconComponent = FileText;
+  return <IconComponent className={className} />;
+};
+
+export const MinusIcon: React.FC<{ className?: string }> = ({ className }) => {
+  const IconComponent = Minus;
   return <IconComponent className={className} />;
 };
 
