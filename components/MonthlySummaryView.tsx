@@ -193,35 +193,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
 
         {/* Adjustments UI removed — inline editing is available in the daily summary table below */}
 
-        <div className="mb-4">
-          <h4 className="font-medium mb-2">Totaux par Engin</h4>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Engin</TableHead>
-                <TableHead>Heures travail</TableHead>
-                <TableHead>Heures chômage</TableHead>
-                <TableHead>Heures panne</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {perMachineTotals.map(m => (
-                <TableRow key={m.machineId}>
-                  <TableCell>{m.code} - {m.designation}</TableCell>
-                  <TableCell>{m.workHours}</TableCell>
-                  <TableCell>{m.downtimeHours}</TableCell>
-                  <TableCell>{m.panneHours}</TableCell>
-                </TableRow>
-              ))}
-              <TableRow>
-                <TableCell className="font-bold">Total Général</TableCell>
-                <TableCell className="font-bold">{grandTotals.workHours}</TableCell>
-                <TableCell className="font-bold">{grandTotals.downtimeHours}</TableCell>
-                <TableCell className="font-bold">{grandTotals.panneHours}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
+        
 
         <h4 className="font-semibold">Synthèse journalière</h4>
         <Table>
