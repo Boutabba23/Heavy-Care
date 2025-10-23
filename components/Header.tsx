@@ -57,13 +57,7 @@ const Header: React.FC<HeaderProps> = (props) => {
         <MenuIcon className="h-6 w-6" />
       </button>
       <div className="flex items-center text-lg">
-        <span className="font-semibold text-muted-foreground hidden sm:inline">
-          GestiFiltres
-        </span>
-        <span className="font-semibold text-muted-foreground sm:hidden">
-          ...
-        </span>
-        <BreadcrumbSeparator />
+       
         <span className="font-bold text-foreground">{getTitle()}</span>
       </div>
       <div className="flex-1" /> {/* Spacer */}
