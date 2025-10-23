@@ -32,7 +32,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
   const [optimisticEdits, setOptimisticEdits] = useState<Record<string, { workHours: number; downtimeHours: number; panneHours: number; pending: boolean; id?: string }>>({});
   // handlers will be set by parent via props; they exist on props via closure below
   const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0]?.id || "");
-  const [month, setMonth] = useState<string>(new Date().toISOString().slice(0,7)); // YYYY-MM
+  const [month, setMonth] = useState<string>(new Date().toLocaleString('en-US', { month: 'short' }).toUpperCase()); // YYYY-MM
 
   const selectedMachine = machines.find(m => m.id === selectedMachineId) || null;
 
