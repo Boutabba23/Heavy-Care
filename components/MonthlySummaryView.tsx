@@ -32,10 +32,15 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
   const [optimisticEdits, setOptimisticEdits] = useState<Record<string, { workHours: number; downtimeHours: number; panneHours: number; pending: boolean; id?: string }>>({});
   // handlers will be set by parent via props; they exist on props via closure below
   const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0]?.id || "");
-  const [month, setMonth] = useState<string>(new Date().toLocaleString('en-US', { month: 'short' }).toUpperCase()); // YYYY-MM
+  const [month, setMonth] = useState<string>(new Date().toISOString().slice(0,7)); // YYYY-MM
 
   const selectedMachine = machines.find(m => m.id === selectedMachineId) || null;
-
+  const formatMonth = (monthString: string) => {
+    const [year, monthNum] = monthString.split("-");
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const formattedMonth = months[parseInt(monthNum, 10) - 1];
+    return `${year} - ${formattedMonth}`;
+  };
   // Period runs from 21st of previous month to 20th of selected month
   const { periodStart, periodEnd, dateRange } = useMemo(() => {
     const [year, monthNum] = month.split("-").map(Number);
@@ -221,7 +226,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       </div>
 
       <div className="p-4 border rounded">
-        <h3 className="font-semibold">Synthèse Mensuelle - {month}</h3>
+        <h3 className="font-semibold">Synthèse Mensuelle - {formatMonth(month)}</h3>
 
         {/* Adjustments UI removed — inline editing is available in the daily summary table below */}
 
