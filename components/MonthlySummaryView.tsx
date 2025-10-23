@@ -24,108 +24,113 @@ interface Props {
 // This view computes a daily summary for a given machine and month.
 const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adjustments, onCreateAdjustment, onUpdateAdjustment, onDeleteAdjustment, addToast }) => {
   // Inline editing state for daily rows
-  const [editingDay, setEditingDay] = useState<number | null>(null);
+  const [editingKey, setEditingKey] = useState<string | null>(null); // ISO date string when editing a row
   const [editValues, setEditValues] = useState<{ workHours: number | string; downtimeHours: number | string; panneHours: number | string }>({ workHours: 0, downtimeHours: 0, panneHours: 0 });
   const [isSavingAdj, setIsSavingAdj] = useState(false);
-  // optimistic edits keyed by day number
-  const [optimisticEdits, setOptimisticEdits] = useState<Record<number, { workHours: number; downtimeHours: number; panneHours: number; pending: boolean; id?: string }>>({});
+  // optimistic edits keyed by ISO date string (YYYY-MM-DD)
+  const [optimisticEdits, setOptimisticEdits] = useState<Record<string, { workHours: number; downtimeHours: number; panneHours: number; pending: boolean; id?: string }>>({});
   // handlers will be set by parent via props; they exist on props via closure below
   const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0]?.id || "");
   const [month, setMonth] = useState<string>(new Date().toISOString().slice(0,7)); // YYYY-MM
 
   const selectedMachine = machines.find(m => m.id === selectedMachineId) || null;
 
-  const daysInMonth = useMemo(() => {
+  // Period runs from 21st of previous month to 20th of selected month
+  const { periodStart, periodEnd, dateRange } = useMemo(() => {
     const [year, monthNum] = month.split("-").map(Number);
-    if (!year || !monthNum) return 0;
-    return new Date(year, monthNum, 0).getDate();
+    if (!year || !monthNum) return { periodStart: null as null | Date, periodEnd: null as null | Date, dateRange: [] as string[] };
+    // selected month is YYYY-MM, we want period from (month-1)-21 to month-20
+    const start = new Date(year, monthNum - 2, 21); // JS months 0-indexed: monthNum-2 is previous month
+    const end = new Date(year, monthNum - 1, 20);
+    const range: string[] = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      range.push(d.toISOString().slice(0,10));
+    }
+    return { periodStart: start, periodEnd: end, dateRange: range };
   }, [month]);
 
   const recordsForMachineAndMonth = useMemo(() => {
-    const [year, monthNum] = month.split("-").map(Number);
-    if (!year || !monthNum) return [] as MaintenanceRecord[];
+    if (!periodStart || !periodEnd) return [] as MaintenanceRecord[];
     return maintenanceRecords.filter(r => {
       if (r.machineId !== selectedMachineId) return false;
       const d = new Date(r.date);
-      return d.getFullYear() === year && (d.getMonth() + 1) === monthNum;
+      return d >= periodStart && d <= periodEnd;
     });
-  }, [maintenanceRecords, selectedMachineId, month]);
+  }, [maintenanceRecords, selectedMachineId, periodStart, periodEnd]);
 
   // For now we derive simplistic hour summaries from serviceHours deltas between consecutive maintenance records.
   // This is a heuristic: real data may need explicit fields for downtime/panne hours.
   const dailySummary = useMemo(() => {
     const [year, monthNum] = month.split("-").map(Number);
-    if (!selectedMachine || !year || !monthNum) return [] as { day: number; workHours: number; downtimeHours: number; panneHours: number }[];
+  if (!selectedMachine || !year || !monthNum) return [] as { date: string; workHours: number; downtimeHours: number; panneHours: number }[];
 
-    // Build a map of date -> records
-    const map: Record<number, MaintenanceRecord[]> = {};
+    // Build a map of records by ISO date string
+    const recMap: Record<string, MaintenanceRecord[]> = {};
     recordsForMachineAndMonth.forEach(r => {
-      const d = new Date(r.date);
-      const day = d.getDate();
-      if (!map[day]) map[day] = [];
-      map[day].push(r);
+      const iso = new Date(r.date).toISOString().slice(0,10);
+      if (!recMap[iso]) recMap[iso] = [];
+      recMap[iso].push(r);
     });
 
-    // Build a map of adjustments for this machine and month (including work hours)
-    const adjMap: Record<number, { work_hours?: number; downtime_hours: number; panne_hours: number }[]> = {};
+    // Build a map of adjustments for this machine and month (including work hours), keyed by ISO date
+    const adjMap: Record<string, { work_hours?: number; downtime_hours: number; panne_hours: number }[]> = {};
     (adjustments || []).forEach((adj: any) => {
       if (adj.machine_id !== selectedMachineId) return;
-      const d = new Date(adj.date);
-      if (d.getFullYear() !== year || (d.getMonth() + 1) !== monthNum) return;
-      const day = d.getDate();
-      if (!adjMap[day]) adjMap[day] = [];
-      adjMap[day].push({ work_hours: adj.work_hours || 0, downtime_hours: adj.downtime_hours || 0, panne_hours: adj.panne_hours || 0 });
+      const iso = new Date(adj.date).toISOString().slice(0,10);
+      // ensure adjustment is within period
+      if (!dateRange.includes(iso)) return;
+      if (!adjMap[iso]) adjMap[iso] = [];
+      adjMap[iso].push({ work_hours: adj.work_hours || 0, downtime_hours: adj.downtime_hours || 0, panne_hours: adj.panne_hours || 0 });
     });
 
-    const results = [] as { day: number; workHours: number; downtimeHours: number; panneHours: number }[];
+    const results: { date: string; workHours: number; downtimeHours: number; panneHours: number }[] = [];
+    if (!periodStart || !periodEnd) return [] as any;
 
-    // naive approach: use serviceHours reported in records to approximate daily work hours when multiple records are present
-    // If only one record exists for a day, we can't compute delta; treat as 0 for now.
-    for (let d = 1; d <= daysInMonth; d++) {
-      const recs = map[d] || [];
+    // For each date in dateRange, compute metrics
+    dateRange.forEach(dateIso => {
+      // maintenance records for that exact date
+      const recs = recMap[dateIso] || [];
       let workHours = 0;
       let downtimeHours = 0;
       let panneHours = 0;
 
       if (recs.length >= 2) {
-        // sort by time
         recs.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         const first = recs[0];
         const last = recs[recs.length - 1];
         workHours = last.serviceHours - first.serviceHours;
         if (workHours < 0) workHours = 0;
       }
-  // Sum adjustments (if any) for the day
-  const dayAdjustments = adjMap[d] || [];
-  const adjWork = dayAdjustments.reduce((s, a) => s + (a.work_hours || 0), 0);
-  const adjDowntime = dayAdjustments.reduce((s, a) => s + (a.downtime_hours || 0), 0);
-  const adjPanne = dayAdjustments.reduce((s, a) => s + (a.panne_hours || 0), 0);
 
-      // Also include downtime/panne reported directly on maintenance records for the day
+  const dayAdj = adjMap[dateIso] || [];
+  const adjWork = dayAdj.reduce((s,a) => s + (a.work_hours || 0), 0);
+  const adjDowntime = dayAdj.reduce((s,a) => s + (a.downtime_hours || 0), 0);
+  const adjPanne = dayAdj.reduce((s,a) => s + (a.panne_hours || 0), 0);
+
       const recDowntime = recs.reduce((s, r) => s + ((r as any).downtimeHours || 0), 0);
       const recPanne = recs.reduce((s, r) => s + ((r as any).panneHours || 0), 0);
 
-      // include adjustments into totals
       workHours = workHours + adjWork;
       downtimeHours = adjDowntime + recDowntime;
       panneHours = adjPanne + recPanne;
-      results.push({ day: d, workHours, downtimeHours, panneHours });
-    }
 
-    return results;
-  }, [recordsForMachineAndMonth, selectedMachine, daysInMonth, adjustments]);
+      results.push({ date: dateIso, workHours, downtimeHours, panneHours });
+    });
+
+    return results as any;
+  }, [recordsForMachineAndMonth, selectedMachine, adjustments, dateRange, periodStart, periodEnd]);
 
   // Apply optimistic edits to the daily summary for display/totals
   const displayedDailySummary = useMemo(() => {
-    return dailySummary.map(d => {
-      const o = optimisticEdits[d.day];
-      if (o) return { day: d.day, workHours: o.workHours, downtimeHours: o.downtimeHours, panneHours: o.panneHours };
+    return dailySummary.map((d: { date: string; workHours: number; downtimeHours: number; panneHours: number }) => {
+      const o = optimisticEdits[d.date];
+      if (o) return { date: d.date, workHours: o.workHours, downtimeHours: o.downtimeHours, panneHours: o.panneHours };
       return d;
     });
   }, [dailySummary, optimisticEdits]);
 
   const totals = useMemo(() => {
-    return displayedDailySummary.reduce((acc, cur) => ({
+    return displayedDailySummary.reduce((acc: { workHours: number; downtimeHours: number; panneHours: number }, cur: { workHours: number; downtimeHours: number; panneHours: number }) => ({
       workHours: acc.workHours + cur.workHours,
       downtimeHours: acc.downtimeHours + cur.downtimeHours,
       panneHours: acc.panneHours + cur.panneHours,
@@ -141,7 +146,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       const records = maintenanceRecords.filter(r => {
         if (r.machineId !== machine.id) return false;
         const d = new Date(r.date);
-        return d.getFullYear() === y && (d.getMonth() + 1) === m;
+        return periodStart && periodEnd ? (d >= periodStart && d <= periodEnd) : false;
       }).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
       let workHours = 0;
@@ -158,8 +163,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
       // include adjustments for this machine in the month
       const machineAdjustments = (adjustments || []).filter((adj: any) => {
         if (adj.machine_id !== machine.id) return false;
-        const d = new Date(adj.date);
-        return d.getFullYear() === y && (d.getMonth() + 1) === m;
+        const iso = new Date(adj.date).toISOString().slice(0,10);
+        return dateRange.includes(iso);
       });
       const adjWork = machineAdjustments.reduce((s: number, a: any) => s + (a.work_hours || 0), 0);
       const adjDowntime = machineAdjustments.reduce((s: number, a: any) => s + (a.downtime_hours || 0), 0);
@@ -171,8 +176,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
 
       // include optimistic edits if they belong to the currently selected machine
       if (machine.id === selectedMachineId) {
-        const optimisticSum = Object.entries(optimisticEdits).reduce((s, [dayStr, o]) => {
-          // ensure the optimistic edit is within the current month (we keyed by day so just add)
+        const optimisticSum = Object.entries(optimisticEdits).reduce((s, [dateStr, o]) => {
+          if (!dateRange.includes(dateStr)) return s;
           return {
             workHours: s.workHours + o.workHours,
             downtimeHours: s.downtimeHours + o.downtimeHours,
@@ -235,75 +240,75 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
             </TableRow>
           </TableHeader>
           <TableBody>
-            {dailySummary.map(row => {
-              const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && new Date(a.date).getDate() === row.day && new Date(a.date).toISOString().startsWith(month));
+            {displayedDailySummary.map((row: any) => {
+              const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && new Date(a.date).toISOString().slice(0,10) === row.date);
+              const dayLabel = new Date(row.date + 'T00:00:00Z').getDate();
               return (
-                <TableRow key={row.day}>
-                  <TableCell>{row.day}</TableCell>
+                <TableRow key={row.date}>
+                  <TableCell>{dayLabel}</TableCell>
                   <TableCell>
-                    {editingDay === row.day ? (
+                    {editingKey === row.date ? (
                       <Input type="number" value={String(editValues.workHours)} onChange={e => setEditValues(v => ({ ...v, workHours: e.target.value }))} />
                     ) : (
                       row.workHours
                     )}
                   </TableCell>
                   <TableCell>
-                    {editingDay === row.day ? (
+                    {editingKey === row.date ? (
                       <Input type="number" value={String(editValues.downtimeHours)} onChange={e => setEditValues(v => ({ ...v, downtimeHours: e.target.value }))} />
                     ) : (
                       row.downtimeHours
                     )}
                   </TableCell>
                   <TableCell>
-                    {editingDay === row.day ? (
+                    {editingKey === row.date ? (
                       <Input type="number" value={String(editValues.panneHours)} onChange={e => setEditValues(v => ({ ...v, panneHours: e.target.value }))} />
                     ) : (
                       row.panneHours
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {editingDay === row.day ? (
+                    {editingKey === row.date ? (
                       <div className="flex gap-2 justify-end">
                         <Button size="sm" disabled={isSavingAdj} onClick={async () => {
                           if (!selectedMachine) return;
-                          // apply optimistic edit
+                          // apply optimistic edit keyed by ISO date
                           const optimistic = { workHours: Number(editValues.workHours || 0), downtimeHours: Number(editValues.downtimeHours || 0), panneHours: Number(editValues.panneHours || 0), pending: true, id: adjForDay ? (adjForDay as any).id : undefined };
-                          setOptimisticEdits(o => ({ ...o, [row.day]: optimistic }));
-                          setEditingDay(null);
+                          setOptimisticEdits(o => ({ ...o, [row.date]: optimistic }));
+                          setEditingKey(null);
                           try {
-                            const dateStr = `${month}-${String(row.day).padStart(2, '0')}`;
+                            const dateStr = row.date;
                             const payload = { machineId: selectedMachine.id, date: dateStr, workHours: optimistic.workHours, downtimeHours: optimistic.downtimeHours, panneHours: optimistic.panneHours };
                             if (adjForDay && onUpdateAdjustment) {
                               await onUpdateAdjustment((adjForDay as any).id, payload as any);
+                              setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
                             } else if (onCreateAdjustment) {
                               const res = await onCreateAdjustment(payload as any);
-                              // If create returns the new id, attach it
                               if (res && (res as any).id) {
-                                setOptimisticEdits(o => ({ ...o, [row.day]: { ...o[row.day], pending: false, id: (res as any).id } }));
+                                setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false, id: (res as any).id } }));
                               } else {
-                                setOptimisticEdits(o => ({ ...o, [row.day]: { ...o[row.day], pending: false } }));
+                                setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
                               }
                             } else {
-                              // mark not pending
-                              setOptimisticEdits(o => ({ ...o, [row.day]: { ...o[row.day], pending: false } }));
+                              setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
                             }
                             if (addToast) addToast({ type: 'success', title: 'Ajustement sauvegardé', description: '' });
                           } catch (e) {
                             // revert optimistic edit on failure
                             setOptimisticEdits(o => {
                               const copy = { ...o };
-                              delete copy[row.day];
+                              delete copy[row.date];
                               return copy;
                             });
                             if (addToast) addToast({ type: 'error', title: 'Erreur', description: 'Erreur lors de la sauvegarde' });
                           }
                         }}>Enregistrer</Button>
-                        <Button size="sm" variant="ghost" onClick={() => { setEditingDay(null); }}>Annuler</Button>
+                        <Button size="sm" variant="ghost" onClick={() => { setEditingKey(null); }}>Annuler</Button>
                       </div>
                     ) : (
                       <div className="flex justify-end">
                         <Button size="sm" variant="ghost" onClick={() => {
-                          setEditingDay(row.day);
+                          setEditingKey(row.date);
                           setEditValues({ workHours: row.workHours, downtimeHours: row.downtimeHours, panneHours: row.panneHours });
                         }}>Modifier</Button>
                       </div>
