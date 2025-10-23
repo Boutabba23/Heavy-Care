@@ -26,6 +26,8 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ isOpen, onClose, on
   const [serviceHours, setServiceHours] = useState('');
   const [date, setDate] = useState('');
   const [filtersUsed, setFiltersUsed] = useState<UsedFilter[]>([]);
+    const [downtimeHours, setDowntimeHours] = useState<number | string>(0);
+    const [panneHours, setPanneHours] = useState<number | string>(0);
   const [error, setError] = useState('');
 
     const [newFilter, setNewFilter] = useState({ typeId: '', refId: '', quantity: '1' });
@@ -51,6 +53,8 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ isOpen, onClose, on
       setServiceHours(String(record?.serviceHours || ''));
       setDate(record?.date ? new Date(record.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
       setFiltersUsed(record?.filtersUsed || []);
+            setDowntimeHours(record?.downtimeHours ?? 0);
+            setPanneHours(record?.panneHours ?? 0);
       
     setNewFilter({ typeId: '', refId: '', quantity: '1' });
       setError('');
@@ -180,6 +184,8 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ isOpen, onClose, on
         serviceHours: hours,
         date: new Date(date).toISOString(),
         filtersUsed,
+        downtimeHours: typeof downtimeHours === 'string' ? parseInt(downtimeHours || '0', 10) : downtimeHours,
+        panneHours: typeof panneHours === 'string' ? parseInt(panneHours || '0', 10) : panneHours,
     };
     
     if (isEditing) {
@@ -240,6 +246,16 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ isOpen, onClose, on
                 <div className="space-y-2">
                     <Label htmlFor="serviceHours">Heures de service</Label>
                     <Input id="serviceHours" type="number" value={serviceHours} onChange={e => setServiceHours(e.target.value)} placeholder="ex: 12500" disabled={viewOnly} />
+                </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="downtimeHours">Heures de chômage</Label>
+                    <Input id="downtimeHours" type="number" min="0" value={String(downtimeHours)} onChange={e => setDowntimeHours(e.target.value)} disabled={viewOnly} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="panneHours">Heures de panne</Label>
+                    <Input id="panneHours" type="number" min="0" value={String(panneHours)} onChange={e => setPanneHours(e.target.value)} disabled={viewOnly} />
                 </div>
             </div>
             

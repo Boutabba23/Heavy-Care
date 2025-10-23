@@ -245,6 +245,11 @@ const AppContent: React.FC = () => {
           <MonthlySummaryView
             machines={state.machines}
             maintenanceRecords={state.maintenanceRecords}
+            adjustments={state.monthlyDailyAdjustments}
+            onCreateAdjustment={actions.createDailyAdjustment}
+            onUpdateAdjustment={actions.updateDailyAdjustment}
+            onDeleteAdjustment={actions.deleteDailyAdjustment}
+                addToast={actions.addToast}
           />
         );
       default:

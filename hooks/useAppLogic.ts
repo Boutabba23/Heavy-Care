@@ -85,6 +85,59 @@ export const useAppLogic = () => {
   const [maintenanceRecords, setMaintenanceRecords] = useState<
     MaintenanceRecord[]
   >([]);
+  const [monthlyDailyAdjustments, setMonthlyDailyAdjustments] = useState<{
+    id: string;
+    machine_id: string;
+    date: string;
+    downtime_hours: number;
+    panne_hours: number;
+    notes?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+  }[]>([]);
+
+  // Daily adjustment helpers (declare here so they can be referenced in actions)
+  async function createDailyAdjustment(adj: { machineId: string; date: string; downtimeHours: number; panneHours: number; notes?: string }) {
+    const payload: import("../types/supabase").Database['public']['Tables']['monthly_daily_adjustments']['Insert'] = {
+      id: `adj-${Date.now()}-${Math.random().toString(36).substr(2,6)}`,
+      machine_id: adj.machineId,
+      date: adj.date,
+      downtime_hours: adj.downtimeHours || 0,
+      panne_hours: adj.panneHours || 0,
+      notes: adj.notes || null,
+    };
+    const { data, error } = await supabase.from('monthly_daily_adjustments').insert(payload).select('*');
+    if (error) {
+      addToast({ type: 'error', title: 'Erreur', description: error.message });
+      return null;
+    }
+    await fetchData();
+    return (data && data[0]) || null;
+  }
+
+  async function updateDailyAdjustment(id: string, changes: Partial<{ downtimeHours: number; panneHours: number; notes?: string }>) {
+    const payload: Partial<import("../types/supabase").Database['public']['Tables']['monthly_daily_adjustments']['Update']> = {};
+    if (changes.downtimeHours !== undefined) payload.downtime_hours = changes.downtimeHours;
+    if (changes.panneHours !== undefined) payload.panne_hours = changes.panneHours;
+    if (changes.notes !== undefined) payload.notes = changes.notes;
+    const { error } = await supabase.from('monthly_daily_adjustments').update(payload).eq('id', id);
+    if (error) {
+      addToast({ type: 'error', title: 'Erreur', description: error.message });
+      return false;
+    }
+    await fetchData();
+    return true;
+  }
+
+  async function deleteDailyAdjustment(id: string) {
+    const { error } = await supabase.from('monthly_daily_adjustments').delete().eq('id', id);
+    if (error) {
+      addToast({ type: 'error', title: 'Erreur', description: error.message });
+      return false;
+    }
+    await fetchData();
+    return true;
+  }
 
   const [theme, _setTheme] = useState<Theme>(() =>
     loadFromStorage("gestifiltres-theme", "default-light")
@@ -154,11 +207,13 @@ export const useAppLogic = () => {
         filterGroupsRes,
         filterTypesRes,
         maintenanceRecordsRes,
+        adjustmentsRes,
       ] = await Promise.all([
         supabase.from("machines").select("*"),
         supabase.from("filter_groups").select("*"),
         supabase.from("filter_types").select("*"),
         supabase.from("maintenance_records").select("*"),
+  supabase.from("monthly_daily_adjustments").select("*"),
       ]);
 
       if (machinesRes.error) throw machinesRes.error;
@@ -200,7 +255,56 @@ export const useAppLogic = () => {
         serviceHours: record.service_hours,
         date: record.date,
         filtersUsed: record.filters_used || [],
+        downtimeHours: record.downtime_hours || 0,
+        panneHours: record.panne_hours || 0,
       }));
+
+      setMonthlyDailyAdjustments(adjustmentsRes.data || []);
+
+      // Helper: CRUD for monthly_daily_adjustments
+      const createDailyAdjustment = async (adj: { machineId: string; date: string; downtimeHours: number; panneHours: number; notes?: string }) => {
+        const payload = {
+          id: `adj-${Date.now()}-${Math.random().toString(36).substr(2,6)}`,
+          machine_id: adj.machineId,
+          date: adj.date,
+          downtime_hours: adj.downtimeHours || 0,
+          panne_hours: adj.panneHours || 0,
+          notes: adj.notes || null,
+        };
+        const res = await (supabase as any).from('monthly_daily_adjustments').insert(payload as any);
+        if (res.error) {
+          addToast({ type: 'error', title: 'Erreur', description: res.error.message });
+          return null;
+        }
+        await fetchData();
+        return res.data?.[0] || null;
+      };
+
+      const updateDailyAdjustment = async (id: string, changes: Partial<{ downtimeHours: number; panneHours: number; notes?: string }>) => {
+        const payload: any = {};
+        if (changes.downtimeHours !== undefined) payload.downtime_hours = changes.downtimeHours;
+        if (changes.panneHours !== undefined) payload.panne_hours = changes.panneHours;
+        if (changes.notes !== undefined) payload.notes = changes.notes;
+        const res = await (supabase as any).from('monthly_daily_adjustments').update(payload).eq('id', id);
+        if (res.error) {
+          addToast({ type: 'error', title: 'Erreur', description: res.error.message });
+          return false;
+        }
+        await fetchData();
+        return true;
+      };
+
+      const deleteDailyAdjustment = async (id: string) => {
+        const res = await (supabase as any).from('monthly_daily_adjustments').delete().eq('id', id);
+        if (res.error) {
+          addToast({ type: 'error', title: 'Erreur', description: res.error.message });
+          return false;
+        }
+        await fetchData();
+        return true;
+      };
+
+      // expose helpers via actions later (we'll add them to actions object)
 
       setMachines(transformedMachines);
       setFilterGroups(transformedFilterGroups);
@@ -816,6 +920,8 @@ export const useAppLogic = () => {
             service_hours: recordData.serviceHours,
             maintenance_range: recordData.maintenanceRange,
             filters_used: recordData.filtersUsed,
+            downtime_hours: (recordData as any).downtimeHours || 0,
+            panne_hours: (recordData as any).panneHours || 0,
           }
         : {
             id: `maint-${Date.now()}`,
@@ -824,6 +930,8 @@ export const useAppLogic = () => {
             service_hours: recordData.serviceHours,
             maintenance_range: recordData.maintenanceRange,
             filters_used: recordData.filtersUsed,
+            downtime_hours: (recordData as any).downtimeHours || 0,
+            panne_hours: (recordData as any).panneHours || 0,
           };
 
     const { error } = await supabase
@@ -902,6 +1010,8 @@ export const useAppLogic = () => {
           }
         }
       }
+
+  // Refresh data and notify success (already done below)
 
       // Refresh data and notify success
       fetchData();
@@ -1108,6 +1218,10 @@ export const useAppLogic = () => {
     importMaintenanceRecords,
     openMaintenanceImportModal,
     closeMaintenanceImportModal,
+    // daily adjustments CRUD
+    createDailyAdjustment: (adj: { machineId: string; date: string; downtimeHours: number; panneHours: number; notes?: string }) => (createDailyAdjustment as any)(adj),
+    updateDailyAdjustment: (id: string, changes: Partial<{ downtimeHours: number; panneHours: number; notes?: string }>) => (updateDailyAdjustment as any)(id, changes),
+    deleteDailyAdjustment: (id: string) => (deleteDailyAdjustment as any)(id),
   };
 
   const state = {
@@ -1141,6 +1255,7 @@ export const useAppLogic = () => {
     isImportModalOpen,
     isMaintenanceImportModalOpen,
     confirmationDialogConfig,
+    monthlyDailyAdjustments,
   };
 
   return { state, actions };
