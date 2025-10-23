@@ -38,10 +38,12 @@ const Header: React.FC<HeaderProps> = (props) => {
         return "Maintenance Préventive";
       case View.ANALYTICS:
         return "Analyses & Rapports";
+      case View.MONTHLY_SUMMARY:
+        return "Sythèse Mensuelle";
       case View.SETTINGS:
         return "Paramètres";
       default:
-        return "Tableau de bord";
+        return "";
     }
   };
 
