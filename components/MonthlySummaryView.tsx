@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Machine, MaintenanceRecord } from "../types";
 import Select from "./ui/Select";
 import Input from "./ui/Input";
@@ -8,23 +8,26 @@ import Button from "./ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import Label from "./ui/Label";
 import Tabs from "./ui/Tabs"; // Import Tabs
+import { useGMAOMonthlySummary } from '../hooks/useGMAOMonthlySummary';
 
 // ConfirmationDialog removed: inline editing replaces separate adjustments UI
 import { Toast } from "../types";
 import { PencilIcon } from "@/constants";
 
-interface Props {
-  machines: Machine[];
-  maintenanceRecords: MaintenanceRecord[];
-  adjustments?: { id: string; machine_id: string; date: string; work_hours?: number; downtime_hours: number; panne_hours: number; notes?: string | null }[];
-  onCreateAdjustment?: (adj: { machineId: string; date: string; workHours?: number; downtimeHours: number; panneHours: number; notes?: string }) => Promise<any> | any;
-  onUpdateAdjustment?: (id: string, changes: Partial<{ workHours?: number; downtimeHours: number; panneHours: number; notes?: string }>) => Promise<boolean> | boolean;
-  onDeleteAdjustment?: (id: string) => Promise<boolean> | boolean;
-  addToast?: (t: Omit<Toast, 'id'>) => void;
-}
-
 // This view computes a daily summary for a given machine and month.
-const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adjustments, onCreateAdjustment, onUpdateAdjustment, onDeleteAdjustment, addToast }) => {
+const MonthlySummaryView: React.FC = () => {
+  const {
+    machines,
+    maintenanceRecords,
+    adjustments,
+    isLoading,
+    error,
+    createDailyAdjustment,
+    updateDailyAdjustment,
+    deleteDailyAdjustment,
+    addToast,
+  } = useGMAOMonthlySummary();
+
   // Inline editing state for daily rows
   const [editingKey, setEditingKey] = useState<string | null>(null); // ISO date string when editing a row
   const [editValues, setEditValues] = useState<{ workHours: number | string; downtimeHours: number | string; panneHours: number | string }>({ workHours: 0, downtimeHours: 0, panneHours: 0 });
@@ -32,10 +35,15 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
   // optimistic edits keyed by ISO date string (YYYY-MM-DD)
   const [optimisticEdits, setOptimisticEdits] = useState<Record<string, { workHours: number; downtimeHours: number; panneHours: number; pending: boolean; id?: string }>>({});
   // handlers will be set by parent via props; they exist on props via closure below
-  const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0]?.id || "");
+  const [selectedMachineId, setSelectedMachineId] = useState<string>("");
   const [month, setMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [machineSearch, setMachineSearch] = useState('');
 
+  useEffect(() => {
+    if (machines.length > 0 && !selectedMachineId) {
+      setSelectedMachineId(machines[0].id);
+    }
+  }, [machines, selectedMachineId]);
 
   const selectedMachine = machines.find(m => m.id === selectedMachineId) || null;
   const formatMonth = (monthString: string) => {
