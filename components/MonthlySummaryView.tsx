@@ -248,7 +248,7 @@ const MonthlySummaryView: React.FC = () => {
             </TableHeader>
             <TableBody>
               {displayedDailySummary.map((row: any) => {
-                const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && new Date(a.date).toISOString().slice(0, 10) === row.date);
+                const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && a.date === row.date);
                 const dayLabel = new Date(row.date + 'T00:00:00Z').getDate();
                 return (
                   <TableRow key={row.date}>
@@ -286,11 +286,11 @@ const MonthlySummaryView: React.FC = () => {
                             try {
                               const dateStr = row.date;
                               const payload = { machineId: selectedMachine.id, date: dateStr, workHours: optimistic.workHours, downtimeHours: optimistic.downtimeHours, panneHours: optimistic.panneHours };
-                              if (adjForDay && onUpdateAdjustment) {
-                                await onUpdateAdjustment((adjForDay as any).id, payload as any);
+                              if (adjForDay && updateDailyAdjustment) {
+                                await updateDailyAdjustment((adjForDay as any).id, payload as any);
                                 setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
-                              } else if (onCreateAdjustment) {
-                                const res = await onCreateAdjustment(payload as any);
+                              } else if (createDailyAdjustment) {
+                                const res = await createDailyAdjustment(payload as any);
                                 if (res && (res as any).id) {
                                   setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false, id: (res as any).id } }));
                                 } else {

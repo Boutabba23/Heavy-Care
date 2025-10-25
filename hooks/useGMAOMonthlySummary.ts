@@ -85,7 +85,7 @@ export const useGMAOMonthlySummary = () => {
     const adjustments: any[] = etatRecords.map(record => ({
       id: record.numero,
       machine_id: record.codeMateriel,
-      date: record.date,
+      date: new Date(record.date).toISOString().slice(0, 10),
       work_hours: record.h_service,
       downtime_hours: record.h_chomage,
       panne_hours: record.h_panne,
@@ -101,9 +101,86 @@ export const useGMAOMonthlySummary = () => {
     adjustments,
     isLoading,
     error,
-    // Mock actions for now
-    createDailyAdjustment: async (adj: any) => { console.log('createDailyAdjustment not implemented for GMAO', adj); return null; },
-    updateDailyAdjustment: async (id: string, changes: any) => { console.log('updateDailyAdjustment not implemented for GMAO', id, changes); return true; },
+    createDailyAdjustment: async (adj: any) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/etat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    date: adj.date,
+                    codeMateriel: adj.machineId,
+                    h_service: adj.workHours,
+                    h_chomage: adj.downtimeHours,
+                    h_panne: adj.panneHours,
+                }),
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create adjustment');
+            }
+            const newAdjustmentResult = await response.json();
+
+            const newEtatRecord: GMAOEtat = {
+                numero: newAdjustmentResult.numero,
+                date: adj.date,
+                codeMateriel: adj.machineId,
+                h_service: adj.workHours,
+                h_chomage: adj.downtimeHours,
+                h_panne: adj.panneHours,
+                etat: 0, 
+                carburant: 0,
+                lubrifiant: 0,
+                compteur: 0,
+            };
+
+            setEtatRecords(prevRecords => [...prevRecords, newEtatRecord]);
+
+            return newAdjustmentResult;
+        } catch (err: any) {
+            setError(err.message);
+            return null;
+        }
+    },
+    updateDailyAdjustment: async (id: string, changes: any) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/etat/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    h_service: changes.workHours,
+                    h_chomage: changes.downtimeHours,
+                    h_panne: changes.panneHours,
+                }),
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update adjustment');
+            }
+            
+            setEtatRecords(prevRecords => 
+                prevRecords.map(record => {
+                    if (record.numero === id) {
+                        return {
+                            ...record,
+                            h_service: changes.workHours,
+                            h_chomage: changes.downtimeHours,
+                            h_panne: changes.panneHours,
+                        };
+                    }
+                    return record;
+                })
+            );
+
+            return await response.json();
+        } catch (err: any) {
+            setError(err.message);
+            return null;
+        }
+    },
     deleteDailyAdjustment: async (id: string) => { console.log('deleteDailyAdjustment not implemented for GMAO', id); return true; },
     addToast: (toast: any) => { console.log('addToast', toast); },
   };
