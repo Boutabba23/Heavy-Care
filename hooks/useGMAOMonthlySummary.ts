@@ -50,7 +50,10 @@ export const useGMAOMonthlySummary = () => {
         const machinesData = await machinesRes.json();
         const etatData = await etatRes.json();
 
-        setMachines(machinesData);
+        // Filter machines by chantier 'T154'
+        const filteredMachines = machinesData.filter((machine: GMAOMachine) => machine.chantier === 'T154');
+
+        setMachines(filteredMachines);
         setEtatRecords(etatData);
       } catch (err: any) {
         setError(err.message);
