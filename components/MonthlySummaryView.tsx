@@ -241,25 +241,30 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
             <TableBody>
               {displayedDailySummary.map((row: any) => {
                 const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && new Date(a.date).toISOString().slice(0, 10) === row.date);
-                const dayLabel = new Date(row.date + 'T00:00:00Z').getDate();
+                const date = new Date(row.date + 'T00:00:00Z');
+                const dayName = date.toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3);
+
+                const dayLabel = `${dayName} - ${date.getDate()}`;
+                const isWeekend = dayName === 'jeu' || dayName === 'ven';
+
                 return (
                   <TableRow key={row.date}>
-                    <TableCell>{dayLabel}</TableCell>
-                    <TableCell>
+                    <TableCell className={isWeekend ? 'text-primary' : ''}>{dayLabel}</TableCell>
+                    <TableCell className="pl-14">
                       {editingKey === row.date ? (
                         <Input type="number" value={String(editValues.workHours)} onChange={e => setEditValues(v => ({ ...v, workHours: e.target.value }))} />
                       ) : (
                         row.workHours
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="pl-14">
                       {editingKey === row.date ? (
-                        <Input type="number" value={String(editValues.downtimeHours)} onChange={e => setEditValues(v => ({ ...v, downtimeHours: e.target.value }))} />
+                        <Input  type="number" value={String(editValues.downtimeHours)} onChange={e => setEditValues(v => ({ ...v, downtimeHours: e.target.value }))} />
                       ) : (
                         row.downtimeHours
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="pl-14">
                       {editingKey === row.date ? (
                         <Input type="number" value={String(editValues.panneHours)} onChange={e => setEditValues(v => ({ ...v, panneHours: e.target.value }))} />
                       ) : (
@@ -318,10 +323,10 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
                 );
               })}
               <TableRow>
-                <TableCell className="font-bold">Total</TableCell>
-                <TableCell className="font-bold">{totals.workHours}</TableCell>
-                <TableCell className="font-bold">{totals.downtimeHours}</TableCell>
-                <TableCell className="font-bold">{totals.panneHours}</TableCell>
+                <TableCell className="font-bold text-xl">Total</TableCell>
+                <TableCell className="font-bold text-xl pl-14">{totals.workHours}</TableCell>
+                <TableCell className="font-bold text-xl pl-14">{totals.downtimeHours}</TableCell>
+                <TableCell className="font-bold text-xl pl-14">{totals.panneHours}</TableCell>
                 <TableCell></TableCell>
               </TableRow>
             </TableBody>
@@ -332,7 +337,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
     {
       label: "Synthèse Mensuelle",
       content: (
-        <div className="mb-4 mt-4">
+        <div className="my-4">
           <Input
             type="text"
             placeholder="Rechercher par code ou désignation..."
@@ -353,17 +358,17 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
             <TableBody>
               {filteredPerMachineTotals.map(m => (
                 <TableRow key={m.machineId}>
-                  <TableCell>{m.code} - {m.designation}</TableCell>
-                  <TableCell>{m.workHours}</TableCell>
-                  <TableCell>{m.downtimeHours}</TableCell>
-                  <TableCell>{m.panneHours}</TableCell>
+                  <TableCell >{m.code} - {m.designation}</TableCell>
+                  <TableCell className="pl-14">{m.workHours}</TableCell>
+                  <TableCell className="pl-14">{m.downtimeHours}</TableCell>
+                  <TableCell className="pl-14">{m.panneHours}</TableCell>
                 </TableRow>
               ))}
               <TableRow>
-                <TableCell className="font-bold">Total Général</TableCell>
-                <TableCell className="font-bold">{grandTotals.workHours}</TableCell>
-                <TableCell className="font-bold">{grandTotals.downtimeHours}</TableCell>
-                <TableCell className="font-bold">{grandTotals.panneHours}</TableCell>
+                <TableCell className="font-bold text-xl">Total Général</TableCell>
+                <TableCell className="font-bold pl-14 text-xl">{grandTotals.workHours}</TableCell>
+                <TableCell className="font-bold pl-14 text-xl">{grandTotals.downtimeHours}</TableCell>
+                <TableCell className="font-bold pl-14 text-xl">{grandTotals.panneHours}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -376,14 +381,14 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
     <div className="space-y-4">
       <div className="flex items-end gap-4">
         <div>
-          <Label>Engin</Label>
-          <Select value={selectedMachineId} onChange={e => setSelectedMachineId(e.target.value)}>
+          <Label >Engin</Label>
+          <Select className="mt-2" value={selectedMachineId} onChange={e => setSelectedMachineId(e.target.value)}>
             {machines.map(m => <option key={m.id} value={m.id}>{m.code} - {m.designation}</option>)}
           </Select>
         </div>
         <div>
           <Label>Mois</Label>
-          <Input type="month" value={month} onChange={e => setMonth(e.target.value)} />
+          <Input className="mt-2" type="month" value={month} onChange={e => setMonth(e.target.value)} />
         </div>
       </div>
 
@@ -392,7 +397,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adj
         <Tabs tabs={summaryTabs} />
       </div>
 
-      <div className="text-sm text-muted-foreground">Note: Cette synthèse utilise les heures de service reportées dans les enregistrements de maintenance. Pour des mesures précises de chômage/panne, ajoutez des champs explicites ou ajustements manuels.</div>
+     
     </div>
   );
 };

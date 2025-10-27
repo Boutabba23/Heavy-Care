@@ -8,6 +8,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  devMode: boolean;
+  toggleDevMode: () => void;
   signIn: (
     email: string,
     password: string
@@ -39,6 +41,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [devMode, setDevMode] = useState(process.env.NODE_ENV === 'development');
+
+  const toggleDevMode = () => {
+    setDevMode(prev => !prev);
+  };
 
   useEffect(() => {
     // Get initial session
@@ -114,6 +121,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signOut,
     signInWithGoogle,
     resetPassword,
+    devMode,
+    toggleDevMode,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
