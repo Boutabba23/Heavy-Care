@@ -107,8 +107,7 @@ export interface Database {
           service_hours: number
           maintenance_range: 'C' | 'D' | 'E' | 'F'
           filters_used: Json
-          downtime_hours: number
-          panne_hours: number
+          
           created_at: string
           updated_at: string
         }
@@ -119,8 +118,7 @@ export interface Database {
           service_hours: number
           maintenance_range: 'C' | 'D' | 'E' | 'F'
           filters_used?: Json
-          downtime_hours?: number
-          panne_hours?: number
+          
           created_at?: string
           updated_at?: string
         }
@@ -131,8 +129,7 @@ export interface Database {
           service_hours?: number
           maintenance_range?: 'C' | 'D' | 'E' | 'F'
           filters_used?: Json
-          downtime_hours?: number
-          panne_hours?: number
+        
           created_at?: string
           updated_at?: string
         }
