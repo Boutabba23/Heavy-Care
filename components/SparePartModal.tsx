@@ -126,7 +126,7 @@ const SparePartModal: React.FC<SparePartModalProps> = ({
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
-                                <Label htmlFor="unitPrice">Prix unitaire (€)</Label>
+                                <Label htmlFor="unitPrice">Prix unitaire (DA)</Label>
                                 <Input
                                     id="unitPrice"
                                     type="number"

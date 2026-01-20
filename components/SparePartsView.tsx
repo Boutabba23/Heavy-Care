@@ -139,7 +139,7 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
                 <Card className="p-4">
                     <p className="text-sm text-muted-foreground">Valeur Stock</p>
                     <p className="text-2xl font-bold text-foreground">
-                        {totalStockValue.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
+                        {totalStockValue.toLocaleString("fr-FR")} DA
                     </p>
                 </Card>
                 <Card className="p-4">
@@ -213,7 +213,7 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
                                                 )}
                                                 <p>
                                                     <span className="font-medium">Prix unitaire:</span>{" "}
-                                                    {part.unitPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
+                                                    {part.unitPrice.toLocaleString("fr-FR")} DA
                                                 </p>
                                                 {part.location && (
                                                     <p><span className="font-medium">Emplacement:</span> {part.location}</p>
