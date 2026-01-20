@@ -42,6 +42,8 @@ const Header: React.FC<HeaderProps> = (props) => {
         return "Sythèse Mensuelle";
       case View.SETTINGS:
         return "Paramètres";
+      case View.SPARE_PARTS:
+        return "Pièces de Rechange";
       default:
         return "";
     }
@@ -57,7 +59,7 @@ const Header: React.FC<HeaderProps> = (props) => {
         <MenuIcon className="h-6 w-6" />
       </button>
       <div className="flex items-center sm:text-xl max-sm:text-sm">
-       
+
         <span className="font-bold text-foreground">{getTitle()}</span>
       </div>
       <div className="flex-1" /> {/* Spacer */}
