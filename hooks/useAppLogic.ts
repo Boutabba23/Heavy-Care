@@ -1267,7 +1267,10 @@ export const useAppLogic = () => {
         .eq("id", partData.id);
       error = res.error;
     } else {
-      const res = await supabase.from("spare_parts").insert([payload]);
+      const res = await supabase.from("spare_parts").insert([{
+        ...payload,
+        id: `sp-${Date.now()}`,
+      }]);
       error = res.error;
     }
 
@@ -1331,7 +1334,10 @@ export const useAppLogic = () => {
       notes: instData.notes || null,
     };
 
-    const { error } = await supabase.from("spare_part_installations").insert([payload]);
+    const { error } = await supabase.from("spare_part_installations").insert([{
+      ...payload,
+      id: `inst-${Date.now()}`,
+    }]);
 
     if (error) {
       addToast({
