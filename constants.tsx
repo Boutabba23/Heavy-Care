@@ -428,3 +428,10 @@ export const ExclamationTriangleIcon: React.FC<{ className?: string }> = ({
   const IconComponent = AlertTriangle;
   return <IconComponent className={className} />;
 };
+
+export const SparePartsIcon: React.FC<{ className?: string }> = ({
+  className,
+}) => {
+  const IconComponent = Wrench;
+  return <IconComponent className={className} />;
+};

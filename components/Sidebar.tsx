@@ -13,6 +13,7 @@ import {
   WrenchIcon,
   Squares2x2Icon,
   ChartBarIcon,
+  SparePartsIcon,
 } from "../constants";
 
 interface SidebarProps {
@@ -83,11 +84,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           setCurrentView(view);
           closeSidebar();
         }}
-        className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
-          isActive
-            ? "bg-gradient-to-r from-primary via-primary to-orange-400 text-primary-foreground shadow-md scale-105"
-            : "text-foreground/80 hover:bg-muted"
-        }`}
+        className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${isActive
+          ? "bg-gradient-to-r from-primary via-primary to-orange-400 text-primary-foreground shadow-md scale-105"
+          : "text-foreground/80 hover:bg-muted"
+          }`}
       >
         {icon}
         <span>{label}</span>
@@ -105,9 +105,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         />
       )}
       <aside
-        className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform transform ${
-          isMobileOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 bg-card border-r border-border flex flex-col`}
+        className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform transform ${isMobileOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0 bg-card border-r border-border flex flex-col`}
       >
         <div className="h-16 flex items-center px-6 border-b border-border">
           <LogoIcon className="h-7 w-7 text-primary" />
@@ -133,6 +132,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             view={View.MAINTENANCE}
             label="Maintenance Préventive"
             icon={<WrenchIcon className="h-5 w-5" />}
+          />
+          <NavItem
+            view={View.SPARE_PARTS}
+            label="Pièces de Rechange"
+            icon={<SparePartsIcon className="h-5 w-5" />}
           />
           <NavItem
             view={View.ANALYTICS}

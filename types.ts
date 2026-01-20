@@ -4,6 +4,7 @@ export enum View {
   MACHINE_DETAIL = "MACHINE_DETAIL",
   FILTER_MANAGEMENT = "FILTER_MANAGEMENT",
   MAINTENANCE = "MAINTENANCE",
+  SPARE_PARTS = "SPARE_PARTS",
   SETTINGS = "SETTINGS",
   ANALYTICS = "ANALYTICS",
   MONTHLY_SUMMARY = "MONTHLY_SUMMARY",
@@ -150,4 +151,28 @@ export interface StockUpdateInfo {
   filterReference: FilterReference;
   filterGroupId: string;
   isRemove?: boolean;
+}
+
+// --- Spare Parts Management ---
+export interface SparePart {
+  id: string;
+  reference: string;
+  designation: string;
+  category?: string;
+  manufacturer?: string;
+  unitPrice: number;
+  stockQuantity: number;
+  minStock: number;
+  location?: string;
+}
+
+export interface SparePartInstallation {
+  id: string;
+  sparePartId: string;
+  machineId: string;
+  quantity: number;
+  installationDate: string; // ISO date (YYYY-MM-DD)
+  serviceHoursAtInstall?: number;
+  installedBy?: string;
+  notes?: string;
 }

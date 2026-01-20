@@ -17,6 +17,8 @@ import {
   StockUpdateInfo,
   CustomColors,
   SavedTheme,
+  SparePart,
+  SparePartInstallation,
 } from "../types";
 import { calculateNextMaintenance } from "../utils/maintenance";
 import { supabase } from "../utils/supabase";
@@ -201,12 +203,20 @@ export const useAppLogic = () => {
   const [isMaintenanceImportModalOpen, setIsMaintenanceImportModalOpen] =
     useState(false);
 
+  // Spare Parts state
+  const [spareParts, setSpareParts] = useState<SparePart[]>([]);
+  const [sparePartInstallations, setSparePartInstallations] = useState<SparePartInstallation[]>([]);
+  const [isSparePartModalOpen, setIsSparePartModalOpen] = useState(false);
+  const [editingSparePart, setEditingSparePart] = useState<SparePart | null>(null);
+  const [isInstallationModalOpen, setIsInstallationModalOpen] = useState(false);
+  const [preselectedSparePartId, setPreselectedSparePartId] = useState<string | undefined>(undefined);
+
   const [confirmationDialogConfig, setConfirmationDialogConfig] =
     useState<ConfirmationDialogConfig>({
       isOpen: false,
       title: "",
       description: "",
-      onConfirm: () => {},
+      onConfirm: () => { },
     });
 
   const addToast = useCallback((toast: Omit<Toast, "id">) => {
@@ -224,21 +234,25 @@ export const useAppLogic = () => {
         filterTypesRes,
         maintenanceRecordsRes,
         adjustmentsRes,
+        sparePartsRes,
+        installationsRes,
       ] = await Promise.all([
         supabase.from("machines").select("*"),
         supabase.from("filter_groups").select("*"),
         supabase.from("filter_types").select("*"),
         supabase.from("maintenance_records").select("*"),
-  supabase.from("monthly_daily_adjustments").select("*"),
+        supabase.from("monthly_daily_adjustments").select("*"),
+        supabase.from("spare_parts").select("*"),
+        supabase.from("spare_part_installations").select("*"),
       ]);
 
       if (machinesRes.error) throw machinesRes.error;
       if (filterGroupsRes.error) throw filterGroupsRes.error;
-  // Define database types
-  type Tables = Database['public']['Tables'];
-  type MonthlyDailyAdjustmentInsert = Tables['monthly_daily_adjustments']['Insert'];
-  type MonthlyDailyAdjustmentUpdate = Tables['monthly_daily_adjustments']['Update'];
-  type MonthlyDailyAdjustmentRow = Tables['monthly_daily_adjustments']['Row'];
+      // Define database types
+      type Tables = Database['public']['Tables'];
+      type MonthlyDailyAdjustmentInsert = Tables['monthly_daily_adjustments']['Insert'];
+      type MonthlyDailyAdjustmentUpdate = Tables['monthly_daily_adjustments']['Update'];
+      type MonthlyDailyAdjustmentRow = Tables['monthly_daily_adjustments']['Row'];
       if (filterTypesRes.error) throw filterTypesRes.error;
       if (maintenanceRecordsRes.error) throw maintenanceRecordsRes.error;
 
@@ -285,7 +299,7 @@ export const useAppLogic = () => {
       // Helper: CRUD for monthly_daily_adjustments
       const createDailyAdjustment = async (adj: { machineId: string; date: string; downtimeHours: number; panneHours: number; notes?: string }) => {
         const payload = {
-          id: `adj-${Date.now()}-${Math.random().toString(36).substr(2,6)}`,
+          id: `adj-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
           machine_id: adj.machineId,
           date: adj.date,
           downtime_hours: adj.downtimeHours || 0,
@@ -327,10 +341,41 @@ export const useAppLogic = () => {
 
       // expose helpers via actions later (we'll add them to actions object)
 
+      // Transform spare parts
+      const transformedSpareParts: SparePart[] = (sparePartsRes?.data || []).map(
+        (part: any) => ({
+          id: part.id,
+          reference: part.reference,
+          designation: part.designation,
+          category: part.category || undefined,
+          manufacturer: part.manufacturer || undefined,
+          unitPrice: part.unit_price || 0,
+          stockQuantity: part.stock_quantity || 0,
+          minStock: part.min_stock || 0,
+          location: part.location || undefined,
+        })
+      );
+
+      // Transform installations
+      const transformedInstallations: SparePartInstallation[] = (installationsRes?.data || []).map(
+        (inst: any) => ({
+          id: inst.id,
+          sparePartId: inst.spare_part_id,
+          machineId: inst.machine_id,
+          quantity: inst.quantity,
+          installationDate: inst.installation_date,
+          serviceHoursAtInstall: inst.service_hours_at_install || undefined,
+          installedBy: inst.installed_by || undefined,
+          notes: inst.notes || undefined,
+        })
+      );
+
       setMachines(transformedMachines);
       setFilterGroups(transformedFilterGroups);
       setFilterTypes(filterTypesRes.data || []);
       setMaintenanceRecords(transformedMaintenanceRecords);
+      setSpareParts(transformedSpareParts);
+      setSparePartInstallations(transformedInstallations);
     } catch (error: any) {
       console.error("Failed to fetch data from Supabase:", error);
       addToast({
@@ -508,8 +553,8 @@ export const useAppLogic = () => {
         description: `${assignedFilters.length} type(s) de filtre ajouté(s) avec succès.`,
       });
       // Mettre à jour seulement la machine concernée sans recharger toutes les données
-      const updatedMachines = machines.map(machine => 
-        machine.id === machineId 
+      const updatedMachines = machines.map(machine =>
+        machine.id === machineId
           ? { ...machine, assignedFilters: newAssignedFilters }
           : machine
       );
@@ -586,27 +631,27 @@ export const useAppLogic = () => {
     // Prepare the machine data for insertion
     const machineToSave = editingMachine
       ? {
-          id: editingMachine.id,
-          code: machineData.code,
-          designation: machineData.designation,
-          marque: machineData.marque,
-          type: machineData.type,
-          serial_number: machineData.serialNumber || null, // Use null instead of empty string
-          registration_number: machineData.registrationNumber || null, // Use null instead of empty string
-          service_hours: machineData.serviceHours,
-          assigned_filters: editingMachine.assignedFilters || [],
-        }
+        id: editingMachine.id,
+        code: machineData.code,
+        designation: machineData.designation,
+        marque: machineData.marque,
+        type: machineData.type,
+        serial_number: machineData.serialNumber || null, // Use null instead of empty string
+        registration_number: machineData.registrationNumber || null, // Use null instead of empty string
+        service_hours: machineData.serviceHours,
+        assigned_filters: editingMachine.assignedFilters || [],
+      }
       : {
-          id: `m-${Date.now()}`,
-          code: machineData.code,
-          designation: machineData.designation,
-          marque: machineData.marque,
-          type: machineData.type,
-          serial_number: machineData.serialNumber || null, // Use null instead of empty string
-          registration_number: machineData.registrationNumber || null, // Use null instead of empty string
-          service_hours: machineData.serviceHours,
-          assigned_filters: [],
-        };
+        id: `m-${Date.now()}`,
+        code: machineData.code,
+        designation: machineData.designation,
+        marque: machineData.marque,
+        type: machineData.type,
+        serial_number: machineData.serialNumber || null, // Use null instead of empty string
+        registration_number: machineData.registrationNumber || null, // Use null instead of empty string
+        service_hours: machineData.serviceHours,
+        assigned_filters: [],
+      };
 
     const { error } = await supabase
       .from("machines")
@@ -672,9 +717,9 @@ export const useAppLogic = () => {
 
   const importMaintenanceRecords = async (newMaintenanceData: any[]) => {
     // Filter out any records that don't have the minimum required data
-    const validMaintenanceData = newMaintenanceData.filter(record => 
-      record.date && 
-      record.serviceHours !== undefined && 
+    const validMaintenanceData = newMaintenanceData.filter(record =>
+      record.date &&
+      record.serviceHours !== undefined &&
       record.maintenanceRange
     );
 
@@ -707,31 +752,31 @@ export const useAppLogic = () => {
       // Normalize dates (remove time part if exists)
       const date1 = normalizeValue(existingRecord.date).split('T')[0];
       const date2 = normalizeValue(newRecord.date).split('T')[0];
-      
+
       // Handle database format vs import format
       const machineId1 = existingRecord.machineId || existingRecord.machine_id;
       const machineId2 = newRecord.machineId || newRecord.machine_id;
-      
-      const serviceHours1 = existingRecord.serviceHours !== undefined ? 
+
+      const serviceHours1 = existingRecord.serviceHours !== undefined ?
         existingRecord.serviceHours : existingRecord.service_hours;
-      const serviceHours2 = newRecord.serviceHours !== undefined ? 
+      const serviceHours2 = newRecord.serviceHours !== undefined ?
         newRecord.serviceHours : newRecord.service_hours;
-      
+
       const maintenanceRange1 = existingRecord.maintenanceRange || existingRecord.maintenance_range;
       const maintenanceRange2 = newRecord.maintenanceRange || newRecord.maintenance_range;
-      
+
       // Normalize maintenance range (case insensitive)
       const range1 = normalizeValue(maintenanceRange1).toUpperCase();
       const range2 = normalizeValue(maintenanceRange2).toUpperCase();
-      
+
       const isDup = (
         normalizeValue(machineId1) === normalizeValue(machineId2) &&
         date1 === date2 &&
         serviceHours1 === serviceHours2 &&
         range1 === range2
       );
-      
-      
+
+
       return isDup;
     };
 
@@ -741,7 +786,7 @@ export const useAppLogic = () => {
       const isExistingRecord = maintenanceRecords.some((existingRecord) => {
         return isDuplicateRecord(existingRecord, newRecord);
       });
-      
+
       return !isExistingRecord;
     });
 
@@ -778,7 +823,7 @@ export const useAppLogic = () => {
     } else {
       fetchData();
       const duplicateCount = validMaintenanceData.length - uniqueMaintenanceData.length;
-      
+
       // Show appropriate toast based on results
       if (duplicateCount > 0) {
         addToast({
@@ -864,19 +909,19 @@ export const useAppLogic = () => {
     const groupToSave =
       "id" in groupData && groupData.id
         ? {
-            id: groupData.id,
-            name: groupData.name,
-            filter_type: groupData.filterType,
-            original_reference_id: groupData.originalReferenceId,
-            references: groupData.references,
-          }
+          id: groupData.id,
+          name: groupData.name,
+          filter_type: groupData.filterType,
+          original_reference_id: groupData.originalReferenceId,
+          references: groupData.references,
+        }
         : {
-            id: `fg-${Date.now()}`,
-            name: groupData.name,
-            filter_type: groupData.filterType,
-            original_reference_id: groupData.originalReferenceId,
-            references: groupData.references,
-          };
+          id: `fg-${Date.now()}`,
+          name: groupData.name,
+          filter_type: groupData.filterType,
+          original_reference_id: groupData.originalReferenceId,
+          references: groupData.references,
+        };
     const { error } = await supabase
       .from("filter_groups")
       .upsert(groupToSave as any);
@@ -911,8 +956,8 @@ export const useAppLogic = () => {
           );
           await supabase
             .from("machines")
-              .update({ assigned_filters: newAssigned } as any)
-              .eq("id", m.id);
+            .update({ assigned_filters: newAssigned } as any)
+            .eq("id", m.id);
         }
       });
       fetchData();
@@ -935,25 +980,25 @@ export const useAppLogic = () => {
     const recordToSave =
       "id" in recordData && recordData.id
         ? {
-            id: recordData.id,
-            machine_id: recordData.machineId,
-            date: recordData.date,
-            service_hours: recordData.serviceHours,
-            maintenance_range: recordData.maintenanceRange,
-            filters_used: recordData.filtersUsed,
-            downtime_hours: (recordData as any).downtimeHours || 0,
-            panne_hours: (recordData as any).panneHours || 0,
-          }
+          id: recordData.id,
+          machine_id: recordData.machineId,
+          date: recordData.date,
+          service_hours: recordData.serviceHours,
+          maintenance_range: recordData.maintenanceRange,
+          filters_used: recordData.filtersUsed,
+          downtime_hours: (recordData as any).downtimeHours || 0,
+          panne_hours: (recordData as any).panneHours || 0,
+        }
         : {
-            id: `maint-${Date.now()}`,
-            machine_id: recordData.machineId,
-            date: recordData.date,
-            service_hours: recordData.serviceHours,
-            maintenance_range: recordData.maintenanceRange,
-            filters_used: recordData.filtersUsed,
-            downtime_hours: (recordData as any).downtimeHours || 0,
-            panne_hours: (recordData as any).panneHours || 0,
-          };
+          id: `maint-${Date.now()}`,
+          machine_id: recordData.machineId,
+          date: recordData.date,
+          service_hours: recordData.serviceHours,
+          maintenance_range: recordData.maintenanceRange,
+          filters_used: recordData.filtersUsed,
+          downtime_hours: (recordData as any).downtimeHours || 0,
+          panne_hours: (recordData as any).panneHours || 0,
+        };
 
     const { error } = await supabase
       .from("maintenance_records")
@@ -1032,7 +1077,7 @@ export const useAppLogic = () => {
         }
       }
 
-  // Refresh data and notify success (already done below)
+      // Refresh data and notify success (already done below)
 
       // Refresh data and notify success
       fetchData();
@@ -1090,11 +1135,11 @@ export const useAppLogic = () => {
 
     // Find all groups that have this reference (matching by reference number and manufacturer)
     const groupsToUpdate = filterGroups.map(group => {
-      const hasMatchingReference = group.references.some(ref => 
-        ref.reference === filterReference.reference && 
+      const hasMatchingReference = group.references.some(ref =>
+        ref.reference === filterReference.reference &&
         ref.manufacturer === filterReference.manufacturer
       );
-      
+
       if (!hasMatchingReference) return null;
 
       const newReferences = group.references.map(ref => {
@@ -1112,17 +1157,17 @@ export const useAppLogic = () => {
     if (groupsToUpdate.length === 0) return;
 
     // Update all groups that have matching references
-    const updates = groupsToUpdate.map(group => 
+    const updates = groupsToUpdate.map(group =>
       supabase
         .from("filter_groups")
-  .update({ references: group.references } as any)
+        .update({ references: group.references } as any)
         .eq("id", group.id)
     );
 
     try {
       const results = await Promise.all(updates);
       const errors = results.filter(r => r.error).map(r => r.error);
-      
+
       if (errors.length > 0) {
         console.error("Errors updating stock:", errors);
         addToast({ type: "error", title: "Erreur", description: "Erreur lors de la mise à jour du stock dans certains groupes." });
@@ -1140,7 +1185,7 @@ export const useAppLogic = () => {
       console.error("Error updating stock:", error);
       addToast({ type: "error", title: "Erreur", description: "Une erreur est survenue lors de la mise à jour du stock." });
     }
-    
+
     closeAddStockModal();
   };
 
@@ -1191,14 +1236,138 @@ export const useAppLogic = () => {
     addToast({ type: "info", title: "Thème Supprimé" });
   };
 
+  const openSparePartModal = (part: SparePart | null) => {
+    setEditingSparePart(part);
+    setIsSparePartModalOpen(true);
+  };
+
+  const closeSparePartModal = () => {
+    setEditingSparePart(null);
+    setIsSparePartModalOpen(false);
+  };
+
+  const saveSparePart = async (partData: SparePart | Omit<SparePart, "id">) => {
+    const isEditing = "id" in partData;
+    const payload = {
+      reference: partData.reference,
+      designation: partData.designation,
+      category: partData.category || null,
+      manufacturer: partData.manufacturer || null,
+      unit_price: partData.unitPrice,
+      stock_quantity: partData.stockQuantity,
+      min_stock: partData.minStock,
+      location: partData.location || null,
+    };
+
+    let error;
+    if (isEditing) {
+      const res = await supabase
+        .from("spare_parts")
+        .update(payload)
+        .eq("id", partData.id);
+      error = res.error;
+    } else {
+      const res = await supabase.from("spare_parts").insert([payload]);
+      error = res.error;
+    }
+
+    if (error) {
+      addToast({
+        type: "error",
+        title: "Erreur",
+        description: error.message,
+      });
+      return false;
+    }
+
+    addToast({
+      type: "success",
+      title: isEditing ? "Pièce Mise à Jour" : "Pièce Ajoutée",
+    });
+    await fetchData();
+    return true;
+  };
+
+  const deleteSparePart = async (partId: string) => {
+    const { error } = await supabase
+      .from("spare_parts")
+      .delete()
+      .eq("id", partId);
+
+    if (error) {
+      addToast({
+        type: "error",
+        title: "Erreur",
+        description: error.message,
+      });
+      return false;
+    }
+
+    addToast({ type: "info", title: "Pièce Supprimée" });
+    await fetchData();
+    return true;
+  };
+
+  const openInstallationModal = (partId?: string) => {
+    setPreselectedSparePartId(partId);
+    setIsInstallationModalOpen(true);
+  };
+
+  const closeInstallationModal = () => {
+    setPreselectedSparePartId(undefined);
+    setIsInstallationModalOpen(false);
+  };
+
+  const saveSparePartInstallation = async (
+    instData: Omit<SparePartInstallation, "id">
+  ) => {
+    const payload = {
+      spare_part_id: instData.sparePartId,
+      machine_id: instData.machineId,
+      quantity: instData.quantity,
+      installation_date: instData.installationDate,
+      service_hours_at_install: instData.serviceHoursAtInstall || null,
+      installed_by: instData.installedBy || null,
+      notes: instData.notes || null,
+    };
+
+    const { error } = await supabase.from("spare_part_installations").insert([payload]);
+
+    if (error) {
+      addToast({
+        type: "error",
+        title: "Erreur",
+        description: error.message,
+      });
+      return false;
+    }
+
+    // Automatically decrement stock
+    const part = spareParts.find((p) => p.id === instData.sparePartId);
+    if (part) {
+      await supabase
+        .from("spare_parts")
+        .update({ stock_quantity: Math.max(0, part.stockQuantity - instData.quantity) })
+        .eq("id", part.id);
+    }
+
+    addToast({
+      type: "success",
+      title: "Montage Enregistré",
+      description: "Le stock de la pièce a été automatiquement mis à jour.",
+    });
+    await fetchData();
+    return true;
+  };
+
   const actions = {
     setCurrentView,
     toggleSidebar,
     closeSidebar,
     selectMachine,
     assignFilterToMachine,
-  addFilterTypeToMachine,
-  addMultipleFilterTypesToMachine,
+    addFilterTypeToMachine,
+    addMultipleFilterTypesToMachine,
     removeFilterTypeFromMachine,
     openConfirmationDialog,
     closeConfirmationDialog,
@@ -1243,6 +1412,14 @@ export const useAppLogic = () => {
     createDailyAdjustment: (adj: { machineId: string; date: string; downtimeHours: number; panneHours: number; notes?: string }) => (createDailyAdjustment as any)(adj),
     updateDailyAdjustment: (id: string, changes: Partial<{ downtimeHours: number; panneHours: number; notes?: string }>) => (updateDailyAdjustment as any)(id, changes),
     deleteDailyAdjustment: (id: string) => (deleteDailyAdjustment as any)(id),
+    // Spare Parts
+    openSparePartModal,
+    closeSparePartModal,
+    saveSparePart,
+    deleteSparePart,
+    openInstallationModal,
+    closeInstallationModal,
+    saveSparePartInstallation,
   };
 
   const state = {
@@ -1277,6 +1454,13 @@ export const useAppLogic = () => {
     isMaintenanceImportModalOpen,
     confirmationDialogConfig,
     monthlyDailyAdjustments,
+    // Spare Parts
+    spareParts,
+    sparePartInstallations,
+    isSparePartModalOpen,
+    editingSparePart,
+    isInstallationModalOpen,
+    preselectedSparePartId,
   };
 
   return { state, actions };

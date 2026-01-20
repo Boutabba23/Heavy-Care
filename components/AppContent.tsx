@@ -28,6 +28,9 @@ import ThemeCustomizerModal from "./ThemeCustomizerModal";
 import { hexToHsl, isColorDark } from "../utils/colors";
 import ImportModal from "./ImportModal";
 import ImportMaintenanceModal from "./ImportMaintenanceModal";
+import { SparePartsView } from "./SparePartsView";
+import SparePartModal from "./SparePartModal";
+import SparePartInstallationModal from "./SparePartInstallationModal";
 import { LogoIcon } from "../constants";
 
 const AppContent: React.FC = () => {
@@ -249,7 +252,20 @@ const AppContent: React.FC = () => {
             onCreateAdjustment={actions.createDailyAdjustment}
             onUpdateAdjustment={actions.updateDailyAdjustment}
             onDeleteAdjustment={actions.deleteDailyAdjustment}
-                addToast={actions.addToast}
+            addToast={actions.addToast}
+          />
+        );
+      case View.SPARE_PARTS:
+        return (
+          <SparePartsView
+            spareParts={state.spareParts}
+            installations={state.sparePartInstallations}
+            machines={state.machines}
+            onAddSparePart={() => actions.openSparePartModal(null)}
+            onEditSparePart={actions.openSparePartModal}
+            onDeleteSparePart={actions.deleteSparePart}
+            onAddInstallation={actions.openInstallationModal}
+            onOpenConfirmationDialog={actions.openConfirmationDialog}
           />
         );
       default:
@@ -393,6 +409,24 @@ const AppContent: React.FC = () => {
         title={state.confirmationDialogConfig.title}
         description={state.confirmationDialogConfig.description}
       />
+      {state.isSparePartModalOpen && (
+        <SparePartModal
+          isOpen={state.isSparePartModalOpen}
+          onClose={actions.closeSparePartModal}
+          onSave={actions.saveSparePart}
+          part={state.editingSparePart}
+        />
+      )}
+      {state.isInstallationModalOpen && (
+        <SparePartInstallationModal
+          isOpen={state.isInstallationModalOpen}
+          onClose={actions.closeInstallationModal}
+          onSave={actions.saveSparePartInstallation}
+          spareParts={state.spareParts}
+          machines={state.machines}
+          preselectedSparePartId={state.preselectedSparePartId}
+        />
+      )}
     </div>
   );
 };
