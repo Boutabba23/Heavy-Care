@@ -314,6 +314,12 @@ const AppContent: React.FC = () => {
           onMarkAllNotificationsAsRead={actions.markAllNotificationsAsRead}
           onOpenAIAssistant={actions.openAIAssistant}
           onOpenScanner={actions.openScanner}
+          machines={state.machines}
+          filterGroups={state.filterGroups}
+          spareParts={state.spareParts}
+          onSelectMachine={actions.selectMachine}
+          onNavigateToGroup={actions.navigateToFilterGroup}
+          onSetView={actions.setCurrentView}
         />
         <main className="relative flex-1 p-4 sm:p-6 lg:p-8">
           {renderView()}

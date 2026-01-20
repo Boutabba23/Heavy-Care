@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { Machine, Notification, View } from "../types";
+import { Machine, Notification, View, FilterGroup, SparePart } from "../types";
 import { MenuIcon, SparklesIcon, CameraIcon } from "../constants";
 import NotificationBell from "./NotificationBell";
+import GlobalSearch from "./GlobalSearch";
 
 interface HeaderProps {
   currentView: View;
@@ -17,6 +18,12 @@ interface HeaderProps {
   onCloseNotifications: () => void;
   onNotificationClick: (notification: Notification) => void;
   onMarkAllNotificationsAsRead: () => void;
+  machines: Machine[];
+  filterGroups: FilterGroup[];
+  spareParts: SparePart[];
+  onSelectMachine: (machineId: string) => void;
+  onNavigateToGroup: (groupId: string) => void;
+  onSetView: (view: View) => void;
 }
 
 const BreadcrumbSeparator = () => (
@@ -62,7 +69,16 @@ const Header: React.FC<HeaderProps> = (props) => {
 
         <span className="font-bold text-foreground">{getTitle()}</span>
       </div>
-      <div className="flex-1" /> {/* Spacer */}
+      <div className="flex-1 flex justify-center px-4">
+        <GlobalSearch
+          machines={props.machines}
+          filterGroups={props.filterGroups}
+          spareParts={props.spareParts}
+          onSelectMachine={props.onSelectMachine}
+          onNavigateToGroup={props.onNavigateToGroup}
+          onSetView={props.onSetView}
+        />
+      </div>
       <div className="flex items-center space-x-2">
         <button
           onClick={props.onOpenScanner}
