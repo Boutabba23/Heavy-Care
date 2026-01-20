@@ -31,6 +31,7 @@ import ImportMaintenanceModal from "./ImportMaintenanceModal";
 import { SparePartsView } from "./SparePartsView";
 import SparePartModal from "./SparePartModal";
 import SparePartInstallationModal from "./SparePartInstallationModal";
+import OilManagementView from "./OilManagementView";
 import { LogoIcon } from "../constants";
 
 const AppContent: React.FC = () => {
@@ -268,6 +269,15 @@ const AppContent: React.FC = () => {
             onOpenConfirmationDialog={actions.openConfirmationDialog}
           />
         );
+      case View.OIL_MANAGEMENT:
+        return (
+          <OilManagementView
+            machines={state.machines}
+            oilStocks={state.oilStocks}
+            onUpdateStock={actions.setOilStocks}
+            addToast={actions.addToast}
+          />
+        );
       default:
         return (
           <DashboardView
@@ -369,6 +379,7 @@ const AppContent: React.FC = () => {
           machines={state.machines}
           filterTypes={state.filterTypes}
           filterGroups={state.filterGroups}
+          oilStocks={state.oilStocks}
           record={state.editingMaintenanceRecord}
           viewOnly={state.isMaintenanceViewOnly}
         />

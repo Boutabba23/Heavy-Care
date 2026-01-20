@@ -11,27 +11,28 @@ interface NotificationBellProps {
   onClose: () => void;
   onNotificationClick: (notification: Notification) => void;
   onMarkAllAsRead: () => void;
+  customTrigger?: React.ReactNode;
 }
 
-const NotificationBell: React.FC<NotificationBellProps> = ({ notifications, isOpen, onToggle, onClose, onNotificationClick, onMarkAllAsRead }) => {
+const NotificationBell: React.FC<NotificationBellProps> = ({ notifications, isOpen, onToggle, onClose, onNotificationClick, onMarkAllAsRead, customTrigger }) => {
   const unreadCount = notifications.filter(n => !n.read).length;
   const sortedNotifications = [...notifications].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  
+
   const getIconForType = (type: 'maintenance' | 'stock') => {
-    switch(type) {
+    switch (type) {
       case 'maintenance': return <WrenchIcon className="h-5 w-5 text-warning-foreground" />;
       case 'stock': return <FilterIcon className="h-5 w-5 text-destructive" />;
     }
   }
 
   const getBgForType = (type: 'maintenance' | 'stock') => {
-    switch(type) {
+    switch (type) {
       case 'maintenance': return 'bg-warning/20';
       case 'stock': return 'bg-destructive/20';
     }
   }
 
-  const trigger = (
+  const trigger = customTrigger || (
     <button
       onClick={onToggle}
       className="relative p-2 rounded-full text-foreground/80 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
@@ -65,13 +66,13 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ notifications, isOp
                   <button onClick={() => onNotificationClick(notification)} className="w-full text-left p-3 hover:bg-accent transition-colors">
                     <div className="flex items-start gap-3">
                       <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getBgForType(notification.type)}`}>
-                          {getIconForType(notification.type)}
+                        {getIconForType(notification.type)}
                       </div>
                       <div className="flex-1">
-                          <p className="text-sm">{notification.message}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(notification.createdAt).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                          </p>
+                        <p className="text-sm">{notification.message}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(notification.createdAt).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </p>
                       </div>
                       {!notification.read && <div className="mt-1 w-2.5 h-2.5 rounded-full bg-primary flex-shrink-0" />}
                     </div>

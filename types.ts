@@ -9,6 +9,7 @@ export enum View {
   ANALYTICS = "ANALYTICS",
   MONTHLY_SUMMARY = "MONTHLY_SUMMARY",
   USER_PROFILE = "USER_PROFILE",
+  OIL_MANAGEMENT = "OIL_MANAGEMENT",
 }
 
 export type Theme = string;
@@ -82,6 +83,11 @@ export interface UsedFilter {
   quantity: number;
 }
 
+export interface UsedOil {
+  oilStockId: string;
+  quantity: number;
+}
+
 export interface MaintenanceRecord {
   id: string;
   machineId: string;
@@ -89,6 +95,7 @@ export interface MaintenanceRecord {
   serviceHours: number;
   date: string; // ISO String
   filtersUsed: UsedFilter[];
+  oilsUsed: UsedOil[];
   downtimeHours?: number; // hours of idle time recorded for this maintenance
   panneHours?: number; // hours of breakdown recorded for this maintenance
 }
@@ -175,4 +182,23 @@ export interface SparePartInstallation {
   serviceHoursAtInstall?: number;
   installedBy?: string;
   notes?: string;
+}
+
+// --- Oil Management ---
+export interface OilStock {
+  id: string;
+  type: string; // e.g., "15W40", "Hydraulique 46"
+  currentLevel: number; // Liters in current barrel (max 200)
+  totalBarrels: number; // Number of full barrels in stock
+  alertThreshold: number; // Level to trigger low stock alert (e.g., 20L)
+}
+
+export interface OilTransaction {
+  id: string;
+  machineId: string;
+  oilStockId: string;
+  quantity: number;
+  date: string;
+  performedBy?: string;
+  serviceHours?: number;
 }

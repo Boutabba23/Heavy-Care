@@ -137,13 +137,13 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
       description: `Êtes-vous sûr de vouloir supprimer toutes les ${recordsOfMachine.length} opérations de maintenance pour l'engin "${machineName}" ? Cette action est irréversible.`,
       onConfirm: async () => {
         // Create an array of promises for all deletions
-        const deletePromises = recordsOfMachine.map(record => 
+        const deletePromises = recordsOfMachine.map(record =>
           onDeleteMaintenance(record.id, false) // Pass false to suppress individual notifications
         );
-        
+
         // Wait for all deletions to complete
         await Promise.all(deletePromises);
-        
+
         // Show a single toast with the count of deleted records
         addToast({
           type: "info",
@@ -168,13 +168,13 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
       description: `Êtes-vous sûr de vouloir supprimer toutes les ${recordsOfGamme.length} opérations de maintenance de gamme "${rangeFilter}" ? Cette action est irréversible.`,
       onConfirm: async () => {
         // Create an array of promises for all deletions
-        const deletePromises = recordsOfGamme.map(record => 
+        const deletePromises = recordsOfGamme.map(record =>
           onDeleteMaintenance(record.id, false) // Pass false to suppress individual notifications
         );
-        
+
         // Wait for all deletions to complete
         await Promise.all(deletePromises);
-        
+
         // Show a single toast with the count of deleted records
         addToast({
           type: "info",
@@ -194,13 +194,13 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
       description: `Êtes-vous sûr de vouloir supprimer toutes les ${maintenanceRecords.length} opérations de maintenance ? Cette action est irréversible.`,
       onConfirm: async () => {
         // Create an array of promises for all deletions
-        const deletePromises = maintenanceRecords.map(record => 
+        const deletePromises = maintenanceRecords.map(record =>
           onDeleteMaintenance(record.id, false) // Pass false to suppress individual notifications
         );
-        
+
         // Wait for all deletions to complete
         await Promise.all(deletePromises);
-        
+
         // Show a single toast with the count of deleted records
         addToast({
           type: "info",
@@ -457,13 +457,22 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                       </p>
                     </div>
                     <div>
+                      <p className="text-sm text-muted-foreground">
+                        Huiles
+                      </p>
+                      <p className="font-semibold text-xs">
+                        {record.oilsUsed && record.oilsUsed.length > 0
+                          ? record.oilsUsed.length + " type(s)"
+                          : "Aucune"}
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-sm text-muted-foreground mb-1">
                         Gamme Exécutée
                       </p>
                       <span
-                        className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-sm ${
-                          rangeColors[record.maintenanceRange]
-                        }`}
+                        className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-sm ${rangeColors[record.maintenanceRange]
+                          }`}
                       >
                         {record.maintenanceRange}
                       </span>
@@ -474,11 +483,10 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                       </p>
                       <div className="flex items-center gap-2">
                         <span
-                          className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-sm ${
-                            rangeColors[
-                              nextMaint.gamme as keyof typeof rangeColors
+                          className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-sm ${rangeColors[
+                            nextMaint.gamme as keyof typeof rangeColors
                             ]
-                          }`}
+                            }`}
                         >
                           {nextMaint.gamme}
                         </span>
@@ -512,6 +520,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                     <TableHead>Gamme éxecutée</TableHead>
                     <TableHead>Gamme Prochaine</TableHead>
                     <TableHead>Filtres Changés</TableHead>
+                    <TableHead>Huiles</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -535,9 +544,8 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                         </TableCell>
                         <TableCell>
                           <span
-                            className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-xs ${
-                              rangeColors[record.maintenanceRange]
-                            }`}
+                            className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-xs ${rangeColors[record.maintenanceRange]
+                              }`}
                           >
                             {record.maintenanceRange}
                           </span>
@@ -545,11 +553,10 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span
-                              className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-xs ${
-                                rangeColors[
-                                  nextMaint.gamme as keyof typeof rangeColors
+                              className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-xs ${rangeColors[
+                                nextMaint.gamme as keyof typeof rangeColors
                                 ]
-                              }`}
+                                }`}
                             >
                               {nextMaint.gamme}
                             </span>
@@ -560,6 +567,11 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {record.filtersUsed.length} filtre(s)
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {record.oilsUsed && record.oilsUsed.length > 0
+                            ? record.oilsUsed.length + " type(s)"
+                            : "Aucune"}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="relative menu-container flex justify-end">
@@ -577,11 +589,10 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                             </Button>
                             {openMenuId === record.id && (
                               <div
-                                className={`absolute right-0 w-48 bg-card border border-border rounded-md shadow-lg z-50 ${
-                                  isLastRow
+                                className={`absolute right-0 w-48 bg-card border border-border rounded-md shadow-lg z-50 ${isLastRow
                                     ? "bottom-full mb-2"
                                     : "top-full mt-2"
-                                } animate-fadeIn`}
+                                  } animate-fadeIn`}
                               >
                                 {actionMenuItems(record)}
                               </div>

@@ -19,6 +19,7 @@ import {
   SavedTheme,
   SparePart,
   SparePartInstallation,
+  OilStock,
 } from "../types";
 import { calculateNextMaintenance } from "../utils/maintenance";
 import { supabase } from "../utils/supabase";
@@ -94,6 +95,12 @@ export const useAppLogic = () => {
   const [maintenanceRecords, setMaintenanceRecords] = useState<
     MaintenanceRecord[]
   >([]);
+  const [oilStocks, setOilStocks] = useState<OilStock[]>([
+    { id: "oil-1", type: "15W40 Moteur", currentLevel: 120, totalBarrels: 3, alertThreshold: 20 },
+    { id: "oil-2", type: "Hydraulique 46", currentLevel: 15, totalBarrels: 1, alertThreshold: 30 },
+    { id: "oil-3", type: "Transmission 80W90", currentLevel: 180, totalBarrels: 2, alertThreshold: 20 },
+    { id: "oil-4", type: "Liquide de Refroidissement", currentLevel: 200, totalBarrels: 4, alertThreshold: 20 },
+  ]);
   const [monthlyDailyAdjustments, setMonthlyDailyAdjustments] = useState<{
     id: string;
     machine_id: string;
@@ -290,6 +297,7 @@ export const useAppLogic = () => {
         serviceHours: record.service_hours,
         date: record.date,
         filtersUsed: record.filters_used || [],
+        oilsUsed: record.oils_used || [],
         downtimeHours: record.downtime_hours || 0,
         panneHours: record.panne_hours || 0,
       }));
@@ -986,6 +994,7 @@ export const useAppLogic = () => {
           service_hours: recordData.serviceHours,
           maintenance_range: recordData.maintenanceRange,
           filters_used: recordData.filtersUsed,
+          oils_used: recordData.oilsUsed,
           downtime_hours: (recordData as any).downtimeHours || 0,
           panne_hours: (recordData as any).panneHours || 0,
         }
@@ -996,6 +1005,7 @@ export const useAppLogic = () => {
           service_hours: recordData.serviceHours,
           maintenance_range: recordData.maintenanceRange,
           filters_used: recordData.filtersUsed,
+          oils_used: recordData.oilsUsed,
           downtime_hours: (recordData as any).downtimeHours || 0,
           panne_hours: (recordData as any).panneHours || 0,
         };
@@ -1075,6 +1085,19 @@ export const useAppLogic = () => {
             addToast({ type: "error", title: "Erreur", description: "Erreur lors de la mise à jour du stock." });
           }
         }
+      }
+
+      // Decrement Oil Stocks
+      if (recordData.oilsUsed && recordData.oilsUsed.length > 0) {
+        setOilStocks(currentStocks => {
+          return currentStocks.map(stock => {
+            const used = recordData.oilsUsed.find(uo => uo.oilStockId === stock.id);
+            if (used) {
+              return { ...stock, currentLevel: Math.max(0, stock.currentLevel - used.quantity) };
+            }
+            return stock;
+          });
+        });
       }
 
       // Refresh data and notify success (already done below)
@@ -1426,6 +1449,7 @@ export const useAppLogic = () => {
     openInstallationModal,
     closeInstallationModal,
     saveSparePartInstallation,
+    setOilStocks,
   };
 
   const state = {
@@ -1436,6 +1460,7 @@ export const useAppLogic = () => {
     filterTypes,
     selectedMachine,
     maintenanceRecords,
+    oilStocks,
     theme,
     customColors,
     savedThemes,

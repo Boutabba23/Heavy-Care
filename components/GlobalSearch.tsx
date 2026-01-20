@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Machine, FilterGroup, SparePart, View } from "../types";
-import { SearchIcon, TruckIcon, FilterIcon, WrenchIcon } from "../constants";
+import { SearchIcon, TruckIcon, FilterIcon, WrenchIcon, XIcon } from "../constants";
 import { Card } from "./ui/Card";
 import Input from "./ui/Input";
 
@@ -34,25 +35,36 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     const [query, setQuery] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const [mounted, setMounted] = useState(false);
 
-    // Close dropdown when clicking outside
+    // Refs
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const desktopInputRef = useRef<HTMLInputElement>(null);
+    const mobileInputRef = useRef<HTMLInputElement>(null);
+
+    // Initial mount to support portals
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Close dropdown when clicking outside (Desktop)
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
-                if (!query) setIsMobileSearchOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [query]);
+    }, []);
 
     // Focus input when mobile search opens
     useEffect(() => {
-        if (isMobileSearchOpen && inputRef.current) {
-            inputRef.current.focus();
+        if (isMobileSearchOpen && mobileInputRef.current) {
+            // Small timeout to ensure render in portal is complete
+            setTimeout(() => {
+                mobileInputRef.current?.focus();
+            }, 50);
         }
     }, [isMobileSearchOpen]);
 
@@ -132,8 +144,47 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
         }
     };
 
+    const renderResults = () => {
+        if (results.length === 0 || query.length < 2) return null;
+
+        return (
+            <div className="bg-card border border-border rounded-lg shadow-xl overflow-hidden w-full">
+                <div className="max-h-[60vh] md:max-h-[300px] overflow-y-auto">
+                    {results.map((result) => (
+                        <button
+                            key={`${result.type}-${result.id}`}
+                            onClick={() => handleResultClick(result)}
+                            className="w-full flex items-center gap-3 p-4 md:p-3 hover:bg-muted text-left transition-colors border-b border-border/50 last:border-0"
+                        >
+                            <div className="flex-shrink-0 h-10 w-10 md:h-8 md:w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                {result.type === "machine" && <TruckIcon className="h-5 w-5 md:h-4 md:w-4" />}
+                                {result.type === "filter" && <FilterIcon className="h-5 w-5 md:h-4 md:w-4" />}
+                                {result.type === "spare_part" && <WrenchIcon className="h-5 w-5 md:h-4 md:w-4" />}
+                            </div>
+                            <div>
+                                <p className="font-medium text-foreground text-sm md:text-base">{result.title}</p>
+                                <p className="text-xs text-muted-foreground">{result.subtitle}</p>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
+    const renderNoResults = () => {
+        if (query.length >= 2 && results.length === 0) {
+            return (
+                <div className="p-4 bg-card border border-border rounded-lg shadow-xl text-center w-full mt-2">
+                    <p className="text-sm text-muted-foreground">Aucun résultat pour "{query}"</p>
+                </div>
+            );
+        }
+        return null;
+    };
+
     return (
-        <div className="relative flex items-center justify-end md:w-full md:max-w-md mx-4" ref={dropdownRef}>
+        <div className="relative flex items-center justify-end md:w-full md:max-w-md mx-2">
             {/* Mobile Search Icon Button */}
             <button
                 onClick={() => setIsMobileSearchOpen(true)}
@@ -143,67 +194,61 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                 <SearchIcon className="h-6 w-6" />
             </button>
 
-            {/* Desktop Search Bar / Mobile Overlay */}
-            <div className={`
-                ${isMobileSearchOpen
-                    ? "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm p-4 flex flex-col items-center pt-16 md:relative md:inset-auto md:p-0 md:bg-transparent md:backdrop-blur-none"
-                    : "hidden md:block w-full"
-                }
-            `}>
-                <div className="relative w-full max-w-2xl md:max-w-md">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        ref={inputRef}
-                        type="text"
-                        placeholder="Rechercher engin, filtre, pièce..."
-                        value={query}
-                        onChange={(e) => {
-                            setQuery(e.target.value);
-                            setIsOpen(true);
-                        }}
-                        onFocus={() => setIsOpen(true)}
-                        className="pl-10 h-10 md:h-9 bg-card md:bg-background/50 border-border/50 focus:bg-card shadow-lg md:shadow-none"
-                    />
-                    {isMobileSearchOpen && (
-                        <button
-                            onClick={() => setIsMobileSearchOpen(false)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-primary hover:text-primary/80"
-                        >
-                            Annuler
-                        </button>
-                    )}
-                </div>
+            {/* Desktop Search Bar */}
+            <div className="hidden md:block w-full relative" ref={dropdownRef}>
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                <Input
+                    ref={desktopInputRef}
+                    type="text"
+                    placeholder="Rechercher engin, filtre, pièce..."
+                    value={query}
+                    onChange={(e) => {
+                        setQuery(e.target.value);
+                        setIsOpen(true);
+                    }}
+                    onFocus={() => setIsOpen(true)}
+                    className="pl-10 h-9 bg-background/50 border-border/50 focus:bg-card w-full"
+                />
 
-                {(isOpen || isMobileSearchOpen) && results.length > 0 && query.length >= 2 && (
-                    <div className="absolute top-full left-0 right-0 md:mt-2 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50 w-full max-w-2xl md:max-w-md mx-auto mt-4">
-                        <div className="max-h-[60vh] md:max-h-[300px] overflow-y-auto">
-                            {results.map((result) => (
-                                <button
-                                    key={`${result.type}-${result.id}`}
-                                    onClick={() => handleResultClick(result)}
-                                    className="w-full flex items-center gap-3 p-4 md:p-3 hover:bg-muted text-left transition-colors border-b border-border/50 last:border-0"
-                                >
-                                    <div className="flex-shrink-0 h-10 w-10 md:h-8 md:w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                        {result.type === "machine" && <TruckIcon className="h-5 w-5 md:h-4 md:w-4" />}
-                                        {result.type === "filter" && <FilterIcon className="h-5 w-5 md:h-4 md:w-4" />}
-                                        {result.type === "spare_part" && <WrenchIcon className="h-5 w-5 md:h-4 md:w-4" />}
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-foreground text-sm md:text-base">{result.title}</p>
-                                        <p className="text-xs text-muted-foreground">{result.subtitle}</p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {isMobileSearchOpen && query.length >= 2 && results.length === 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-4 p-8 bg-card border border-border rounded-lg shadow-xl text-center z-50 w-full max-w-2xl mx-auto">
-                        <p className="text-sm text-muted-foreground">Aucun résultat trouvé pour "{query}"</p>
+                {isOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 z-50">
+                        {renderResults()}
+                        {renderNoResults()}
                     </div>
                 )}
             </div>
+
+            {/* Mobile Search Portal */}
+            {mounted && isMobileSearchOpen && createPortal(
+                <div className="fixed inset-0 z-[9999] bg-background/60 backdrop-blur-md flex flex-col items-center pt-8 px-4 animate-in fade-in duration-200">
+                    <div className="w-full max-w-lg relative">
+                        <div className="relative flex items-center mb-4">
+                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+                            <Input
+                                ref={mobileInputRef}
+                                type="text"
+                                placeholder="Rechercher..."
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                className="pl-11 pr-10 h-12 text-lg bg-card shadow-lg w-full rounded-full border-primary/20"
+                            />
+                            <button
+                                onClick={() => setIsMobileSearchOpen(false)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            >
+                                <XIcon className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        {/* Mobile Results */}
+                        <div className="w-full space-y-2">
+                            {renderResults()}
+                            {renderNoResults()}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 };

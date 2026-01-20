@@ -14,6 +14,7 @@ import {
   Squares2x2Icon,
   ChartBarIcon,
   SparePartsIcon,
+  DropletIcon,
 } from "../constants";
 
 interface SidebarProps {
@@ -137,6 +138,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             view={View.SPARE_PARTS}
             label="Pièces de Rechange"
             icon={<SparePartsIcon className="h-5 w-5" />}
+          />
+          <NavItem
+            view={View.OIL_MANAGEMENT}
+            label="Gestion des Huiles"
+            icon={<DropletIcon className="h-5 w-5" />}
           />
           <NavItem
             view={View.ANALYTICS}
