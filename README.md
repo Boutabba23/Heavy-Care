@@ -1,4 +1,4 @@
-# HeavyCare - Gestion de Maintenance Préventive
+# HeavyCare - Gestion de Maintenance Préventive et stock
 
 HeavyCare est une plateforme complète pour la gestion de maintenance, le suivi des huiles et la gestion des équipements pour parcs d'engins lourds.
 
