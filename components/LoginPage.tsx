@@ -11,16 +11,15 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-hidden bg-background">
+    <div className="min-h-screen overflow-hidden bg-gradient-to-br from-primary/60 to-slate-900 text-white">
       <div
-        className={`flex w-[200%] md:w-full h-full min-h-screen transition-transform duration-500 ease-in-out ${currentStep === 'login' ? '-translate-x-1/2 md:translate-x-0' : 'translate-x-0'
+        className={`flex w-[200%] md:w-full md:flex-row-reverse h-full min-h-screen transition-transform duration-500 ease-in-out ${currentStep === 'login' ? '-translate-x-1/2 md:translate-x-0' : 'translate-x-0'
           }`}
       >
         {/* Brand Section (Welcome Section on Mobile) */}
-        <div className="w-1/2 md:w-[45%] flex-shrink-0 bg-slate-900 flex flex-col items-center md:justify-center p-8 text-white relative overflow-hidden">
+        <div className="w-1/2 md:w-[45%] flex-shrink-0 flex flex-col items-center md:justify-center p-8 relative overflow-hidden z-10 transition-opacity duration-500">
           {/* Subtle decorative background elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-32 -mt-32" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -ml-32 -mb-32" />
+
 
           {/* Main Content: centered on mobile flex-1 */}
           <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center max-w-sm w-full">
@@ -56,7 +55,8 @@ const LoginPage: React.FC = () => {
         </div>
 
         {/* Form Section */}
-        <div className="w-1/2 md:flex-1 flex-shrink-0 flex items-start md:items-center justify-center p-6 pt-12 md:pt-6 bg-slate-50 dark:bg-slate-950/20">
+        {/* Form Section */}
+        <div className="w-1/2 md:flex-1 flex-shrink-0 flex items-start md:items-center justify-center p-6 pt-12 md:pt-6 bg-transparent transition-opacity duration-500">
           <div className="w-full max-w-md">
             {/* Mobile Only Header with Back Button */}
             <div className="md:hidden flex items-center justify-between mb-6">

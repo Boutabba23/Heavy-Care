@@ -165,6 +165,7 @@ export interface SparePart {
   id: string;
   reference: string;
   designation: string;
+  serialNumber?: string;
   category?: string;
   manufacturer?: string;
   unitPrice: number;

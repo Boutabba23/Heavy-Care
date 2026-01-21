@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     "Plateforme de gestion de maintenance et suivi pour engins lourds",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/logo.svg",
   },
 };
 

@@ -22,31 +22,28 @@ const SparePartModal: React.FC<SparePartModalProps> = ({
     const [reference, setReference] = useState("");
     const [designation, setDesignation] = useState("");
     const [category, setCategory] = useState("");
-    const [manufacturer, setManufacturer] = useState("");
     const [unitPrice, setUnitPrice] = useState(0);
     const [stockQuantity, setStockQuantity] = useState(0);
     const [minStock, setMinStock] = useState(5);
-    const [location, setLocation] = useState("");
+    const [serialNumber, setSerialNumber] = useState("");
 
     useEffect(() => {
         if (part) {
             setReference(part.reference);
             setDesignation(part.designation);
             setCategory(part.category || "");
-            setManufacturer(part.manufacturer || "");
             setUnitPrice(part.unitPrice);
             setStockQuantity(part.stockQuantity);
             setMinStock(part.minStock);
-            setLocation(part.location || "");
+            setSerialNumber(part.serialNumber || "");
         } else {
             setReference("");
             setDesignation("");
             setCategory("");
-            setManufacturer("");
             setUnitPrice(0);
             setStockQuantity(0);
             setMinStock(5);
-            setLocation("");
+            setSerialNumber("");
         }
     }, [part, isOpen]);
 
@@ -56,11 +53,11 @@ const SparePartModal: React.FC<SparePartModalProps> = ({
             reference,
             designation,
             category: category || undefined,
-            manufacturer: manufacturer || undefined,
             unitPrice,
             stockQuantity,
             minStock,
-            location: location || undefined,
+
+            serialNumber: serialNumber || undefined,
         });
         onClose();
     };
@@ -105,21 +102,21 @@ const SparePartModal: React.FC<SparePartModalProps> = ({
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
+                                <Label htmlFor="serialNumber">Numéro de série</Label>
+                                <Input
+                                    id="serialNumber"
+                                    value={serialNumber}
+                                    onChange={(e) => setSerialNumber(e.target.value)}
+                                    placeholder="S/N..."
+                                />
+                            </div>
+                            <div>
                                 <Label htmlFor="category">Catégorie</Label>
                                 <Input
                                     id="category"
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
                                     placeholder="Moteur, Hydraulique..."
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="manufacturer">Fabricant</Label>
-                                <Input
-                                    id="manufacturer"
-                                    value={manufacturer}
-                                    onChange={(e) => setManufacturer(e.target.value)}
-                                    placeholder="Caterpillar, Komatsu..."
                                 />
                             </div>
                         </div>
@@ -158,15 +155,7 @@ const SparePartModal: React.FC<SparePartModalProps> = ({
                             </div>
                         </div>
 
-                        <div>
-                            <Label htmlFor="location">Emplacement</Label>
-                            <Input
-                                id="location"
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                                placeholder="Étagère A3, Bac 12..."
-                            />
-                        </div>
+
 
                         <div className="flex justify-end gap-3 pt-4">
                             <Button type="button" variant="outline" onClick={onClose}>
@@ -178,8 +167,8 @@ const SparePartModal: React.FC<SparePartModalProps> = ({
                         </div>
                     </form>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

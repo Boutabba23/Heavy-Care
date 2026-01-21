@@ -35,7 +35,19 @@ const Header: React.FC<HeaderProps> = (props) => {
   const [userMenuView, setUserMenuView] = useState<'menu' | 'notifications'>('menu');
   const userMenuRef = useRef<HTMLDivElement>(null);
 
+  const [imageError, setImageError] = useState(false);
+
   const hasUnreadNotifications = props.notifications.some((n) => !n.read);
+  // ... (keep useEffect) ...
+  // ... (keep getUserName) ...
+  // ... (keep userName) ...
+  // ... (keep getTitle) ...
+
+  // Update the avatar rendering part
+  // Note: I need to insert the state at the top of the component and the rendering update in the return
+
+  // This tool call is tricky because I need to update two separate places. 
+  // I will use multi_replace_file_content instead.
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -117,15 +129,23 @@ const Header: React.FC<HeaderProps> = (props) => {
             aria-label="Menu utilisateur"
           >
             <div className="relative">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-transparent group-hover:border-primary/30 transition-all overflow-hidden bg-muted">
-                <img
-                  src={
-                    props.user?.user_metadata?.avatar_url ||
-                    `https://ui-avatars.io/api/?name=${encodeURIComponent(userName)}&background=random`
-                  }
-                  alt={userName}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-transparent group-hover:border-primary/30 transition-all overflow-hidden bg-muted flex items-center justify-center">
+                {!imageError ? (
+                  <img
+                    src={
+                      props.user?.user_metadata?.avatar_url ||
+                      `https://ui-avatars.io/api/?name=${encodeURIComponent(userName)}&background=random`
+                    }
+                    alt={userName}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <span className="text-sm font-bold text-muted-foreground">
+                    {userName.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
               {hasUnreadNotifications && (
                 <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-destructive ring-2 ring-card animate-pulse" />

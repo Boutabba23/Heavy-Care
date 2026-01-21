@@ -70,6 +70,7 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
             const matchesSearch =
                 part.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 part.designation.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (part.serialNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
                 (part.manufacturer?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
             const matchesCategory =
                 categoryFilter === "all" || part.category === categoryFilter;
@@ -156,7 +157,7 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
                     <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                         type="text"
-                        placeholder="Rechercher par référence, désignation ou fabricant..."
+                        placeholder="Rechercher par réf, désignation, N° série ou fabricant..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
@@ -208,6 +209,9 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
                                             </div>
                                             <div className="mt-2 text-sm text-muted-foreground space-y-1">
                                                 <p><span className="font-medium">Réf:</span> {part.reference}</p>
+                                                {part.serialNumber && (
+                                                    <p><span className="font-medium">S/N:</span> {part.serialNumber}</p>
+                                                )}
                                                 {part.manufacturer && (
                                                     <p><span className="font-medium">Fabricant:</span> {part.manufacturer}</p>
                                                 )}
