@@ -81,54 +81,15 @@ const byPrefixAndName = {
 };
 
 export const LogoIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
+  <img
+    src="/logo.svg"
+    alt="HeavyCare Logo"
     className={className}
-  >
-    <path d="M12 9a3.75 3.75 0 1 0 0 7.5A3.75 3.75 0 0 0 12 9Z" />
-    <path
-      fillRule="evenodd"
-      d="M9.344 3.071a.75.75 0 0 1 1.06 0l1.125 1.125a.75.75 0 0 1 0 1.06l-1.125 1.125a.75.75 0 0 1-1.06 0L8.22 5.256a.75.75 0 0 1 0-1.06L9.344 3.07Z"
-      clipRule="evenodd"
-    />
-    <path
-      fillRule="evenodd"
-      d="M14.656 3.071a.75.75 0 0 1 1.06 0L16.84 4.19a.75.75 0 0 1 0 1.061l-1.125 1.125a.75.75 0 0 1-1.06 0L13.53 5.256a.75.75 0 0 1 0-1.06l1.125-1.125Z"
-      clipRule="evenodd"
-    />
-    <path
-      fillRule="evenodd"
-      d="M18.75 9.344a.75.75 0 0 1 0 1.06l-1.125 1.125a.75.75 0 0 1-1.06 0l-1.125-1.125a.75.75 0 0 1 0-1.06l1.125-1.125a.75.75 0 0 1 1.06 0L18.75 9.344Z"
-      clipRule="evenodd"
-    />
-    <path
-      fillRule="evenodd"
-      d="M18.75 14.656a.75.75 0 0 1 0 1.06l-1.125 1.125a.75.75 0 0 1-1.06 0L15.44 15.72a.75.75 0 0 1 0-1.061l1.125-1.125a.75.75 0 0 1 1.06 0l1.125 1.125Z"
-      clipRule="evenodd"
-    />
-    <path
-      fillRule="evenodd"
-      d="M14.656 19.879a.75.75 0 0 1-1.06 0l-1.125-1.125a.75.75 0 0 1 0-1.06l1.125-1.125a.75.75 0 0 1 1.06 0l1.125 1.125a.75.75 0 0 1 0 1.06l-1.125 1.125Z"
-      clipRule="evenodd"
-    />
-    <path
-      fillRule="evenodd"
-      d="M9.344 19.879a.75.75 0 0 1-1.06 0l-1.125-1.125a.75.75 0 0 1 0-1.06l1.125-1.125a.75.75 0 0 1 1.06 0l1.125 1.125a.75.75 0 0 1 0 1.06L9.344 19.88Z"
-      clipRule="evenodd"
-    />
-    <path
-      fillRule="evenodd"
-      d="M5.25 14.656a.75.75 0 0 1 0-1.06l1.125-1.125a.75.75 0 0 1 1.06 0l1.125 1.125a.75.75 0 0 1 0 1.06l-1.125 1.125a.75.75 0 0 1-1.06 0L5.25 14.656Z"
-      clipRule="evenodd"
-    />
-    <path
-      fillRule="evenodd"
-      d="M5.25 9.344a.75.75 0 0 1 0-1.06l1.125-1.125a.75.75 0 0 1 1.06 0L8.56 8.28a.75.75 0 0 1 0 1.061l-1.125 1.125a.75.75 0 0 1-1.06 0L5.25 9.344Z"
-      clipRule="evenodd"
-    />
-  </svg>
+    style={{
+      objectFit: 'contain',
+      filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.5)) brightness(1.1) contrast(1.1)'
+    }}
+  />
 );
 
 export const MenuIcon: React.FC<{ className?: string }> = ({ className }) => {
@@ -464,5 +425,21 @@ export const DropletIcon: React.FC<{ className?: string }> = ({ className = "h-5
     className={className}
   >
     <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
+  </svg>
+);
+
+export const UserIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
   </svg>
 );

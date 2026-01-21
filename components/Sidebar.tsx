@@ -22,8 +22,6 @@ interface SidebarProps {
   setCurrentView: (view: View) => void;
   isMobileOpen: boolean;
   closeSidebar: () => void;
-  onLogout: () => void;
-  userEmail?: string;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -31,40 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   setCurrentView,
   isMobileOpen,
   closeSidebar,
-  onLogout,
-  userEmail,
 }) => {
-  const { signOut, user } = useAuth();
-
-  // Extract user name from email
-  const getUserName = (email: string) => {
-    if (!email) return "Utilisateur";
-
-    // Extract the part before @ and capitalize it
-    const namePart = email.split("@")[0];
-
-    // Handle different email formats
-    if (namePart.includes(".")) {
-      // If email is like "john.doe@example.com", take the first part
-      const firstName = namePart.split(".")[0];
-      return (
-        firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
-      );
-    } else {
-      // If email is like "mohamed@example.com", use the whole part
-      return namePart.charAt(0).toUpperCase() + namePart.slice(1).toLowerCase();
-    }
-  };
-
-  const userName = getUserName(userEmail || "");
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
   const NavItem = ({
     view,
     label,
@@ -109,9 +74,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform transform ${isMobileOpen ? "translate-x-0" : "-translate-x-full"
           } md:translate-x-0 bg-card border-r border-border flex flex-col`}
       >
-        <div className="h-16 flex items-center px-6 border-b border-border">
-          <LogoIcon className="h-7 w-7 text-primary" />
-          <span className="text-xl font-bold ml-3">GestiFiltres</span>
+        <div className="h-20 flex items-center px-4 mb-4 justify-center  border-border bg-slate-50/10 dark:bg-slate-900/10">
+          <LogoIcon className="h-[100px] w-[100px] shrink-0" />
+
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <NavItem
@@ -160,63 +125,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             icon={<SettingsIcon className="h-5 w-5" />}
           />
         </nav>
-        <div className="p-4 border-t border-border">
-          <div className="flex items-center justify-between">
-            <div
-              className="flex items-center space-x-3 overflow-hidden cursor-pointer"
-              onClick={() => {
-                setCurrentView(View.USER_PROFILE);
-                closeSidebar();
-              }}
-            >
-              <div className="w-10 h-10 rounded-full bg-muted flex-shrink-0 flex items-center justify-center font-bold text-muted-foreground overflow-hidden">
-                {/* Google profile photo */}
-                <img
-                  src={
-                    user?.user_metadata?.avatar_url ||
-                    user?.user_metadata?.picture ||
-                    `https://ui-avatars.io/api/?name=${encodeURIComponent(
-                      userName
-                    )}&background=random`
-                  }
-                  alt={userName}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback to initials if image fails to load
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = "none";
-                    const fallback = target.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = "flex";
-                  }}
-                />
-                <div
-                  className="w-full h-full flex items-center justify-center text-muted-foreground font-bold"
-                  style={{ display: "none" }}
-                >
-                  {userName?.charAt(0).toUpperCase()}
-                </div>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <p className="font-semibold text-sm truncate" title={userName}>
-                  {userName}
-                </p>
-                <p
-                  className="text-xs text-muted-foreground truncate"
-                  title={userEmail}
-                >
-                  {userEmail}
-                </p>
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center space-x-2 text-destructive-foreground bg-destructive text-sm font-medium mt-4 p-2 rounded-md hover:bg-destructive/90"
-          >
-            <LogoutIcon className="h-4 w-4" />
-            <span>Déconnexion</span>
-          </button>
-        </div>
       </aside>
     </>
   );

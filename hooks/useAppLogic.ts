@@ -243,6 +243,7 @@ export const useAppLogic = () => {
         adjustmentsRes,
         sparePartsRes,
         installationsRes,
+        oilStocksRes,
       ] = await Promise.all([
         supabase.from("machines").select("*"),
         supabase.from("filter_groups").select("*"),
@@ -251,17 +252,26 @@ export const useAppLogic = () => {
         supabase.from("monthly_daily_adjustments").select("*"),
         supabase.from("spare_parts").select("*"),
         supabase.from("spare_part_installations").select("*"),
+        supabase.from("oil_stocks").select("*"),
       ]);
 
       if (machinesRes.error) throw machinesRes.error;
       if (filterGroupsRes.error) throw filterGroupsRes.error;
-      // Define database types
-      type Tables = Database['public']['Tables'];
-      type MonthlyDailyAdjustmentInsert = Tables['monthly_daily_adjustments']['Insert'];
-      type MonthlyDailyAdjustmentUpdate = Tables['monthly_daily_adjustments']['Update'];
-      type MonthlyDailyAdjustmentRow = Tables['monthly_daily_adjustments']['Row'];
       if (filterTypesRes.error) throw filterTypesRes.error;
       if (maintenanceRecordsRes.error) throw maintenanceRecordsRes.error;
+      if (oilStocksRes.error) throw oilStocksRes.error;
+
+      // Transform oil stocks
+      if (oilStocksRes.data && oilStocksRes.data.length > 0) {
+        const transformedOilStocks = (oilStocksRes.data || []).map((stock: any) => ({
+          id: stock.id,
+          type: stock.type,
+          currentLevel: stock.current_level,
+          totalBarrels: stock.total_barrels,
+          alertThreshold: stock.alert_threshold,
+        }));
+        setOilStocks(transformedOilStocks);
+      }
 
       // Transform database results to match application types
       const transformedMachines = (machinesRes.data || []).map(
@@ -1089,15 +1099,14 @@ export const useAppLogic = () => {
 
       // Decrement Oil Stocks
       if (recordData.oilsUsed && recordData.oilsUsed.length > 0) {
-        setOilStocks(currentStocks => {
-          return currentStocks.map(stock => {
-            const used = recordData.oilsUsed.find(uo => uo.oilStockId === stock.id);
-            if (used) {
-              return { ...stock, currentLevel: Math.max(0, stock.currentLevel - used.quantity) };
-            }
-            return stock;
-          });
+        const newStocks = state.oilStocks.map(stock => {
+          const used = recordData.oilsUsed.find(uo => uo.oilStockId === stock.id);
+          if (used) {
+            return { ...stock, currentLevel: Math.max(0, stock.currentLevel - used.quantity) };
+          }
+          return stock;
         });
+        updateOilStocksInternal(newStocks);
       }
 
       // Refresh data and notify success (already done below)
@@ -1450,7 +1459,28 @@ export const useAppLogic = () => {
     closeInstallationModal,
     saveSparePartInstallation,
     setOilStocks,
+    updateOilStocks: async (newStocks: OilStock[]) => {
+      await updateOilStocksInternal(newStocks);
+    },
   };
+
+  async function updateOilStocksInternal(newStocks: OilStock[]) {
+    setOilStocks(newStocks);
+    try {
+      const stocksToSave = newStocks.map(stock => ({
+        id: stock.id,
+        type: stock.type,
+        current_level: stock.currentLevel,
+        total_barrels: stock.totalBarrels,
+        alert_threshold: stock.alertThreshold
+      }));
+      const { error } = await (supabase as any).from('oil_stocks').upsert(stocksToSave);
+      if (error) throw error;
+    } catch (e: any) {
+      console.error("Error saving oil stocks:", e);
+      addToast({ type: "error", title: "Erreur", description: "Impossible de sauvegarder le stock d'huile." });
+    }
+  }
 
   const state = {
     isLoading,

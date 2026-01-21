@@ -67,7 +67,7 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         {
           id: "initial",
           role: "model",
-          text: "Comment puis-je vous aider à trouver un filtre aujourd'hui ? Décrivez-le ou montrez-moi une photo.",
+          text: "Bonjour ! Je suis l'assistant HeavyCare. Comment puis-je vous aider avec votre maintenance ou vos filtres aujourd'hui ?",
         },
       ]);
     }
@@ -136,8 +136,8 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
       );
       const ai = new GoogleGenerativeAI(
         process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY ||
-          process.env.GOOGLE_AI_API_KEY ||
-          ""
+        process.env.GOOGLE_AI_API_KEY ||
+        ""
       );
 
       const promptParts: any[] = [
@@ -272,7 +272,7 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
           <SparklesIcon className="w-6 h-6 text-primary" />
-          Assistant IA GestiFiltres
+          Assistant IA HeavyCare
         </DialogTitle>
         <DialogDescription>
           Obtenez des suggestions de filtres en décrivant ce que vous cherchez
@@ -284,9 +284,8 @@ const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`chat-bubble ${
-                msg.role === "user" ? "chat-bubble-user" : "chat-bubble-model"
-              } ${msg.isError ? "bg-destructive/20 text-destructive" : ""}`}
+              className={`chat-bubble ${msg.role === "user" ? "chat-bubble-user" : "chat-bubble-model"
+                } ${msg.isError ? "bg-destructive/20 text-destructive" : ""}`}
             >
               {msg.isLoading ? (
                 <LoadingBubble />

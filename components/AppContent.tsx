@@ -35,7 +35,7 @@ import OilManagementView from "./OilManagementView";
 import { LogoIcon } from "../constants";
 
 const AppContent: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { state, actions } = useAppLogic();
 
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
@@ -83,7 +83,6 @@ const AppContent: React.FC = () => {
     if (state.theme.startsWith("custom")) {
       const style = document.createElement("style");
       style.id = customStyleTagId;
-
       const colors = state.customColors;
 
       style.innerHTML = `
@@ -107,7 +106,6 @@ const AppContent: React.FC = () => {
           --border: ${hexToHsl(colors.border)};
           --input: ${hexToHsl(colors.input)};
           --ring: ${hexToHsl(colors.ring)};
-          
           --warning: 38 92% 50%;
           --warning-foreground: 48 96% 6%;
         }
@@ -128,7 +126,11 @@ const AppContent: React.FC = () => {
   }, [state.theme, state.customColors]);
 
   const handleLogout = async () => {
-    // Logout is now handled by the AuthContext
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const renderLoadingScreen = () => (
@@ -274,7 +276,7 @@ const AppContent: React.FC = () => {
           <OilManagementView
             machines={state.machines}
             oilStocks={state.oilStocks}
-            onUpdateStock={actions.setOilStocks}
+            onUpdateStock={(actions as any).updateOilStocks}
             addToast={actions.addToast}
           />
         );
@@ -308,8 +310,6 @@ const AppContent: React.FC = () => {
         setCurrentView={actions.setCurrentView}
         isMobileOpen={state.isSidebarOpen}
         closeSidebar={actions.closeSidebar}
-        onLogout={handleLogout}
-        userEmail={user?.email || ""}
       />
       <div className="flex flex-col md:pl-64">
         <Header
@@ -330,6 +330,9 @@ const AppContent: React.FC = () => {
           onSelectMachine={actions.selectMachine}
           onNavigateToGroup={actions.navigateToFilterGroup}
           onSetView={actions.setCurrentView}
+          user={user}
+          userEmail={user?.email || ""}
+          onLogout={handleLogout}
         />
         <main className="relative flex-1 p-4 sm:p-6 lg:p-8">
           {renderView()}

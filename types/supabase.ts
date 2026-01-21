@@ -162,17 +162,46 @@ export interface Database {
           updated_at?: string
         }
         Update: {
-          id?: string
-          machine_id?: string
-          date?: string
-          downtime_hours?: number
-          panne_hours?: number
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-    }
+          id?: string;
+          machine_id?: string;
+          date?: string;
+          downtime_hours?: number;
+          panne_hours?: number;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      oil_stocks: {
+        Row: {
+          id: string;
+          type: string;
+          current_level: number;
+          total_barrels: number;
+          alert_threshold: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          type: string;
+          current_level?: number;
+          total_barrels?: number;
+          alert_threshold?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          type?: string;
+          current_level?: number;
+          total_barrels?: number;
+          alert_threshold?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+    };
     Views: {
       [_ in never]: never
     }

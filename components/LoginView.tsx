@@ -9,7 +9,7 @@ import { supabase } from '../utils/supabase';
 const LoginView: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -21,40 +21,40 @@ const LoginView: React.FC = () => {
     setError('');
 
     if (isSignUp) {
-        if (!email || !password || !companyName || !confirmPassword) {
-            setError('Tous les champs sont requis.');
-            setIsLoading(false);
-            return;
+      if (!email || !password || !companyName || !confirmPassword) {
+        setError('Tous les champs sont requis.');
+        setIsLoading(false);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Les mots de passe ne correspondent pas.');
+        setIsLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            company_name: companyName,
+          }
         }
-        if (password !== confirmPassword) {
-            setError('Les mots de passe ne correspondent pas.');
-            setIsLoading(false);
-            return;
-        }
-        
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    company_name: companyName,
-                }
-            }
-        });
-        if (error) setError(error.message);
+      });
+      if (error) setError(error.message);
 
     } else { // Sign In
-        if (!email || !password) {
-            setError('Email et mot de passe sont requis.');
-            setIsLoading(false);
-            return;
-        }
-        
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-        if (error) setError(error.message);
+      if (!email || !password) {
+        setError('Email et mot de passe sont requis.');
+        setIsLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) setError(error.message);
     }
     setIsLoading(false);
   };
@@ -63,11 +63,11 @@ const LoginView: React.FC = () => {
     setIsLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      
+
     });
     if (error) {
-        setError(error.message);
-        setIsLoading(false);
+      setError(error.message);
+      setIsLoading(false);
     }
     // The user will be redirected to Google and then back to the app.
     // The App component's onAuthStateChange listener will handle the session.
@@ -78,8 +78,11 @@ const LoginView: React.FC = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center gap-3 mb-2">
-            <LogoIcon className="h-8 w-8 text-primary" />
-            <CardTitle className="text-3xl">GestiFiltres</CardTitle>
+            <LogoIcon className="h-16 w-auto" />
+            <CardTitle className="text-3xl font-black tracking-tighter">
+              <span className="text-slate-800 dark:text-slate-100">Heavy</span>
+              <span className="text-primary">Care</span>
+            </CardTitle>
           </div>
           <CardDescription>
             {isSignUp ? 'Créez votre compte pour commencer' : 'Connectez-vous à votre compte'}
@@ -107,9 +110,9 @@ const LoginView: React.FC = () => {
             </div>
           )}
           {!isSignUp && (
-              <div className="text-right">
-                <a href="#" className="text-sm text-primary hover:underline">Mot de passe oublié ?</a>
-              </div>
+            <div className="text-right">
+              <a href="#" className="text-sm text-primary hover:underline">Mot de passe oublié ?</a>
+            </div>
           )}
           {error && <p className="text-sm text-center text-destructive">{error}</p>}
         </CardContent>
@@ -117,7 +120,7 @@ const LoginView: React.FC = () => {
           <Button onClick={handleAuthAction} className="w-full" disabled={isLoading}>
             {isLoading ? 'Chargement...' : (isSignUp ? "S'inscrire" : 'Se connecter')}
           </Button>
-          
+
           <div className="relative w-full">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -136,7 +139,7 @@ const LoginView: React.FC = () => {
 
           <p className="text-sm text-muted-foreground">
             {isSignUp ? 'Vous avez déjà un compte ?' : "Vous n'avez pas de compte ?"}
-            <button onClick={() => {setIsSignUp(!isSignUp); setError('');}} className="ml-1 text-primary hover:underline font-semibold" disabled={isLoading}>
+            <button onClick={() => { setIsSignUp(!isSignUp); setError(''); }} className="ml-1 text-primary hover:underline font-semibold" disabled={isLoading}>
               {isSignUp ? 'Se connecter' : "S'inscrire"}
             </button>
           </p>

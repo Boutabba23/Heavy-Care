@@ -177,8 +177,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </CardTitle>
         <CardDescription className="text-center">
           {isSignUp
-            ? "Créez votre compte pour accéder à GestiFiltres"
-            : "Connectez-vous à votre compte GestiFiltres"}
+            ? "Créez votre compte pour accéder à HeavyCare"
+            : "Connectez-vous à votre compte HeavyCare"}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -271,8 +271,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
             {loading
               ? "Chargement..."
               : isSignUp
-              ? "Créer le compte"
-              : "Se connecter"}
+                ? "Créer le compte"
+                : "Se connecter"}
           </Button>
 
           <div className="relative">

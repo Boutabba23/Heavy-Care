@@ -1,7 +1,7 @@
 
 {
-  "name": "GestiFiltres - Gestionnaire de Filtres pour Engins",
-  "description": "Une application web pour gérer les références de filtres compatibles pour un parc d'engins de travaux publics. Permet d'associer des filtres à des engins, de gérer des groupes de filtres compatibles et d'effectuer des opérations CRUD complètes.",
+  "name": "HeavyCare - Gestion de Maintenance et Matériel",
+  "description": "Une plateforme complète pour la gestion de maintenance préventive, le suivi des stocks d'huile et les pièces de rechange pour parc d'engins.",
   "requestFramePermissions": [
     "camera"
   ]

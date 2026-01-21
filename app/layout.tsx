@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GestiFiltres - Gestionnaire de Filtres",
+  title: "HeavyCare - Gestion de Maintenance",
   description:
-    "Système de gestion de filtres pour maintenance de machines lourdes",
+    "Plateforme de gestion de maintenance et suivi pour engins lourds",
   icons: {
     icon: "/favicon.ico",
   },

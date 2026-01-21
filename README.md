@@ -1,6 +1,6 @@
-# GestiFiltres - Frontend
+# HeavyCare - Gestion de Maintenance Préventive
 
-This is the frontend application for GestiFiltres, a filter management system for heavy machinery.
+HeavyCare est une plateforme complète pour la gestion de maintenance, le suivi des huiles et la gestion des équipements pour parcs d'engins lourds.
 
 ## Quick Start
 
