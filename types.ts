@@ -203,3 +203,6 @@ export interface OilTransaction {
   performedBy?: string;
   serviceHours?: number;
 }
+
+export * from './types/monthly-stats';
+

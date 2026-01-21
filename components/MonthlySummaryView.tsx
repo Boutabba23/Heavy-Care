@@ -1,404 +1,618 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { Machine, MaintenanceRecord } from "../types";
-import Select from "./ui/Select";
-import Input from "./ui/Input";
-import Button from "./ui/Button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
-import Label from "./ui/Label";
-import Tabs from "./ui/Tabs"; // Import Tabs
+import React, { useState, useEffect, useMemo } from 'react';
+import { Machine, MaintenanceRecord } from '../types';
+import { MachineMonthlyStat, MonthlyDistributionResult } from '../types/monthly-stats';
+import { calculateMonthlyDistribution, calculatePeriodDates } from '../utils/distribution-algo';
+import { supabase } from '../utils/supabase';
+import { exportMonthlySynthesisToExcel } from '../utils/excel-export';
 
-// ConfirmationDialog removed: inline editing replaces separate adjustments UI
-import { Toast } from "../types";
-import { PencilIcon } from "@/constants";
+import { SynthesisReportModal } from './MonthlyStats/SynthesisReportModal';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
+import {
+  BarChart3 as CalendarIcon, // Calendar unavailable, using BarChart3 as fallback
+  Download,
+  Sparkles,
+  AlertTriangle as AlertTriangleLucide // use lucide import if available
+} from 'lucide-react';
+// Since previous checks failed, let's rely on constants.tsx where possible
+import {
+  ClockIcon,
+  ExcavatorIcon,
+  WrenchIcon,
+  ExclamationTriangleIcon,
+  SparklesIcon,
+  MoonIcon, // for idle? or sun?
+  CloudRainIcon
+} from '../constants';
+
+import Button from './ui/Button';
+import Select from './ui/Select';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from './ui/Table';
+import { Card } from './ui/Card';
+import Input from './ui/Input';
 
 interface Props {
   machines: Machine[];
   maintenanceRecords: MaintenanceRecord[];
-  adjustments?: { id: string; machine_id: string; date: string; work_hours?: number; downtime_hours: number; panne_hours: number; notes?: string | null }[];
-  onCreateAdjustment?: (adj: { machineId: string; date: string; workHours?: number; downtimeHours: number; panneHours: number; notes?: string }) => Promise<any> | any;
-  onUpdateAdjustment?: (id: string, changes: Partial<{ workHours?: number; downtimeHours: number; panneHours: number; notes?: string }>) => Promise<boolean> | boolean;
-  onDeleteAdjustment?: (id: string) => Promise<boolean> | boolean;
-  addToast?: (t: Omit<Toast, 'id'>) => void;
+  addToast: (toast: any) => void;
 }
 
-// This view computes a daily summary for a given machine and month.
-const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, adjustments, onCreateAdjustment, onUpdateAdjustment, onDeleteAdjustment, addToast }) => {
-  // Inline editing state for daily rows
-  const [editingKey, setEditingKey] = useState<string | null>(null); // ISO date string when editing a row
-  const [editValues, setEditValues] = useState<{ workHours: number | string; downtimeHours: number | string; panneHours: number | string }>({ workHours: 0, downtimeHours: 0, panneHours: 0 });
-  const [isSavingAdj, setIsSavingAdj] = useState(false);
-  // optimistic edits keyed by ISO date string (YYYY-MM-DD)
-  const [optimisticEdits, setOptimisticEdits] = useState<Record<string, { workHours: number; downtimeHours: number; panneHours: number; pending: boolean; id?: string }>>({});
-  // handlers will be set by parent via props; they exist on props via closure below
-  const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0]?.id || "");
+const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, addToast }) => {
   const [month, setMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM
-  const [machineSearch, setMachineSearch] = useState('');
+  const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0]?.id || "");
+  const [viewMode, setViewMode] = useState<'dashboard' | 'calendar'>('dashboard');
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
+  const [monthlyStats, setMonthlyStats] = useState<MachineMonthlyStat[]>([]);
+  const [globalSettings, setGlobalSettings] = useState<{ intemperieDays: string[] }>({ intemperieDays: [] });
+  const [loading, setLoading] = useState(false);
 
-  const selectedMachine = machines.find(m => m.id === selectedMachineId) || null;
-  const formatMonth = (monthString: string) => {
-    const [year, monthNum] = monthString.split("-");
-    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-    const formattedMonth = months[parseInt(monthNum, 10) - 1];
-    return `${year} - ${formattedMonth}`;
-  };
-  // Period runs from 21st of previous month to 20th of selected month
-  const { periodStart, periodEnd, dateRange } = useMemo(() => {
-    const [year, monthNum] = month.split("-").map(Number);
-    if (!year || !monthNum) return { periodStart: null as null | Date, periodEnd: null as null | Date, dateRange: [] as string[] };
-    // selected month is YYYY-MM, we want period from (month-1)-21 to month-20
-    const start = new Date(year, monthNum - 2, 22); // JS months 0-indexed: monthNum-2 is previous month
-    const end = new Date(year, monthNum - 1, 21);
-    const range: string[] = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      range.push(d.toISOString().slice(0, 10));
-    }
-    return { periodStart: start, periodEnd: end, dateRange: range };
+  // Local state for inline configuration
+  const [configStartHours, setConfigStartHours] = useState<number>(0);
+  const [configEndHours, setConfigEndHours] = useState<number>(0);
+  const [configWeekends, setConfigWeekends] = useState<boolean>(false);
+  const [configDirty, setConfigDirty] = useState(false);
+  const [editingBreakdownDate, setEditingBreakdownDate] = useState<string | null>(null);
+
+  // Fetch Stats & Settings
+  useEffect(() => {
+    fetchData();
   }, [month]);
 
-  const recordsForMachineAndMonth = useMemo(() => {
-    if (!periodStart || !periodEnd) return [] as MaintenanceRecord[];
-    return maintenanceRecords.filter(r => {
-      if (r.machineId !== selectedMachineId) return false;
-      const d = new Date(r.date);
-      return d >= periodStart && d <= periodEnd;
-    });
-  }, [maintenanceRecords, selectedMachineId, periodStart, periodEnd]);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const { data: statsData, error: statsError } = await supabase
+        .from('machine_monthly_stats')
+        .select('*')
+        .eq('month', month);
 
-  // For now we derive simplistic hour summaries from serviceHours deltas between consecutive maintenance records.
-  // This is a heuristic: real data may need explicit fields for downtime/panne hours.
-  const dailySummary = useMemo(() => {
-    const [year, monthNum] = month.split("-").map(Number);
-    if (!selectedMachine || !year || !monthNum) return [] as { date: string; workHours: number; downtimeHours: number; panneHours: number }[];
+      if (statsError) throw statsError;
 
-    // Build a map of records by ISO date string
-    const recMap: Record<string, MaintenanceRecord[]> = {};
-    recordsForMachineAndMonth.forEach(r => {
-      const iso = new Date(r.date).toISOString().slice(0, 10);
-      if (!recMap[iso]) recMap[iso] = [];
-      recMap[iso].push(r);
-    });
+      const transformedStats: MachineMonthlyStat[] = (statsData || []).map((s: any) => ({
+        id: s.id,
+        machineId: s.machine_id,
+        month: s.month,
+        startHours: s.start_hours,
+        endHours: s.end_hours,
+        worksOnWeekends: s.works_on_weekends,
+        breakdownDays: s.breakdown_days || [],
+        breakdownHours: s.breakdown_hours || {}
+      }));
+      setMonthlyStats(transformedStats);
 
-    // Build a map of adjustments for this machine and month (including work hours), keyed by ISO date
-    const adjMap: Record<string, { work_hours?: number; downtime_hours: number; panne_hours: number }[]> = {};
-    (adjustments || []).forEach((adj: any) => {
-      if (adj.machine_id !== selectedMachineId) return;
-      const iso = new Date(adj.date).toISOString().slice(0, 10);
-      // ensure adjustment is within period
-      if (!dateRange.includes(iso)) return;
-      if (!adjMap[iso]) adjMap[iso] = [];
-      adjMap[iso].push({ work_hours: adj.work_hours || 0, downtime_hours: adj.downtime_hours || 0, panne_hours: adj.panne_hours || 0 });
-    });
+      const { data: settingsData } = await supabase
+        .from('global_monthly_settings')
+        .select('*')
+        .eq('month', month)
+        .single();
 
-    const results: { date: string; workHours: number; downtimeHours: number; panneHours: number }[] = [];
-    if (!periodStart || !periodEnd) return [] as any;
+      setGlobalSettings({ intemperieDays: settingsData?.intemperie_days || [] });
 
-    // For each date in dateRange, compute metrics
-    dateRange.forEach(dateIso => {
-      // maintenance records for that exact date
-      const recs = recMap[dateIso] || [];
-      let workHours = 0;
-      let downtimeHours = 0;
-      let panneHours = 0;
-
-      if (recs.length >= 2) {
-        recs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        const first = recs[0];
-        const last = recs[recs.length - 1];
-        workHours = last.serviceHours - first.serviceHours;
-        if (workHours < 0) workHours = 0;
-      }
-
-      const dayAdj = adjMap[dateIso] || [];
-      const adjWork = dayAdj.reduce((s, a) => s + (a.work_hours || 0), 0);
-      const adjDowntime = dayAdj.reduce((s, a) => s + (a.downtime_hours || 0), 0);
-      const adjPanne = dayAdj.reduce((s, a) => s + (a.panne_hours || 0), 0);
-
-      const recDowntime = recs.reduce((s, r) => s + ((r as any).downtimeHours || 0), 0);
-      const recPanne = recs.reduce((s, r) => s + ((r as any).panneHours || 0), 0);
-
-      workHours = workHours + adjWork;
-      downtimeHours = adjDowntime + recDowntime;
-      panneHours = adjPanne + recPanne;
-
-      results.push({ date: dateIso, workHours, downtimeHours, panneHours });
-    });
-
-    return results as any;
-  }, [recordsForMachineAndMonth, selectedMachine, adjustments, dateRange, periodStart, periodEnd]);
-
-  // Apply optimistic edits to the daily summary for display/totals
-  const displayedDailySummary = useMemo(() => {
-    return dailySummary.map((d: { date: string; workHours: number; downtimeHours: number; panneHours: number }) => {
-      const o = optimisticEdits[d.date];
-      if (o) return { date: d.date, workHours: o.workHours, downtimeHours: o.downtimeHours, panneHours: o.panneHours };
-      return d;
-    });
-  }, [dailySummary, optimisticEdits]);
-
-  const totals = useMemo(() => {
-    return displayedDailySummary.reduce((acc: { workHours: number; downtimeHours: number; panneHours: number }, cur: { workHours: number; downtimeHours: number; panneHours: number }) => ({
-      workHours: acc.workHours + cur.workHours,
-      downtimeHours: acc.downtimeHours + cur.downtimeHours,
-      panneHours: acc.panneHours + cur.panneHours,
-    }), { workHours: 0, downtimeHours: 0, panneHours: 0 });
-  }, [displayedDailySummary]);
-
-  // Compute totals per machine for the selected month
-  const perMachineTotals = useMemo(() => {
-    const [y, m] = month.split("-").map(Number);
-    if (!y || !m) return [] as { machineId: string; code: string; designation: string; workHours: number; downtimeHours: number; panneHours: number }[];
-
-    return machines.map(machine => {
-      const records = maintenanceRecords.filter(r => {
-        if (r.machineId !== machine.id) return false;
-        const d = new Date(r.date);
-        return periodStart && periodEnd ? (d >= periodStart && d <= periodEnd) : false;
-      }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-      let workHours = 0;
-      let downtimeHours = 0;
-      let panneHours = 0;
-
-      if (records.length >= 2) {
-        // approximate total work hours by difference between last and first serviceHours
-        const first = records[0];
-        const last = records[records.length - 1];
-        workHours = Math.max(0, last.serviceHours - first.serviceHours);
-      }
-
-      // include adjustments for this machine in the month
-      const machineAdjustments = (adjustments || []).filter((adj: any) => {
-        if (adj.machine_id !== machine.id) return false;
-        const iso = new Date(adj.date).toISOString().slice(0, 10);
-        return dateRange.includes(iso);
-      });
-      const adjWork = machineAdjustments.reduce((s: number, a: any) => s + (a.work_hours || 0), 0);
-      const adjDowntime = machineAdjustments.reduce((s: number, a: any) => s + (a.downtime_hours || 0), 0);
-      const adjPanne = machineAdjustments.reduce((s: number, a: any) => s + (a.panne_hours || 0), 0);
-
-      workHours = workHours + adjWork;
-      downtimeHours = downtimeHours + adjDowntime;
-      panneHours = panneHours + adjPanne;
-
-      // include optimistic edits if they belong to the currently selected machine
-      if (machine.id === selectedMachineId) {
-        const optimisticSum = Object.entries(optimisticEdits).reduce((s, [dateStr, o]) => {
-          if (!dateRange.includes(dateStr)) return s;
-          return {
-            workHours: s.workHours + o.workHours,
-            downtimeHours: s.downtimeHours + o.downtimeHours,
-            panneHours: s.panneHours + o.panneHours,
-          };
-        }, { workHours: 0, downtimeHours: 0, panneHours: 0 });
-
-        workHours += optimisticSum.workHours;
-        downtimeHours += optimisticSum.downtimeHours;
-        panneHours += optimisticSum.panneHours;
-      }
-
-      return { machineId: machine.id, code: machine.code, designation: machine.designation, workHours, downtimeHours, panneHours };
-    });
-  }, [machines, maintenanceRecords, month, periodStart, periodEnd, dateRange, selectedMachineId, optimisticEdits]);
-
-  const filteredPerMachineTotals = useMemo(() => {
-    if (!machineSearch) {
-      return perMachineTotals;
+    } catch (error: any) {
+      console.error('Error fetching monthly data:', error);
+    } finally {
+      setLoading(false);
     }
-    return perMachineTotals.filter(m =>
-      m.code.toLowerCase().includes(machineSearch.toLowerCase()) ||
-      m.designation.toLowerCase().includes(machineSearch.toLowerCase())
-    );
-  }, [perMachineTotals, machineSearch]);
+  };
 
-  const grandTotals = useMemo(() => {
-    return filteredPerMachineTotals.reduce((acc, cur) => ({
-      workHours: acc.workHours + cur.workHours,
-      downtimeHours: acc.downtimeHours + cur.downtimeHours,
-      panneHours: acc.panneHours + cur.panneHours,
-    }), { workHours: 0, downtimeHours: 0, panneHours: 0 });
-  }, [filteredPerMachineTotals]);
+  const selectedMachine = machines.find(m => m.id === selectedMachineId);
+  const currentStat = monthlyStats.find(s => s.machineId === selectedMachineId);
 
-  const summaryTabs = [
-    {
-      label: "Synthèse journalière",
-      content: (
-        <>
-          <div className="mb-2 text-sm text-muted-foreground">Engin sélectionné: <span className="font-medium">{selectedMachine ? `${selectedMachine.code} - ${selectedMachine.designation}` : '—'}</span></div>
-          <Table className="table-zebra"
-          >
-            <TableHeader>
-              <TableRow>
-                <TableHead>Jour</TableHead>
-                <TableHead>Heures service</TableHead>
-                <TableHead>Heures chômage</TableHead>
-                <TableHead>Heures panne</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayedDailySummary.map((row: any) => {
-                const adjForDay = (adjustments || []).find(a => a.machine_id === selectedMachineId && new Date(a.date).toISOString().slice(0, 10) === row.date);
-                const date = new Date(row.date + 'T00:00:00Z');
-                const dayName = date.toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3);
+  // Sync config state with selected machine
+  useEffect(() => {
+    if (selectedMachine) {
+      if (currentStat) {
+        setConfigStartHours(currentStat.startHours);
+        setConfigEndHours(currentStat.endHours);
+        setConfigWeekends(currentStat.worksOnWeekends);
+      } else {
+        setConfigStartHours(selectedMachine.serviceHours || 0);
+        setConfigEndHours(selectedMachine.serviceHours || 0);
+        setConfigWeekends(false);
+      }
+      setConfigDirty(false);
+    }
+  }, [selectedMachine, currentStat]);
 
-                const dayLabel = `${dayName} - ${date.getDate()}`;
-                const isWeekend = dayName === 'jeu' || dayName === 'ven';
+  // Computed Distribution
+  const distribution = useMemo(() => {
+    if (!selectedMachine) return null;
+    // Use current Config state for "Live" preview if dirty, else use persisted stat
+    // But for the Chart/Table, we usually want the *Applied* data. 
+    // Let's rely on the persisted `currentStat` for the main view to avoid confusion, 
+    // or use a temporary object for "Preview"?
+    // For simplicity: The main view uses `currentStat`. One must "Save" to see changes.
+    if (!currentStat) return null;
+    return calculateMonthlyDistribution(currentStat, {
+      intemperieDays: globalSettings.intemperieDays,
+      forcedWorkDays: []
+    });
+  }, [selectedMachine, currentStat, globalSettings]);
 
-                return (
-                  <TableRow key={row.date}>
-                    <TableCell className={isWeekend ? 'text-primary' : ''}>{dayLabel}</TableCell>
-                    <TableCell className="pl-14">
-                      {editingKey === row.date ? (
-                        <Input type="number" value={String(editValues.workHours)} onChange={e => setEditValues(v => ({ ...v, workHours: e.target.value }))} />
-                      ) : (
-                        row.workHours
-                      )}
-                    </TableCell>
-                    <TableCell className="pl-14">
-                      {editingKey === row.date ? (
-                        <Input  type="number" value={String(editValues.downtimeHours)} onChange={e => setEditValues(v => ({ ...v, downtimeHours: e.target.value }))} />
-                      ) : (
-                        row.downtimeHours
-                      )}
-                    </TableCell>
-                    <TableCell className="pl-14">
-                      {editingKey === row.date ? (
-                        <Input type="number" value={String(editValues.panneHours)} onChange={e => setEditValues(v => ({ ...v, panneHours: e.target.value }))} />
-                      ) : (
-                        row.panneHours
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {editingKey === row.date ? (
-                        <div className="flex gap-2 justify-end">
-                          <Button size="sm" disabled={isSavingAdj} onClick={async () => {
-                            if (!selectedMachine) return;
-                            // apply optimistic edit keyed by ISO date
-                            const optimistic = { workHours: Number(editValues.workHours || 0), downtimeHours: Number(editValues.downtimeHours || 0), panneHours: Number(editValues.panneHours || 0), pending: true, id: adjForDay ? (adjForDay as any).id : undefined };
-                            setOptimisticEdits(o => ({ ...o, [row.date]: optimistic }));
-                            setEditingKey(null);
-                            try {
-                              const dateStr = row.date;
-                              const payload = { machineId: selectedMachine.id, date: dateStr, workHours: optimistic.workHours, downtimeHours: optimistic.downtimeHours, panneHours: optimistic.panneHours };
-                              if (adjForDay && onUpdateAdjustment) {
-                                await onUpdateAdjustment((adjForDay as any).id, payload as any);
-                                setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
-                              } else if (onCreateAdjustment) {
-                                const res = await onCreateAdjustment(payload as any);
-                                if (res && (res as any).id) {
-                                  setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false, id: (res as any).id } }));
-                                } else {
-                                  setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
-                                }
-                              } else {
-                                setOptimisticEdits(o => ({ ...o, [row.date]: { ...o[row.date], pending: false } }));
-                              }
-                              if (addToast) addToast({ type: 'success', title: 'Ajustement sauvegardé', description: '' });
-                            } catch (e) {
-                              // revert optimistic edit on failure
-                              setOptimisticEdits(o => {
-                                const copy = { ...o };
-                                delete copy[row.date];
-                                return copy;
-                              });
-                              if (addToast) addToast({ type: 'error', title: 'Erreur', description: 'Erreur lors de la sauvegarde' });
-                            }
-                          }}>Enregistrer</Button>
-                          <Button size="sm" variant="ghost" onClick={() => { setEditingKey(null); }}>Annuler</Button>
-                        </div>
-                      ) : (
-                        <div className="flex justify-end">
-                          <Button size="sm" variant="ghost" onClick={() => {
-                            setEditingKey(row.date);
-                            setEditValues({ workHours: row.workHours, downtimeHours: row.downtimeHours, panneHours: row.panneHours });
-                          }}>                              <PencilIcon className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              <TableRow>
-                <TableCell className="font-bold text-xl">Total</TableCell>
-                <TableCell className="font-bold text-xl pl-14">{totals.workHours}</TableCell>
-                <TableCell className="font-bold text-xl pl-14">{totals.downtimeHours}</TableCell>
-                <TableCell className="font-bold text-xl pl-14">{totals.panneHours}</TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </>
-      ),
-    },
-    {
-      label: "Synthèse Mensuelle",
-      content: (
-        <div className="my-4">
-          <Input
-            type="text"
-            placeholder="Rechercher par code ou désignation..."
-            value={machineSearch}
-            onChange={e => setMachineSearch(e.target.value)}
-            className="mb-4"
-          />
-          <Table className="table-zebra"
-          >
-            <TableHeader>
-              <TableRow>
-                <TableHead>Engin</TableHead>
-                <TableHead>Heures service</TableHead>
-                <TableHead>Heures chômage</TableHead>
-                <TableHead>Heures panne</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPerMachineTotals.map(m => (
-                <TableRow key={m.machineId}>
-                  <TableCell >{m.code} - {m.designation}</TableCell>
-                  <TableCell className="pl-14">{m.workHours}</TableCell>
-                  <TableCell className="pl-14">{m.downtimeHours}</TableCell>
-                  <TableCell className="pl-14">{m.panneHours}</TableCell>
-                </TableRow>
-              ))}
-              <TableRow>
-                <TableCell className="font-bold text-xl">Total Général</TableCell>
-                <TableCell className="font-bold pl-14 text-xl">{grandTotals.workHours}</TableCell>
-                <TableCell className="font-bold pl-14 text-xl">{grandTotals.downtimeHours}</TableCell>
-                <TableCell className="font-bold pl-14 text-xl">{grandTotals.panneHours}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-      ),
-    },
-  ];
+  // Potential Hours (Theoretical Capacity)
+  const potentialHours = useMemo(() => {
+    if (!distribution) return 0;
+    // Potential = Total days in period (excluding weekends if not working?) * 8h
+    // Align with "Potentiel" usually meaning "Workable Hours".
+    // Let's sum up standard 8h for every valid non-weekend day (or weekend if enabled)
+    return distribution.days.filter(d => d.status !== 'WEEKEND').length * 8;
+  }, [distribution]);
+
+
+  // Handle Save Config
+  const handleSaveConfig = async () => {
+    if (!selectedMachine) return;
+    const payload = {
+      machine_id: selectedMachine.id,
+      month: month,
+      start_hours: configStartHours,
+      end_hours: configEndHours,
+      works_on_weekends: configWeekends,
+      breakdown_days: currentStat?.breakdownDays || [],
+      breakdown_hours: currentStat?.breakdownHours || {}
+    };
+
+    const { error } = await supabase
+      .from('machine_monthly_stats')
+      .upsert(payload, { onConflict: 'machine_id, month' });
+
+    if (error) {
+      addToast({ type: 'error', title: 'Erreur', description: error.message });
+    } else {
+      addToast({ type: 'success', title: 'Succès', description: 'Configuration sauvegardée' });
+      fetchData();
+      setConfigDirty(false);
+    }
+  };
+
+  const toggleBreakdownDay = async (date: string) => {
+    if (!currentStat) return;
+    const isBroken = currentStat.breakdownDays.includes(date);
+
+    let newDays = [...currentStat.breakdownDays];
+    let newHours = { ...(currentStat.breakdownHours || {}) };
+
+    if (isBroken) {
+      newDays = newDays.filter(d => d !== date);
+      delete newHours[date];
+
+      // Update DB & State
+      const updatedStats = monthlyStats.map(s => s.machineId === selectedMachineId ? { ...s, breakdownDays: newDays, breakdownHours: newHours } : s);
+      setMonthlyStats(updatedStats);
+      await supabase.from('machine_monthly_stats').update({ breakdown_days: newDays, breakdown_hours: newHours }).eq('id', currentStat.id);
+    } else {
+      // Enter inline edit mode
+      setEditingBreakdownDate(date);
+    }
+  };
+
+  const handleUpdateBreakdownHours = async (date: string, hours: number) => {
+    if (!currentStat) return;
+
+    let newDays = [...currentStat.breakdownDays];
+    if (!newDays.includes(date)) {
+      newDays.push(date);
+    }
+
+    let newHours = { ...(currentStat.breakdownHours || {}), [date]: hours };
+
+    // Optimistic Update
+    const updatedStats = monthlyStats.map(s => s.machineId === selectedMachineId ? { ...s, breakdownDays: newDays, breakdownHours: newHours } : s);
+    setMonthlyStats(updatedStats);
+    setEditingBreakdownDate(null);
+
+    await supabase.from('machine_monthly_stats')
+      .update({ breakdown_days: newDays, breakdown_hours: newHours })
+      .eq('id', currentStat.id);
+  };
+
+  const toggleIntemperieDay = async (date: string) => {
+    const isIntemperie = globalSettings.intemperieDays.includes(date);
+    const newDays = isIntemperie ? globalSettings.intemperieDays.filter(d => d !== date) : [...globalSettings.intemperieDays, date];
+    setGlobalSettings({ intemperieDays: newDays });
+    await supabase.from('global_monthly_settings').upsert({ month, intemperie_days: newDays }, { onConflict: 'month' });
+  };
+
+  const handleExportExcel = () => {
+    if (!monthlyStats.length) return;
+    const resultsMap = new Map<string, MonthlyDistributionResult | null>();
+    machines.forEach(m => {
+      const stat = monthlyStats.find(s => s.machineId === m.id);
+      if (stat) {
+        const res = calculateMonthlyDistribution(stat, { intemperieDays: globalSettings.intemperieDays, forcedWorkDays: [] });
+        resultsMap.set(m.id, res);
+      } else {
+        resultsMap.set(m.id, null);
+      }
+    });
+
+    exportMonthlySynthesisToExcel(month, machines, resultsMap);
+  };
+
+  const chartData = distribution ? distribution.days.map(d => ({
+    day: new Date(d.date).getDate(),
+    work: d.workHours,
+    total: 8 // Capacity line?
+  })) : [];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-end gap-4">
-        <div>
-          <Label >Engin</Label>
-          <Select className="mt-2" value={selectedMachineId} onChange={e => setSelectedMachineId(e.target.value)}>
-            {machines.map(m => <option key={m.id} value={m.id}>{m.code} - {m.designation}</option>)}
-          </Select>
+    <div className="space-y-6 font-sans text-foreground">
+      {/* Top Header Row within View */}
+      {/* Top Header Row within View */}
+      <div className="flex flex-col md:flex-row justify-between items-center bg-card text-card-foreground p-4 rounded-[2rem] shadow-sm border border-border">
+        <div className="flex items-center gap-4">
+          <div className="bg-primary/10 p-2 rounded-xl">
+            <CalendarIcon className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black tracking-tight text-foreground">POINTAGE PRO</h2>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+              <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-xl border border-border/50">
+                <Input
+                  type="month"
+                  value={month}
+                  onChange={e => setMonth(e.target.value)}
+                  className="h-6 w-32 bg-transparent border-none text-foreground text-xs font-extrabold focus:ring-0 p-0"
+                />
+              </div>
+              {(() => {
+                const { start, end } = calculatePeriodDates(month);
+                const format = (d: Date) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+                return (
+                  <div className="text-[10px] font-bold bg-primary/5 text-primary px-3 py-1.5 rounded-xl border border-primary/10">
+                    PÉRIODE: {format(start)} AU {format(end)}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
         </div>
-        <div>
-          <Label>Mois</Label>
-          <Input className="mt-2" type="month" value={month} onChange={e => setMonth(e.target.value)} />
+        <div className="flex bg-muted rounded-full p-1.5 gap-1">
+          <button
+            onClick={() => setViewMode('dashboard')}
+            className={`px-6 py-2 rounded-full text-xs font-extrabold transition-all uppercase tracking-wide ${viewMode === 'dashboard' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Tableau de bord
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={`px-6 py-2 rounded-full text-xs font-extrabold transition-all uppercase tracking-wide ${viewMode === 'calendar' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Calendrier
+          </button>
         </div>
       </div>
 
-      <div className="p-4 border rounded">
-        <h3 className="font-semibold">Synthèse Mensuelle - {formatMonth(month)}</h3>
-        <Tabs tabs={summaryTabs} />
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Sidebar: Fleet & Config */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Fleet List */}
+          <div className="bg-card rounded-[2rem] shadow-sm p-6 border border-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">VOTRE FLOTTE ({machines.length})</h3>
+              <div className="flex gap-1">
+              </div>
+            </div>
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+              {machines.map(m => {
+                const stat = monthlyStats.find(s => s.machineId === m.id);
+                const isSelected = selectedMachineId === m.id;
+                return (
+                  <div
+                    key={m.id}
+                    onClick={() => setSelectedMachineId(m.id)}
+                    className={`p-4 rounded-2xl cursor-pointer transition-all border ${isSelected
+                      ? 'bg-primary/5 border-primary/20 shadow-sm'
+                      : 'bg-muted/30 border-transparent hover:bg-card hover:shadow-sm'
+                      }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className={`font-bold ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                          {m.designation}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">{m.code}</div>
+                      </div>
+                      {stat && stat.endHours > stat.startHours && (
+                        <div className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                          {(stat.endHours - stat.startHours).toFixed(0)}H
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
 
-     
-    </div>
+          {/* Inline Configuration */}
+          {selectedMachine && (
+            <div className="bg-card rounded-[2rem] shadow-sm p-6 border border-border">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-6">CONFIGURATION</h3>
+              {/* Weekend Toggle */}
+              <div className="bg-muted/50 p-4 rounded-2xl flex items-center justify-between mb-6">
+                <span className="text-sm font-semibold text-foreground">TRAVAIL 7J/7</span>
+                <div
+                  onClick={() => { setConfigWeekends(!configWeekends); setConfigDirty(true); }}
+                  className={`w-12 h-6 rounded-full cursor-pointer transition-colors relative ${configWeekends ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-card rounded-full transition-transform ${configWeekends ? 'left-7' : 'left-1'}`} />
+                </div>
+              </div>
+
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">COMPTEURS</h3>
+              <div className="space-y-4">
+                <div>
+                  <Input
+                    type="number"
+                    value={configStartHours}
+                    onChange={e => { setConfigStartHours(Number(e.target.value)); setConfigDirty(true); }}
+                    className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-card focus:border-primary/30 text-lg font-bold text-center"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <Input
+                    type="number"
+                    value={configEndHours}
+                    onChange={e => { setConfigEndHours(Number(e.target.value)); setConfigDirty(true); }}
+                    className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-card focus:border-primary/30 text-lg font-bold text-center"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              {configDirty && (
+                <div className="mt-6 animate-in fade-in slide-in-from-bottom-2">
+                  <Button
+                    onClick={handleSaveConfig}
+                    className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20"
+                  >
+                    ENREGISTRER
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right Content */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Top Stats & Buttons */}
+          <div className="flex flex-wrap gap-4 items-center justify-between">
+            {/* KPI Cards */}
+            <div className="flex gap-4 overflow-x-auto pb-2 flex-1">
+              {[
+                { label: 'POTENTIEL', value: `${potentialHours}h`, color: 'text-foreground' },
+                { label: 'SERVICE', value: distribution ? `${(distribution.totalWorkHours + distribution.totalOvertimeHours).toFixed(0)}h` : '-', color: 'text-primary' },
+                { label: 'INTEMPÉRÉ', value: distribution ? `${distribution.totalIntemperieHours.toFixed(0)}h` : '-', color: 'text-blue-500' },
+                { label: 'PANNE', value: distribution ? `${distribution.totalBreakdownHours.toFixed(0)}h` : '-', color: 'text-destructive' },
+                { label: 'CHÔMAGE', value: distribution ? `${distribution.totalIdleHours.toFixed(0)}h` : '-', color: 'text-warning' }
+              ].map((stat, i) => (
+                <div key={i} className="bg-card px-6 py-4 rounded-[1.5rem] shadow-sm flex flex-col items-center min-w-[120px] border border-border">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    {stat.label === 'INTEMPÉRÉ' && <CloudRainIcon className="w-3 h-3 text-blue-500" />}
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{stat.label}</span>
+                  </div>
+                  <span className={`text-2xl font-black ${stat.color}`}>{stat.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                onClick={handleExportExcel}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl px-6 h-12 font-bold shadow-md shadow-emerald-500/20 gap-2 border-none transition-all hover:shadow-lg"
+              >
+                <Download size={18} strokeWidth={2.5} />
+
+              </Button>
+              <Button
+                onClick={() => setIsAIModalOpen(true)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6 h-12 font-bold shadow-lg shadow-primary/20 gap-2 border-none"
+              >
+                <Sparkles size={18} strokeWidth={2.5} />
+
+              </Button>
+            </div>
+          </div>
+
+          {/* Main View Area */}
+          {viewMode === 'dashboard' ? (
+            <>
+              {/* Chart Section */}
+              <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border">
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-8">PERFORMANCE QUOTIDIENNE</h3>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} barCategoryGap={10}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                      <XAxis
+                        dataKey="day"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        dy={10}
+                      />
+                      <Tooltip
+                        cursor={{ fill: 'hsl(var(--muted) / 0.5)' }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }}
+                      />
+                      <Bar
+                        dataKey="work"
+                        fill="hsl(var(--primary))"
+                        radius={[4, 4, 4, 4]}
+                        barSize={12}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Table Section */}
+              {distribution && (
+                <div className="bg-card p-6 rounded-[2rem] shadow-sm border border-border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-b-border hover:bg-transparent">
+                        <TableHead className="font-bold text-xs uppercase text-muted-foreground">Jour</TableHead>
+                        <TableHead className="font-bold text-xs uppercase text-muted-foreground text-center">T. Travail</TableHead>
+                        <TableHead className="font-bold text-xs uppercase text-muted-foreground text-center">Total</TableHead>
+                        <TableHead className="font-bold text-xs uppercase text-muted-foreground text-center">Chômage</TableHead>
+                        <TableHead className="font-bold text-xs uppercase text-muted-foreground text-center">Panne</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {distribution.days.map((day) => (
+                        <TableRow key={day.date} className="border-b-muted hover:bg-muted/50">
+                          <TableCell className="font-semibold text-foreground text-sm">
+                            {new Date(day.date).getDate()}
+                          </TableCell>
+                          <TableCell className="text-center text-sm font-bold text-primary">
+                            {day.workHours > 0 ? (
+                              <div className="w-full bg-primary/10 h-8 rounded-lg flex items-center justify-center">
+                                {day.workHours.toFixed(0)}h
+                              </div>
+                            ) : '-'}
+                          </TableCell>
+                          <TableCell className="text-center text-sm font-bold text-muted-foreground">
+                            {day.workHours + day.overtimeHours > 0 ? (day.workHours + day.overtimeHours).toFixed(0) + 'h' : '-'}
+                          </TableCell>
+                          <TableCell className="text-center text-sm font-bold text-warning">
+                            {day.idleHours > 0 ? day.idleHours.toFixed(0) + 'h' : '-'}
+                          </TableCell>
+                          <TableCell className="text-center text-sm font-bold text-destructive">
+                            {day.breakdownHours > 0 ? 'PANNE' : '-'}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Calendar View */
+            <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border min-h-[600px]">
+              <h3 className="text-xl font-black text-foreground uppercase tracking-tight mb-8">CALENDRIER DES ÉVÉNEMENTS</h3>
+              <div className="grid grid-cols-7 gap-4">
+                {['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'].map(d => (
+                  <div key={d} className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 phone:text-[8px]">{d}</div>
+                ))}
+                {distribution?.days.map((day, index) => {
+                  const date = new Date(day.date);
+                  const dayNum = date.getDate();
+                  const dateYM = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                  const isCurrentMonth = dateYM === month;
+
+                  // Calculate column start for the first day (index 0)
+                  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                  const colStart = index === 0 ? dayOfWeek + 1 : undefined;
+
+                  // Determine visuals based on status
+                  let cardStyle = "bg-card border-border text-foreground hover:border-primary/50 hover:shadow-md";
+                  let numStyle = "text-foreground";
+
+                  if (day.status === 'PANNE') {
+                    cardStyle = "bg-card border-destructive/30 shadow-sm relative overflow-visible";
+                  } else if (day.workHours > 0) {
+                    // Active work day styling if needed
+                  }
+
+                  // Simulate "Selected" look for day 29 in the example or if it matches active interaction
+                  const isSelected = false; // We can add state for this later if needed
+
+                  return (
+                    <div
+                      key={day.date}
+                      onClick={() => toggleIntemperieDay(day.date)}
+                      style={colStart ? { gridColumnStart: colStart } : undefined}
+                      className={`
+                                        aspect-square rounded-2xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 relative group
+                                        ${cardStyle}
+                                        ${day.status === 'WEEKEND' ? 'bg-muted/50 opacity-60 border-transparent' : ''}
+                                        ${day.status === 'PANNE' ? 'ring-2 ring-destructive/10 border-destructive/30' : ''}
+                                        ${isSelected ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20' : ''}
+                                    `}
+                    >
+                      <span className={`text-lg font-bold ${isSelected ? 'text-primary-foreground' : numStyle}`}>{dayNum}</span>
+
+                      {/* Status Indicators (Icons) */}
+                      <div className="flex gap-1 mt-1">
+                        {day.status === 'PANNE' || editingBreakdownDate === day.date ? (
+                          <div className="flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full border border-destructive/20" onClick={(e) => e.stopPropagation()}>
+                            <ExclamationTriangleIcon className="w-3.5 h-3.5 text-destructive" />
+                            <input
+                              type="number"
+                              autoFocus
+                              defaultValue={day.breakdownHours || 8}
+                              className="w-10 bg-transparent border-none text-[11px] font-black text-destructive focus:ring-0 p-0 text-center"
+                              onBlur={(e) => handleUpdateBreakdownHours(day.date, parseFloat(e.target.value) || 0)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleUpdateBreakdownHours(day.date, parseFloat((e.target as HTMLInputElement).value) || 0);
+                                }
+                              }}
+                            />
+                            <span className="text-[9px] font-bold text-destructive/60 uppercase">H</span>
+                          </div>
+                        ) : (
+                          <>
+                            {day.status === 'INTEMPERIE' && (
+                              <ClockIcon className="w-4 h-4 text-warning" />
+                            )}
+                            {day.workHours > 0 && !isSelected && (
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1" />
+                            )}
+                            {isSelected && (
+                              <WrenchIcon className="w-4 h-4 text-primary-foreground" />
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Hover Actions (Invisible unless hovered) */}
+                      <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleBreakdownDay(day.date); }}
+                          className="w-6 h-6 bg-card border border-border shadow-sm rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/30"
+                          title="Marquer comme Panne"
+                        >
+                          <ExclamationTriangleIcon className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div >
+
+      {isAIModalOpen && (
+        <SynthesisReportModal
+          isOpen={isAIModalOpen}
+          onClose={() => setIsAIModalOpen(false)}
+          month={month}
+          machines={machines}
+          monthlyStats={monthlyStats}
+          globalSettings={globalSettings}
+        />
+      )}
+    </div >
   );
 };
 

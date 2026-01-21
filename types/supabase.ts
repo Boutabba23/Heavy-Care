@@ -191,17 +191,70 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+      };
+      machine_monthly_stats: {
+        Row: {
+          id: string;
+          machine_id: string;
+          month: string;
+          start_hours: number;
+          end_hours: number;
+          works_on_weekends: boolean;
+          breakdown_days: string[]; // dates ISO 
+          breakdown_hours: Record<string, number>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          machine_id: string;
+          month: string;
+          start_hours?: number;
+          end_hours?: number;
+          works_on_weekends?: boolean;
+          breakdown_days?: string[];
+          breakdown_hours?: Record<string, number>;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
           id?: string;
-          type?: string;
-          current_level?: number;
-          total_barrels?: number;
-          alert_threshold?: number;
+          machine_id?: string;
+          month?: string;
+          start_hours?: number;
+          end_hours?: number;
+          works_on_weekends?: boolean;
+          breakdown_days?: string[];
+          breakdown_hours?: Record<string, number>;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      global_monthly_settings: {
+        Row: {
+          id: string;
+          month: string;
+          intemperie_days: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          month: string;
+          intemperie_days?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          month?: string;
+          intemperie_days?: string[];
           created_at?: string;
           updated_at?: string;
         };
       };
     };
+
     Views: {
       [_ in never]: never
     }
