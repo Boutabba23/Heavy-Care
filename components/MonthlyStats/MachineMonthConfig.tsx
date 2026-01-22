@@ -46,7 +46,9 @@ export const MachineMonthConfig: React.FC<MachineMonthConfigProps> = ({
                 startHours,
                 endHours,
                 worksOnWeekends,
-                breakdownHours: currentStat?.breakdownHours || {}
+                breakdownHours: currentStat?.breakdownHours || {},
+                idleDays: currentStat?.idleDays || [],
+                idleHours: currentStat?.idleHours || {}
             });
             onClose();
         } catch (error) {

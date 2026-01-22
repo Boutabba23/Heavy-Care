@@ -202,6 +202,8 @@ export interface Database {
           works_on_weekends: boolean;
           breakdown_days: string[]; // dates ISO 
           breakdown_hours: Record<string, number>;
+          idle_days: string[];
+          idle_hours: Record<string, number>;
           created_at: string;
           updated_at: string;
         };
@@ -214,6 +216,8 @@ export interface Database {
           works_on_weekends?: boolean;
           breakdown_days?: string[];
           breakdown_hours?: Record<string, number>;
+          idle_days?: string[];
+          idle_hours?: Record<string, number>;
           created_at?: string;
           updated_at?: string;
         };
@@ -226,6 +230,8 @@ export interface Database {
           works_on_weekends?: boolean;
           breakdown_days?: string[];
           breakdown_hours?: Record<string, number>;
+          idle_days?: string[];
+          idle_hours?: Record<string, number>;
           created_at?: string;
           updated_at?: string;
         };

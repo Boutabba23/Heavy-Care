@@ -35,114 +35,67 @@ export const calculateMonthlyDistribution = (
 
     const totalActiveHours = stat.endHours - stat.startHours;
 
-    // 1. Identify Day Types
+    // 1. Identify Day Types and breakdown hours
     const dayCalculations = allDates.map(date => {
-        // Use local date part to avoid UTC shift issues
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const dateStr = `${year}-${month}-${day}`;
         const dayOfWeek = date.getDay(); // 0 = Sun, 6 = Sat
 
-        let status: 'WORK' | 'WEEKEND' | 'PANNE' | 'INTEMPERIE' = 'WORK';
-
-        // Weekend is explicitly Friday (5) and Saturday (6) per user requirement
+        let status: 'WORK' | 'WEEKEND' | 'PANNE' | 'INTEMPERIE' | 'CHOMAGE' = 'WORK';
         const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
 
         if (stat.breakdownDays.includes(dateStr)) {
             status = 'PANNE';
         } else if (config.intemperieDays.includes(dateStr)) {
             status = 'INTEMPERIE';
+        } else if (stat.idleDays?.includes(dateStr)) {
+            status = 'CHOMAGE';
         } else if (isWeekend && !stat.worksOnWeekends) {
             status = 'WEEKEND';
         }
 
+        const bdHours = (status === 'PANNE' && stat.breakdownHours && stat.breakdownHours[dateStr] !== undefined)
+            ? stat.breakdownHours[dateStr]
+            : (status === 'PANNE' ? 8 : 0);
+
         return {
             date: dateStr,
             status,
-            isWeekend
+            isWeekend,
+            breakdownHours: bdHours
         };
     });
 
-    // 2. Calculate Deductions (Panne = 8h)
-    // Intemperie = 0h work, but explainable. 
-    // We need to see if "Panne" consumes from the TotalActiveHours?
-    // Logic from prompt: "Calculate total breakdown hours (8h per breakdown day)."
-    // "HoursToDistribute = TotalActiveHours - TotalBreakdownHours."
+    // 2. Calculate Thresholds
+    const totalBreakdownHours = dayCalculations.reduce((acc, d) => acc + d.breakdownHours, 0);
+    const potentialDays = dayCalculations.filter(d => d.status === 'WORK' || d.status === 'CHOMAGE' || d.status === 'PANNE');
+    const potentialTotal = potentialDays.length * 8;
 
-    let totalBreakdownHours = 0;
-    dayCalculations.forEach(d => {
-        if (d.status === 'PANNE') {
-            const hours = (stat.breakdownHours && stat.breakdownHours[d.date] !== undefined)
-                ? stat.breakdownHours[d.date]
-                : 8;
-            totalBreakdownHours += hours;
+    const hoursToDistribute = Math.max(0, totalActiveHours);
+
+    // 3. Distribute to available days (WORK, CHOMAGE, PANNE)
+    const distributionDays = dayCalculations.filter(d => d.status === 'WORK' || d.status === 'CHOMAGE' || d.status === 'PANNE');
+    const numDistDays = distributionDays.length;
+    const baseHoursPerDay = numDistDays > 0 ? Math.floor(hoursToDistribute / numDistDays) : 0;
+    const extraHoursRemainder = numDistDays > 0 ? hoursToDistribute % numDistDays : 0;
+
+    // Randomize which days get the extra +1 hour
+    const extraHourDates = new Set<string>();
+    if (extraHoursRemainder > 0 && numDistDays > 0) {
+        const availableDates = distributionDays.map(d => d.date);
+        // Fisher-Yates shuffle
+        for (let i = availableDates.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [availableDates[i], availableDates[j]] = [availableDates[j], availableDates[i]];
         }
-    });
-
-    // Ensure we don't subtract more than we have (though typically counter increases include work, not downtime?)
-    // Prompt says: "TotalActiveHours = currentCounter - prevCounter"
-    // Then "HoursToDistribute = TotalActiveHours - TotalBreakdownHours"
-    // This implies the counter DOES record breakdown time? Or maybe it's just a heuristic.
-    // If the machine engine is OFF during breakdown, counter shouldn't move. 
-    // But maybe this "TotalActiveHours" is actually "Total Time Passed"? 
-    // No, "currentCounter - prevCounter" is definitely Engine Hours.
-    // If the machine is broken, engine is off. So TotalActiveHours should purely be WORK hours.
-    // HOWEVER, the prompt explicitly says: "HoursToDistribute = TotalActiveHours - TotalBreakdownHours".
-    // This suggests the user treats the counter difference as a pool that *includes* the breakdown time? 
-    // That's physically weird for an hour meter (hm). 
-    // Let's follow the prompt's math strictly: 
-    // "Math Logic: 1. Calculate total breakdown hours (8h per breakdown day). 2. HoursToDistribute = TotalActiveHours - TotalBreakdownHours."
-
-    let hoursToDistribute = Math.max(0, totalActiveHours - totalBreakdownHours);
-
-    // 3. Distribute evenly across valid WORK days
-    /*
-       "Distribute HoursToDistribute evenly across valid WORK days.
-        Cap standard hours at 8h. Any excess goes to overtimeHours.
-        If HoursToDistribute is low, fill days partially; remaining capacity becomes idleHours (Chômage)."
-    */
-
-    const workDays = dayCalculations.filter(d => d.status === 'WORK');
-    const numWorkDays = workDays.length;
-
-    let dailyBase = 0;
-    let dailyOvertime = 0;
-    let chomagePerDay = 0; // If hours are low
-
-    if (numWorkDays > 0) {
-        const avgHours = hoursToDistribute / numWorkDays;
-
-        if (avgHours > 8) {
-            dailyBase = 8;
-            dailyOvertime = avgHours - 8;
-            chomagePerDay = 0;
-        } else {
-            dailyBase = avgHours;
-            dailyOvertime = 0;
-            chomagePerDay = 8 - avgHours; // 8h capacity - actual work
-        }
+        // Pick the first N dates
+        availableDates.slice(0, extraHoursRemainder).forEach(date => extraHourDates.add(date));
     }
 
-    // 4. Construct Final Result
     const days: DailyDistribution[] = dayCalculations.map(d => {
-        if (d.status === 'PANNE') {
-            const hours = (stat.breakdownHours && stat.breakdownHours[d.date] !== undefined)
-                ? stat.breakdownHours[d.date]
-                : 8;
-            return {
-                date: d.date,
-                status: 'PANNE',
-                workHours: 0,
-                overtimeHours: 0,
-                idleHours: 0,
-                breakdownHours: hours,
-                intemperieHours: 0
-            };
-        } else if (d.status === 'INTEMPERIE') {
-            // Intemperie is usually 8h lost? or just 0 work?
-            // Assuming 0 work, 0 breakdown, just "Intemperie" state.
-            // Often in construction, Intemperie counts as 8h "Intemperie".
+        if (d.status === 'INTEMPERIE') {
             return {
                 date: d.date,
                 status: 'INTEMPERIE',
@@ -150,7 +103,7 @@ export const calculateMonthlyDistribution = (
                 overtimeHours: 0,
                 idleHours: 0,
                 breakdownHours: 0,
-                intemperieHours: 8 // Assuming 8h capacity lost
+                intemperieHours: 8
             };
         } else if (d.status === 'WEEKEND') {
             return {
@@ -163,14 +116,21 @@ export const calculateMonthlyDistribution = (
                 intemperieHours: 0
             };
         } else {
-            // WORK
+            // WORK, CHOMAGE, or PANNE
+            const dayTotalHours = baseHoursPerDay + (extraHourDates.has(d.date) ? 1 : 0);
+
+            const capacityForStandardWork = Math.max(0, 8 - d.breakdownHours);
+            const work = Math.min(capacityForStandardWork, dayTotalHours);
+            const overtime = Math.max(0, dayTotalHours - capacityForStandardWork);
+            const idle = Math.max(0, capacityForStandardWork - work);
+
             return {
                 date: d.date,
-                status: 'WORK',
-                workHours: dailyBase,
-                overtimeHours: dailyOvertime,
-                idleHours: chomagePerDay,
-                breakdownHours: 0,
+                status: d.status,
+                workHours: work,
+                overtimeHours: overtime,
+                idleHours: idle,
+                breakdownHours: d.breakdownHours,
                 intemperieHours: 0
             };
         }
@@ -185,7 +145,7 @@ export const calculateMonthlyDistribution = (
 
     return {
         days,
-        totalActiveHours, // The input delta
+        totalActiveHours,
         totalWorkHours: totalWork,
         totalOvertimeHours: totalOvertime,
         totalIdleHours: totalIdle,
