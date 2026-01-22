@@ -35,9 +35,10 @@ import {
   LayoutGrid,
   AlertTriangle,
   Minus,
-  Palette as PaletteIcon,
-  Image as ImageIcon,
+
 } from "lucide-react";
+import Palette from "lucide-react";
+import Image from "lucide-react";
 
 // Custom byPrefixAndName helper object for the exact syntax you requested
 // Now using Lucide React icons instead of FontAwesome
@@ -465,11 +466,11 @@ export const UserIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-
 );
 
 export const SwatchIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = PaletteIcon;
+  const IconComponent = Palette;
   return <IconComponent className={className} />;
 };
 
 export const PhotoIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = ImageIcon;
+  const IconComponent = Image;
   return <IconComponent className={className} />;
 };
