@@ -159,6 +159,21 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, add
     ).length * 8;
   }, [distribution]);
 
+  // Summary of distribution groups (e.g., "15 days at 7h/1h")
+  const distributionSummary = useMemo(() => {
+    if (!distribution) return [];
+    const groups: Record<string, number> = {};
+    distribution.days.forEach(d => {
+      // Typically only for WORK, CHOMAGE, or PANNE days
+      if (d.status === 'WEEKEND' || d.status === 'INTEMPERIE') return;
+
+      const service = d.workHours + d.overtimeHours;
+      const key = `${service}h Service / ${d.idleHours}h Chômage${d.breakdownHours > 0 ? ` / ${d.breakdownHours}h Panne` : ''}`;
+      groups[key] = (groups[key] || 0) + 1;
+    });
+    return Object.entries(groups).map(([label, count]) => ({ label, count }));
+  }, [distribution]);
+
 
   // Handle Save Config
   const handleSaveConfig = async () => {
@@ -189,7 +204,10 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, add
   };
 
   const toggleBreakdownDay = async (date: string) => {
-    if (!currentStat) return;
+    if (!currentStat) {
+      addToast({ type: 'warning', title: 'Attention', description: 'Veuillez d\'abord sauvegarder la configuration initiale (Heures Début/Fin).' });
+      return;
+    }
     const isBroken = currentStat.breakdownDays.includes(date);
 
     let newDays = [...currentStat.breakdownDays];
@@ -235,7 +253,13 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, add
   };
 
   const toggleIdleDay = async (date: string) => {
-    if (!currentStat) return;
+    // If currentStat is missing, we can't save anyway, but we should at least let the user know
+    // or create a default stat object. 
+    // However, if the calendar is showing, currentStat must exist because of distribution memo.
+    if (!currentStat) {
+      addToast({ type: 'warning', title: 'Attention', description: 'Veuillez d\'abord sauvegarder la configuration initiale (Heures Début/Fin).' });
+      return;
+    }
     const isIdle = currentStat.idleDays?.includes(date);
 
     let newDays = [...(currentStat.idleDays || [])];
@@ -524,7 +548,22 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, add
 
               {/* Table Section */}
               {distribution && (
-                <div className="bg-card p-0 sm:p-6 rounded-3xl sm:rounded-[2rem] shadow-sm border border-border overflow-hidden">
+                <div className="bg-card p-4 sm:p-6 rounded-3xl sm:rounded-[2rem] shadow-sm border border-border overflow-hidden">
+                  <h3 className="text-[10px] sm:text-sm font-bold text-foreground uppercase tracking-wider mb-4">SYNTHÈSE DE LA DISTRIBUTION</h3>
+
+                  {/* Distribution Grouping Bar */}
+                  <div className="flex flex-wrap gap-2 mb-6 p-2 bg-muted/30 rounded-2xl border border-border/50">
+                    {distributionSummary.map((group, idx) => (
+                      <div key={idx} className="bg-card px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold border border-border shadow-sm flex items-center gap-3">
+                        <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded-lg text-[9px]">{group.count} JOURS</span>
+                        <span className="text-muted-foreground uppercase tracking-tight">{group.label}</span>
+                      </div>
+                    ))}
+                    {distributionSummary.length === 0 && (
+                      <div className="text-[10px] text-muted-foreground px-4 py-2">Aucune donnée de distribution</div>
+                    )}
+                  </div>
+
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -623,7 +662,7 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, add
                       <div className="flex gap-1 mt-1">
                         {day.status === 'PANNE' ? (
                           <div
-                            className="flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full border border-destructive/20 cursor-pointer hover:bg-destructive/20 transition-colors"
+                            className="flex items-center gap-1.5 bg-destructive/10 px-2.5 py-1 rounded-full border border-destructive/20 cursor-pointer hover:bg-destructive/20 transition-colors shadow-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               setTempBreakdownDate(day.date);
@@ -631,12 +670,12 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, add
                               setIsBreakdownModalOpen(true);
                             }}
                           >
-                            <ExclamationTriangleIcon className="w-3.5 h-3.5 text-destructive" />
-                            <span className="text-[10px] font-black text-destructive">{day.breakdownHours}h</span>
+                            <ExclamationTriangleIcon className="w-4 h-4 text-destructive" />
+                            <span className="text-xs font-black text-destructive">{day.breakdownHours}h</span>
                           </div>
                         ) : day.status === 'CHOMAGE' ? (
                           <div
-                            className="flex items-center gap-1 bg-warning/10 px-2 py-0.5 rounded-full border border-warning/20 cursor-pointer hover:bg-warning/20 transition-colors"
+                            className="flex items-center gap-1.5 bg-warning/10 px-2.5 py-1 rounded-full border border-warning/20 cursor-pointer hover:bg-warning/20 transition-colors shadow-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               setTempIdleDate(day.date);
@@ -644,8 +683,8 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, add
                               setIsIdleModalOpen(true);
                             }}
                           >
-                            <MoonIcon className="w-3.5 h-3.5 text-warning" />
-                            <span className="text-[10px] font-black text-warning">{day.idleHours}h</span>
+                            <MoonIcon className="w-4 h-4 text-warning" />
+                            <span className="text-xs font-black text-warning">{day.idleHours}h</span>
                           </div>
                         ) : (
                           <>
@@ -663,22 +702,24 @@ const MonthlySummaryView: React.FC<Props> = ({ machines, maintenanceRecords, add
                       </div>
 
                       {/* Hover Actions (Invisible unless hovered) */}
-                      <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); toggleIdleDay(day.date); }}
-                          className="w-6 h-6 bg-card border border-border shadow-sm rounded-full flex items-center justify-center text-muted-foreground hover:text-warning hover:border-warning/30"
-                          title="Marquer comme Chômage"
-                        >
-                          <MoonIcon className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); toggleBreakdownDay(day.date); }}
-                          className="w-6 h-6 bg-card border border-border shadow-sm rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/30"
-                          title="Marquer comme Panne"
-                        >
-                          <ExclamationTriangleIcon className="w-3 h-3" />
-                        </button>
-                      </div>
+                      {day.status !== 'WEEKEND' && (
+                        <div className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5 z-10">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleIdleDay(day.date); }}
+                            className="w-8 h-8 bg-card border border-border shadow-md rounded-full flex items-center justify-center text-muted-foreground hover:text-warning hover:border-warning/30 hover:scale-110 active:scale-95 transition-all"
+                            title="Marquer comme Chômage"
+                          >
+                            <MoonIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleBreakdownDay(day.date); }}
+                            className="w-8 h-8 bg-card border border-border shadow-md rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:scale-110 active:scale-95 transition-all"
+                            title="Marquer comme Panne"
+                          >
+                            <ExclamationTriangleIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )
                 })}

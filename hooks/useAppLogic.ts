@@ -23,6 +23,7 @@ import {
 } from "../types";
 import { calculateNextMaintenance } from "../utils/maintenance";
 import { supabase } from "../utils/supabase";
+import { themes, ThemeInfo } from "../utils/themes";
 // Type definitions for monthly daily adjustments
 type MonthlyDailyAdjustmentInsert = Database['public']['Tables']['monthly_daily_adjustments']['Insert'];
 type MonthlyDailyAdjustmentUpdate = Database['public']['Tables']['monthly_daily_adjustments']['Update'];
@@ -174,6 +175,7 @@ export const useAppLogic = () => {
       "gestifiltres-customColors",
       defaultCustomColors
     );
+    // Ensure all fields from defaultCustomColors are present (migration)
     return { ...defaultCustomColors, ...saved };
   });
 
@@ -1229,9 +1231,27 @@ export const useAppLogic = () => {
     }
   };
 
-  const openThemeCustomizer = (themeToEdit: SavedTheme | null) => {
-    setEditingCustomTheme(themeToEdit);
-    setCustomColors(themeToEdit ? themeToEdit.colors : defaultCustomColors);
+  const openThemeCustomizer = (themeToEdit: SavedTheme | ThemeInfo | null) => {
+    if (!themeToEdit) {
+      setEditingCustomTheme(null);
+      setCustomColors(defaultCustomColors);
+    } else if ('colors' in themeToEdit && !('id' in themeToEdit && typeof themeToEdit.id === 'string' && themeToEdit.id.startsWith('custom-'))) {
+      // Predefined theme (ThemeInfo)
+      const predefined = themeToEdit as ThemeInfo;
+      setEditingCustomTheme(null);
+      setCustomColors({
+        ...defaultCustomColors,
+        background: predefined.colors.bg,
+        card: predefined.colors.card,
+        primary: predefined.colors.primary,
+        foreground: predefined.colors.text,
+      });
+    } else {
+      // Saved custom theme
+      const saved = themeToEdit as SavedTheme;
+      setEditingCustomTheme(saved);
+      setCustomColors(saved.colors);
+    }
     setIsThemeCustomizerOpen(true);
   };
   const closeThemeCustomizer = () => {

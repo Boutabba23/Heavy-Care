@@ -35,6 +35,8 @@ import {
   LayoutGrid,
   AlertTriangle,
   Minus,
+  Palette as PaletteIcon,
+  Image as ImageIcon,
 } from "lucide-react";
 
 // Custom byPrefixAndName helper object for the exact syntax you requested
@@ -461,3 +463,13 @@ export const UserIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-
     <circle cx="12" cy="7" r="4" />
   </svg>
 );
+
+export const SwatchIcon: React.FC<{ className?: string }> = ({ className }) => {
+  const IconComponent = PaletteIcon;
+  return <IconComponent className={className} />;
+};
+
+export const PhotoIcon: React.FC<{ className?: string }> = ({ className }) => {
+  const IconComponent = ImageIcon;
+  return <IconComponent className={className} />;
+};

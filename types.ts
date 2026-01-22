@@ -29,6 +29,7 @@ export interface CustomColors {
   input: string;
   ring: string;
   cardBorders: string[];
+  backgroundImage?: string;
 }
 
 export interface SavedTheme {

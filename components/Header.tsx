@@ -2,7 +2,9 @@
 
 import React from "react";
 import { Machine, Notification, View, FilterGroup, SparePart } from "../types";
-import { MenuIcon, SparklesIcon, CameraIcon, BellIcon, LogoutIcon, UserIcon, WrenchIcon, FilterIcon, BackIcon, CheckCircleIcon } from "../constants";
+import { MenuIcon, SparklesIcon, CameraIcon, BellIcon, LogoutIcon, UserIcon, WrenchIcon, FilterIcon, BackIcon, CheckCircleIcon, SwatchIcon, CheckIcon } from "../constants";
+import { themes } from "../utils/themes";
+import { SavedTheme } from "../types";
 import NotificationModal from "./NotificationModal";
 import GlobalSearch from "./GlobalSearch";
 import { useEffect, useRef, useState } from "react";
@@ -28,12 +30,17 @@ interface HeaderProps {
   user: any;
   userEmail: string;
   onLogout: () => void;
+  savedThemes: SavedTheme[];
+  currentTheme: string;
+  onThemeChange: (themeId: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = (props) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
   const [userMenuView, setUserMenuView] = useState<'menu' | 'notifications'>('menu');
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
 
   const [imageError, setImageError] = useState(false);
 
@@ -57,6 +64,12 @@ const Header: React.FC<HeaderProps> = (props) => {
       ) {
         setIsUserMenuOpen(false);
         setUserMenuView('menu');
+      }
+      if (
+        themeMenuRef.current &&
+        !themeMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsThemeMenuOpen(false);
       }
     };
 
@@ -121,6 +134,67 @@ const Header: React.FC<HeaderProps> = (props) => {
       </div>
 
       <div className="flex items-center space-x-1 sm:space-x-2">
+        {/* Theme Selector */}
+        <div className="relative" ref={themeMenuRef}>
+          <button
+            onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+            className="p-2 rounded-full text-foreground/80 hover:bg-muted focus:outline-none transition-colors"
+            title="Changer le thème"
+          >
+            <SwatchIcon className="h-5 w-5" />
+          </button>
+
+          {isThemeMenuOpen && (
+            <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-xl bg-card border border-border overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="px-3 py-2 border-b border-border bg-muted/50">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Thèmes Prédéfinis</p>
+              </div>
+              <div className="max-h-48 overflow-y-auto">
+                {themes.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => { props.onThemeChange(t.id); setIsThemeMenuOpen(false); }}
+                    className={`flex items-center w-full px-3 py-2 text-xs hover:bg-muted transition-colors ${props.currentTheme === t.id ? 'text-primary font-bold' : 'text-foreground'}`}
+                  >
+                    <div className="w-3 h-3 rounded-full mr-2 border border-border" style={{ backgroundColor: t.colors.primary }} />
+                    <span className="flex-1 text-left">{t.name}</span>
+                    {props.currentTheme === t.id && <CheckIcon className="w-3 h-3" />}
+                  </button>
+                ))}
+              </div>
+
+              {props.savedThemes.length > 0 && (
+                <>
+                  <div className="px-3 py-2 border-b border-t border-border bg-muted/50">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Mes Thèmes</p>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    {props.savedThemes.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => { props.onThemeChange(t.id); setIsThemeMenuOpen(false); }}
+                        className={`flex items-center w-full px-3 py-2 text-xs hover:bg-muted transition-colors ${props.currentTheme === t.id ? 'text-primary font-bold' : 'text-foreground'}`}
+                      >
+                        <div className="w-3 h-3 rounded-full mr-2 border border-border" style={{ backgroundColor: t.colors.primary }} />
+                        <span className="flex-1 text-left">{t.name}</span>
+                        {props.currentTheme === t.id && <CheckIcon className="w-3 h-3" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <div className="p-2 border-t border-border">
+                <button
+                  onClick={() => { props.onSetView(View.SETTINGS); setIsThemeMenuOpen(false); }}
+                  className="w-full text-center py-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors hover:bg-primary/5 rounded-lg"
+                >
+                  Gérer les thèmes
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
         {/* Unified User Menu (Desktop & Mobile) */}
         <div className="relative" ref={userMenuRef}>
           <button

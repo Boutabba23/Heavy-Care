@@ -35,4 +35,5 @@ export interface MonthlyDistributionResult {
     totalIdleHours: number;
     totalBreakdownHours: number;
     totalIntemperieHours: number;
+    totalPotentialHours: number;
 }

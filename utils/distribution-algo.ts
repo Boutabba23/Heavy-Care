@@ -46,25 +46,30 @@ export const calculateMonthlyDistribution = (
         let status: 'WORK' | 'WEEKEND' | 'PANNE' | 'INTEMPERIE' | 'CHOMAGE' = 'WORK';
         const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
 
-        if (stat.breakdownDays.includes(dateStr)) {
+        if (isWeekend && !stat.worksOnWeekends) {
+            status = 'WEEKEND';
+        } else if (stat.breakdownDays.includes(dateStr)) {
             status = 'PANNE';
         } else if (config.intemperieDays.includes(dateStr)) {
             status = 'INTEMPERIE';
         } else if (stat.idleDays?.includes(dateStr)) {
             status = 'CHOMAGE';
-        } else if (isWeekend && !stat.worksOnWeekends) {
-            status = 'WEEKEND';
         }
 
         const bdHours = (status === 'PANNE' && stat.breakdownHours && stat.breakdownHours[dateStr] !== undefined)
             ? stat.breakdownHours[dateStr]
             : (status === 'PANNE' ? 8 : 0);
 
+        const idHours = (status === 'CHOMAGE' && stat.idleHours && stat.idleHours[dateStr] !== undefined)
+            ? stat.idleHours[dateStr]
+            : (status === 'CHOMAGE' ? 8 : 0);
+
         return {
             date: dateStr,
             status,
             isWeekend,
-            breakdownHours: bdHours
+            breakdownHours: bdHours,
+            idleHours: idHours
         };
     });
 
@@ -75,8 +80,15 @@ export const calculateMonthlyDistribution = (
 
     const hoursToDistribute = Math.max(0, totalActiveHours);
 
-    // 3. Distribute to available days (WORK, CHOMAGE, PANNE)
-    const distributionDays = dayCalculations.filter(d => d.status === 'WORK' || d.status === 'CHOMAGE' || d.status === 'PANNE');
+    // 3. Distribute to available days (WORK, CHOMAGE, or PANNE < 8h)
+    const distributionDays = dayCalculations.filter(d => {
+        const isBasicEligible = (d.status === 'WORK' || d.status === 'CHOMAGE' || d.status === 'PANNE');
+        if (!isBasicEligible) return false;
+        if (d.breakdownHours >= 8) return false;
+        if (d.idleHours >= 8 && hoursToDistribute < potentialTotal) return false;
+        return true;
+    });
+
     const numDistDays = distributionDays.length;
     const baseHoursPerDay = numDistDays > 0 ? Math.floor(hoursToDistribute / numDistDays) : 0;
     const extraHoursRemainder = numDistDays > 0 ? hoursToDistribute % numDistDays : 0;
@@ -117,7 +129,11 @@ export const calculateMonthlyDistribution = (
             };
         } else {
             // WORK, CHOMAGE, or PANNE
-            const dayTotalHours = baseHoursPerDay + (extraHourDates.has(d.date) ? 1 : 0);
+            const isEligible = (d.status === 'WORK' || d.status === 'CHOMAGE' || d.status === 'PANNE') &&
+                d.breakdownHours < 8 &&
+                !(d.idleHours >= 8 && hoursToDistribute < potentialTotal);
+
+            const dayTotalHours = isEligible ? (baseHoursPerDay + (extraHourDates.has(d.date) ? 1 : 0)) : 0;
 
             const capacityForStandardWork = Math.max(0, 8 - d.breakdownHours);
             const work = Math.min(capacityForStandardWork, dayTotalHours);
@@ -150,6 +166,7 @@ export const calculateMonthlyDistribution = (
         totalOvertimeHours: totalOvertime,
         totalIdleHours: totalIdle,
         totalBreakdownHours: totalBreakdown,
-        totalIntemperieHours: totalIntemperie
+        totalIntemperieHours: totalIntemperie,
+        totalPotentialHours: potentialTotal
     };
 };

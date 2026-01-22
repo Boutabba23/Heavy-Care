@@ -108,7 +108,23 @@ const AppContent: React.FC = () => {
           --ring: ${hexToHsl(colors.ring)};
           --warning: 38 92% 50%;
           --warning-foreground: 48 96% 6%;
+
+          ${colors.backgroundImage ? `
+            --background: transparent;
+            --card: ${hexToHsl(colors.card)} / 0.85;
+          ` : ''}
         }
+        
+        ${colors.backgroundImage ? `
+        body {
+          background-image: url(${colors.backgroundImage});
+          background-size: cover;
+          background-position: center;
+          background-attachment: fixed;
+          background-repeat: no-repeat;
+          background-color: hsl(${hexToHsl(colors.background)});
+        }
+        ` : ''}
       `;
       document.head.appendChild(style);
       root.classList.add("theme-custom");
@@ -329,6 +345,9 @@ const AppContent: React.FC = () => {
           user={user}
           userEmail={user?.email || ""}
           onLogout={handleLogout}
+          savedThemes={state.savedThemes}
+          currentTheme={state.theme}
+          onThemeChange={actions.setTheme}
         />
         <main className="relative flex-1 p-4 sm:p-6 lg:p-8">
           {renderView()}
