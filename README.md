@@ -32,12 +32,12 @@ HeavyCare est une plateforme complète pour la gestion de maintenance, le suivi 
    ```
 
 5. **Open your browser:**
-   Navigate to `http://localhost:5173`
+   Navigate to `http://localhost:3000`
 
 ## Environment Variables
 
-- `VITE_SUPABASE_URL`: Your Supabase project URL
-- `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
 - `GEMINI_API_KEY`: Google Gemini AI API key (optional, for AI features)
 
 ## Available Scripts
