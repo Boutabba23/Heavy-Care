@@ -37,8 +37,6 @@ import {
   Minus,
 
 } from "lucide-react";
-import Palette from "lucide-react";
-import Image from "lucide-react";
 
 // Custom byPrefixAndName helper object for the exact syntax you requested
 // Now using Lucide React icons instead of FontAwesome
@@ -465,12 +463,37 @@ export const UserIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-
   </svg>
 );
 
-export const SwatchIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Palette;
-  return <IconComponent className={className} />;
-};
+export const SwatchIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M12 20.94c1.88-1 3.39-2.39 4.47-4.07a9 9 0 1 0-8.94 0c1.08 1.68 2.59 3.06 4.47 4.07Z" />
+    <circle cx="12" cy="8.5" r="1.5" fill="currentColor" />
+    <circle cx="15.5" cy="11" r="1.5" fill="currentColor" />
+    <circle cx="14" cy="15" r="1.5" fill="currentColor" />
+    <circle cx="10" cy="15" r="1.5" fill="currentColor" />
+    <circle cx="8.5" cy="11" r="1.5" fill="currentColor" />
+  </svg>
+);
 
-export const PhotoIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Image;
-  return <IconComponent className={className} />;
-};
+export const PhotoIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+    <circle cx="9" cy="9" r="2" />
+    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+  </svg>
+);
