@@ -1,499 +1,518 @@
 import React from "react";
 import {
-  Construction,
-  Truck,
-  Filter,
-  Wrench,
-  Clock,
-  LogOut,
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  ArrowLeft,
-  Sun,
-  Moon,
-  Settings,
-  Check,
-  MoreVertical,
-  Eye,
-  EyeOff,
-  Sparkles,
-  Paperclip,
-  Bell,
-  QrCode,
-  Globe,
-  Download,
-  Upload,
-  Camera,
-  CheckCircle,
-  XCircle,
-  Info,
-  BarChart3,
-  FileText,
-  Menu,
-  LayoutGrid,
-  AlertTriangle,
-  Minus,
-
+	Construction,
+	Truck,
+	Filter,
+	Wrench,
+	Clock,
+	LogOut,
+	Search,
+	Plus,
+	Edit,
+	Trash2,
+	ArrowLeft,
+	Sun,
+	Moon,
+	Settings,
+	Check,
+	MoreVertical,
+	Eye,
+	EyeOff,
+	Sparkles,
+	Paperclip,
+	Bell,
+	QrCode,
+	Globe,
+	Download,
+	Upload,
+	Camera,
+	CheckCircle,
+	XCircle,
+	Info,
+	BarChart3,
+	FileText,
+	Menu,
+	LayoutGrid,
+	AlertTriangle,
+	Minus,
 } from "lucide-react";
 
 // Custom byPrefixAndName helper object for the exact syntax you requested
 // Now using Lucide React icons instead of FontAwesome
 const byPrefixAndName = {
-  fas: {
-    excavator: Construction, // Using Construction icon for excavator
-    tractor: Truck,
-    truck: Truck,
-    filter: Filter,
-    wrench: Wrench,
-    clock: Clock,
-    logout: LogOut,
-    search: Search,
-    plus: Plus,
-    edit: Edit,
-    trash: Trash2,
-    back: ArrowLeft,
-    sun: Sun,
-    moon: Moon,
-    settings: Settings,
-    check: Check,
-    menu: MoreVertical,
-    eye: Eye,
-    eyeOff: EyeOff,
-    sparkles: Sparkles,
-    paperclip: Paperclip,
-    bell: Bell,
-    qrcode: QrCode,
-    globe: Globe,
-    download: Download,
-    upload: Upload,
-    camera: Camera,
-    checkCircle: CheckCircle,
-    xCircle: XCircle,
-    info: Info,
-    chart: BarChart3,
-    document: FileText,
-  },
-  fal: {
-    excavator: Construction, // Same as solid for light variant
-    tractor: Truck,
-  },
+	fas: {
+		excavator: Construction, // Using Construction icon for excavator
+		tractor: Truck,
+		truck: Truck,
+		filter: Filter,
+		wrench: Wrench,
+		clock: Clock,
+		logout: LogOut,
+		search: Search,
+		plus: Plus,
+		edit: Edit,
+		trash: Trash2,
+		back: ArrowLeft,
+		sun: Sun,
+		moon: Moon,
+		settings: Settings,
+		check: Check,
+		menu: MoreVertical,
+		eye: Eye,
+		eyeOff: EyeOff,
+		sparkles: Sparkles,
+		paperclip: Paperclip,
+		bell: Bell,
+		qrcode: QrCode,
+		globe: Globe,
+		download: Download,
+		upload: Upload,
+		camera: Camera,
+		checkCircle: CheckCircle,
+		xCircle: XCircle,
+		info: Info,
+		chart: BarChart3,
+		document: FileText,
+	},
+	fal: {
+		excavator: Construction, // Same as solid for light variant
+		tractor: Truck,
+	},
 };
 
 export const LogoIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <img
-    src="/logo.svg"
-    alt="HeavyCare Logo"
-    className={className}
-    style={{
-      objectFit: 'contain',
-      filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.5)) brightness(1.1) contrast(1.1)'
-    }}
-  />
+	<img
+		src='/logo.svg'
+		alt='HeavyCare Logo'
+		className={className}
+		style={{
+			objectFit: "contain",
+			filter:
+				"drop-shadow(0 0 1px rgba(255,255,255,0.5)) brightness(1.1) contrast(1.1)",
+		}}
+	/>
 );
 
 export const MenuIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Menu;
-  return <IconComponent className={className} />;
+	const IconComponent = Menu;
+	return <IconComponent className={className} />;
 };
 
 export const Squares2x2Icon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = LayoutGrid;
-  return <IconComponent className={className} />;
+	const IconComponent = LayoutGrid;
+	return <IconComponent className={className} />;
 };
 
 export const TruckIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Truck;
-  return <IconComponent className={className} />;
+	const IconComponent = Truck;
+	return <IconComponent className={className} />;
 };
 
 export const ExcavatorIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => (
-  // Custom SVG excavator icon for accurate heavy machinery representation
-  <svg
-    id="Layer_1"
-    data-name="Layer 1"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 624.93 500.11"
-    fill="currentColor"
-    className={className}
-  >
-    <g id="b">
-      <path d="M556.18,362.61h-18.75v-25h43.75c3.46,0,6.25-2.79,6.25-6.25v-75c0-3.46-2.79-6.25-6.25-6.25h-131.25v-56.24c0-8.35-3.25-16.2-9.15-22.11-5.91-5.9-13.75-9.14-22.08-9.14h-.02l-102.84.06c-.21,0-.38.13-.58.15-21.27-23.25-126.33-138.15-133.13-146.4C168.4-.21,155.22-.1,137.18.14c-4.94.06-10.45.12-16.7-.13-8.56-.23-12.99,3.26-15.49,6.3-5.51,6.7-5.2,16.65-4.47,22.25-6.51,20.02-50.96,163.35-61.29,201.26l.13.04c-.88,2.65-1.45,5.42-1.56,8.34-15.51,4.09-37.8,16.86-37.8,44.25s0,71.45,58.39,84.47c7.24,1.61,14.26,2.41,21,2.41,15.39,0,29.32-4.16,41.01-12.38,16.69-11.72,27.53-31.13,30.53-54.65.23-1.81-.34-3.64-1.57-4.98-1.22-1.35-2.99-2.09-4.8-2.06-2.11,0-46.03.71-57.13-32.7,4.31-3.62,7.57-8.37,9.35-13.84l.13.06,59.13-128.74,95.64,151.42c-1.05,3.13-1.76,6.42-1.76,9.9v50c0,3.46,2.8,6.25,6.25,6.25h43.75v25h-6.25c-37.9,0-68.75,30.85-68.75,68.75s30.85,68.75,68.75,68.75h262.5c37.9,0,68.75-30.85,68.75-68.75s-30.85-68.75-68.75-68.75h0ZM137.36,307.58c-3.57,16.86-11.99,30.59-24.15,39.14-13.87,9.73-31.86,12.51-52.12,7.99-44.93-10.02-48.6-38.66-48.6-72.27,0-21.09,18.11-29.1,27.39-31.83,4.48,11.19,15.38,19.14,28.15,19.14,2.94,0,5.73-.55,8.43-1.34,10.66,28.17,40.68,37.74,60.9,39.17h0ZM94.32,224.48c-5.23-9.17-14.99-15.45-26.28-15.45-3.68,0-7.17.76-10.44,1.96,14.1-48.15,40.54-133.03,50.91-166.2l39.56,62.64-53.76,117.04h0ZM150.4,50.35c-5.89,0-10.67-4.77-10.67-10.67s4.78-10.67,10.67-10.67,10.67,4.78,10.67,10.67-4.77,10.67-10.67,10.67ZM319.23,175.18l99.44-.06h.02c4.99,0,9.71,1.95,13.25,5.49s5.49,8.25,5.49,13.26v56.24h-155.24c4.73-13.79,15.79-41.78,37.04-74.93h0ZM312.43,337.61h212.5v25h-212.5v-25ZM556.18,487.61h-262.5c-31.02,0-56.25-25.23-56.25-56.25s25.23-56.25,56.25-56.25h262.5c31.02,0,56.25,25.23,56.25,56.25s-25.23,56.25-56.25,56.25h0ZM331.18,431.36c0,20.71-16.79,37.5-37.5,37.5s-37.5-16.79-37.5-37.5,16.79-37.5,37.5-37.5,37.5,16.79,37.5,37.5ZM462.43,431.36c0,20.71-16.79,37.5-37.5,37.5s-37.5-16.79-37.5-37.5,16.79-37.5,37.5-37.5,37.5,16.79,37.5,37.5ZM593.68,431.36c0,20.71-16.79,37.5-37.5,37.5s-37.5-16.79-37.5-37.5,16.79-37.5,37.5-37.5,37.5,16.79,37.5,37.5Z" />
-    </g>
-  </svg>
+	// Custom SVG excavator icon for accurate heavy machinery representation
+	<svg
+		id='Layer_1'
+		data-name='Layer 1'
+		xmlns='http://www.w3.org/2000/svg'
+		viewBox='0 0 624.93 500.11'
+		fill='currentColor'
+		className={className}>
+		<g id='b'>
+			<path d='M556.18,362.61h-18.75v-25h43.75c3.46,0,6.25-2.79,6.25-6.25v-75c0-3.46-2.79-6.25-6.25-6.25h-131.25v-56.24c0-8.35-3.25-16.2-9.15-22.11-5.91-5.9-13.75-9.14-22.08-9.14h-.02l-102.84.06c-.21,0-.38.13-.58.15-21.27-23.25-126.33-138.15-133.13-146.4C168.4-.21,155.22-.1,137.18.14c-4.94.06-10.45.12-16.7-.13-8.56-.23-12.99,3.26-15.49,6.3-5.51,6.7-5.2,16.65-4.47,22.25-6.51,20.02-50.96,163.35-61.29,201.26l.13.04c-.88,2.65-1.45,5.42-1.56,8.34-15.51,4.09-37.8,16.86-37.8,44.25s0,71.45,58.39,84.47c7.24,1.61,14.26,2.41,21,2.41,15.39,0,29.32-4.16,41.01-12.38,16.69-11.72,27.53-31.13,30.53-54.65.23-1.81-.34-3.64-1.57-4.98-1.22-1.35-2.99-2.09-4.8-2.06-2.11,0-46.03.71-57.13-32.7,4.31-3.62,7.57-8.37,9.35-13.84l.13.06,59.13-128.74,95.64,151.42c-1.05,3.13-1.76,6.42-1.76,9.9v50c0,3.46,2.8,6.25,6.25,6.25h43.75v25h-6.25c-37.9,0-68.75,30.85-68.75,68.75s30.85,68.75,68.75,68.75h262.5c37.9,0,68.75-30.85,68.75-68.75s-30.85-68.75-68.75-68.75h0ZM137.36,307.58c-3.57,16.86-11.99,30.59-24.15,39.14-13.87,9.73-31.86,12.51-52.12,7.99-44.93-10.02-48.6-38.66-48.6-72.27,0-21.09,18.11-29.1,27.39-31.83,4.48,11.19,15.38,19.14,28.15,19.14,2.94,0,5.73-.55,8.43-1.34,10.66,28.17,40.68,37.74,60.9,39.17h0ZM94.32,224.48c-5.23-9.17-14.99-15.45-26.28-15.45-3.68,0-7.17.76-10.44,1.96,14.1-48.15,40.54-133.03,50.91-166.2l39.56,62.64-53.76,117.04h0ZM150.4,50.35c-5.89,0-10.67-4.77-10.67-10.67s4.78-10.67,10.67-10.67,10.67,4.78,10.67,10.67-4.77,10.67-10.67,10.67ZM319.23,175.18l99.44-.06h.02c4.99,0,9.71,1.95,13.25,5.49s5.49,8.25,5.49,13.26v56.24h-155.24c4.73-13.79,15.79-41.78,37.04-74.93h0ZM312.43,337.61h212.5v25h-212.5v-25ZM556.18,487.61h-262.5c-31.02,0-56.25-25.23-56.25-56.25s25.23-56.25,56.25-56.25h262.5c31.02,0,56.25,25.23,56.25,56.25s-25.23,56.25-56.25,56.25h0ZM331.18,431.36c0,20.71-16.79,37.5-37.5,37.5s-37.5-16.79-37.5-37.5,16.79-37.5,37.5-37.5,37.5,16.79,37.5,37.5ZM462.43,431.36c0,20.71-16.79,37.5-37.5,37.5s-37.5-16.79-37.5-37.5,16.79-37.5,37.5-37.5,37.5,16.79,37.5,37.5ZM593.68,431.36c0,20.71-16.79,37.5-37.5,37.5s-37.5-16.79-37.5-37.5,16.79-37.5,37.5-37.5,37.5,16.79,37.5,37.5Z' />
+		</g>
+	</svg>
 );
 
 export const FilterIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg
-    id="Layer_1"
-    data-name="Layer 1"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 376.16 376.16"
-    fill="currentColor"
-    className={className}
-  >
-    <g>
-      <path
-        className="cls-3"
-        d="M174.36,20.01c38.05-2.29,93.71,6.8,118.51,38.71,14.29,18.4,12.99,52.32,4.08,72.88-2.25,49.56,3.05,101.85.05,151.1-.81,13.24-7.02,24.95-13.82,36.04-30.45,49.7-142.44,48.52-182.34,10.47-9.49-9.05-21.45-32.02-22.38-45.08-3.5-49.37,2.59-102.74.01-152.53-7.46-14.85-8.92-46.33-2.78-61.4,13.55-33.25,66.09-48.23,98.66-50.19ZM180.23,41.28c-22.99,1.41-67.47,13.21-70.24,41.22-3.66,37,53.43,49.43,81.05,48.79,23.4-.55,71-12.42,74.32-40.81,4.56-38.96-56.6-50.95-85.13-49.2Z"
-      />
-      <path
-        className="cls-2"
-        d="M180.23,41.28c28.53-1.75,89.69,10.24,85.13,49.2-3.32,28.38-50.92,40.26-74.32,40.81-27.62.64-84.71-11.79-81.05-48.79,2.77-28.01,47.25-39.81,70.24-41.22ZM194.83,50.8c-3.34-4-16.78-2.72-15.07,3.66s21.08,3.54,15.07-3.66ZM146.5,58.09c-10.68,1.05-9.15,10.94,3.47,9.39,9.6-1.18,6.2-10.34-3.47-9.39ZM226.43,58.09c-7.9.78-9.24,8.13-1.64,9.33,15.17,2.4,13.93-10.54,1.64-9.33ZM181.7,69.88c-30.95,3.36-29.24,30.22,1.26,32.77,9.57.8,31.45-2.41,33.3-14.33,2.48-15.99-23.27-19.66-34.56-18.44ZM128.12,81.57c-7.64,1.4-6.48,8.68,1.3,9.36,13.34,1.16,12.57-11.9-1.3-9.36ZM241.78,81.57c-8.62,1.43-6.26,8.7,1.3,9.36,13.12,1.15,12.14-11.59-1.3-9.36ZM143.51,105.01c-1.53.34-4.08,2.31-4.22,3.92-.58,6.4,17.77,7.84,16.19-.76-.68-3.71-9.14-3.79-11.97-3.16ZM224.18,105.02c-1.55.31-3.91,1.51-4.22,3.14-1.72,9.02,19.17,6.9,15.79-.36-1.61-3.45-8.36-3.42-11.57-2.78ZM194.85,121.54c6.37-6.66-13.24-10.66-15.1-3.68-1.66,6.25,11.41,7.53,15.1,3.68Z"
-      />
-    </g>
-  </svg>
+	<svg
+		id='Layer_1'
+		data-name='Layer 1'
+		xmlns='http://www.w3.org/2000/svg'
+		viewBox='0 0 376.16 376.16'
+		fill='currentColor'
+		className={className}>
+		<g>
+			<path
+				className='cls-3'
+				d='M174.36,20.01c38.05-2.29,93.71,6.8,118.51,38.71,14.29,18.4,12.99,52.32,4.08,72.88-2.25,49.56,3.05,101.85.05,151.1-.81,13.24-7.02,24.95-13.82,36.04-30.45,49.7-142.44,48.52-182.34,10.47-9.49-9.05-21.45-32.02-22.38-45.08-3.5-49.37,2.59-102.74.01-152.53-7.46-14.85-8.92-46.33-2.78-61.4,13.55-33.25,66.09-48.23,98.66-50.19ZM180.23,41.28c-22.99,1.41-67.47,13.21-70.24,41.22-3.66,37,53.43,49.43,81.05,48.79,23.4-.55,71-12.42,74.32-40.81,4.56-38.96-56.6-50.95-85.13-49.2Z'
+			/>
+			<path
+				className='cls-2'
+				d='M180.23,41.28c28.53-1.75,89.69,10.24,85.13,49.2-3.32,28.38-50.92,40.26-74.32,40.81-27.62.64-84.71-11.79-81.05-48.79,2.77-28.01,47.25-39.81,70.24-41.22ZM194.83,50.8c-3.34-4-16.78-2.72-15.07,3.66s21.08,3.54,15.07-3.66ZM146.5,58.09c-10.68,1.05-9.15,10.94,3.47,9.39,9.6-1.18,6.2-10.34-3.47-9.39ZM226.43,58.09c-7.9.78-9.24,8.13-1.64,9.33,15.17,2.4,13.93-10.54,1.64-9.33ZM181.7,69.88c-30.95,3.36-29.24,30.22,1.26,32.77,9.57.8,31.45-2.41,33.3-14.33,2.48-15.99-23.27-19.66-34.56-18.44ZM128.12,81.57c-7.64,1.4-6.48,8.68,1.3,9.36,13.34,1.16,12.57-11.9-1.3-9.36ZM241.78,81.57c-8.62,1.43-6.26,8.7,1.3,9.36,13.12,1.15,12.14-11.59-1.3-9.36ZM143.51,105.01c-1.53.34-4.08,2.31-4.22,3.92-.58,6.4,17.77,7.84,16.19-.76-.68-3.71-9.14-3.79-11.97-3.16ZM224.18,105.02c-1.55.31-3.91,1.51-4.22,3.14-1.72,9.02,19.17,6.9,15.79-.36-1.61-3.45-8.36-3.42-11.57-2.78ZM194.85,121.54c6.37-6.66-13.24-10.66-15.1-3.68-1.66,6.25,11.41,7.53,15.1,3.68Z'
+			/>
+		</g>
+	</svg>
 );
 
 export const WrenchIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Wrench;
-  return <IconComponent className={className} />;
+	const IconComponent = Wrench;
+	return <IconComponent className={className} />;
 };
 
 export const ClockIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Clock;
-  return <IconComponent className={className} />;
+	const IconComponent = Clock;
+	return <IconComponent className={className} />;
 };
 
 export const LogoutIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = LogOut;
-  return <IconComponent className={className} />;
+	const IconComponent = LogOut;
+	return <IconComponent className={className} />;
 };
 
 export const SearchIcon: React.FC<{ className?: string }> = ({
-  className = "h-4 w-4",
+	className = "h-4 w-4",
 }) => {
-  const IconComponent = Search;
-  return <IconComponent className={className} />;
+	const IconComponent = Search;
+	return <IconComponent className={className} />;
 };
 
 export const PlusIcon: React.FC<{ className?: string }> = ({
-  className = "h-4 w-4",
+	className = "h-4 w-4",
 }) => {
-  const IconComponent = Plus;
-  return <IconComponent className={className} />;
+	const IconComponent = Plus;
+	return <IconComponent className={className} />;
 };
 
 export const PencilIcon: React.FC<{ className?: string }> = ({
-  className = "h-4 w-4",
+	className = "h-4 w-4",
 }) => {
-  const IconComponent = Edit;
-  return <IconComponent className={className} />;
+	const IconComponent = Edit;
+	return <IconComponent className={className} />;
 };
 
 export const TrashIcon: React.FC<{ className?: string }> = ({
-  className = "h-4 w-4",
+	className = "h-4 w-4",
 }) => {
-  const IconComponent = Trash2;
-  return <IconComponent className={className} />;
+	const IconComponent = Trash2;
+	return <IconComponent className={className} />;
 };
 
 export const BackIcon: React.FC<{ className?: string }> = ({
-  className = "h-5 w-5",
+	className = "h-5 w-5",
 }) => {
-  const IconComponent = ArrowLeft;
-  return <IconComponent className={className} />;
+	const IconComponent = ArrowLeft;
+	return <IconComponent className={className} />;
 };
 
 export const SunIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Sun;
-  return <IconComponent className={className} />;
+	const IconComponent = Sun;
+	return <IconComponent className={className} />;
 };
 
 export const MoonIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Moon;
-  return <IconComponent className={className} />;
+	const IconComponent = Moon;
+	return <IconComponent className={className} />;
 };
 
 export const SettingsIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = Settings;
-  return <IconComponent className={className} />;
+	const IconComponent = Settings;
+	return <IconComponent className={className} />;
 };
 
 export const CheckIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Check;
-  return <IconComponent className={className} />;
+	const IconComponent = Check;
+	return <IconComponent className={className} />;
 };
 
 export const EllipsisVerticalIcon: React.FC<{ className?: string }> = ({
-  className = "h-5 w-5",
+	className = "h-5 w-5",
 }) => {
-  const IconComponent = MoreVertical;
-  return <IconComponent className={className} />;
+	const IconComponent = MoreVertical;
+	return <IconComponent className={className} />;
 };
 
 export const EyeIcon: React.FC<{ className?: string }> = ({
-  className = "h-4 w-4",
+	className = "h-4 w-4",
 }) => {
-  const IconComponent = Eye;
-  return <IconComponent className={className} />;
+	const IconComponent = Eye;
+	return <IconComponent className={className} />;
 };
 
 export const EyeSlashIcon: React.FC<{ className?: string }> = ({
-  className = "h-4 w-4",
+	className = "h-4 w-4",
 }) => {
-  const IconComponent = EyeOff;
-  return <IconComponent className={className} />;
+	const IconComponent = EyeOff;
+	return <IconComponent className={className} />;
 };
 
 export const SparklesIcon: React.FC<{ className?: string }> = ({
-  className = "h-5 w-5",
+	className = "h-5 w-5",
 }) => {
-  const IconComponent = Sparkles;
-  return <IconComponent className={className} />;
+	const IconComponent = Sparkles;
+	return <IconComponent className={className} />;
 };
 
 export const PaperClipIcon: React.FC<{ className?: string }> = ({
-  className = "h-5 w-5",
+	className = "h-5 w-5",
 }) => {
-  const IconComponent = Paperclip;
-  return <IconComponent className={className} />;
+	const IconComponent = Paperclip;
+	return <IconComponent className={className} />;
 };
 
 export const BellIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Bell;
-  return <IconComponent className={className} />;
+	const IconComponent = Bell;
+	return <IconComponent className={className} />;
 };
 
 export const QrCodeIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = QrCode;
-  return <IconComponent className={className} />;
+	const IconComponent = QrCode;
+	return <IconComponent className={className} />;
 };
 
 export const GlobeAltIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = Globe;
-  return <IconComponent className={className} />;
+	const IconComponent = Globe;
+	return <IconComponent className={className} />;
 };
 
 export const ArrowDownTrayIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = Download;
-  return <IconComponent className={className} />;
+	const IconComponent = Download;
+	return <IconComponent className={className} />;
 };
 
 export const ArrowUpTrayIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = Upload;
-  return <IconComponent className={className} />;
+	const IconComponent = Upload;
+	return <IconComponent className={className} />;
 };
 
 export const CameraIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Camera;
-  return <IconComponent className={className} />;
+	const IconComponent = Camera;
+	return <IconComponent className={className} />;
 };
 
 export const CheckCircleIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = CheckCircle;
-  return <IconComponent className={className} />;
+	const IconComponent = CheckCircle;
+	return <IconComponent className={className} />;
 };
 
 export const XCircleIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = XCircle;
-  return <IconComponent className={className} />;
+	const IconComponent = XCircle;
+	return <IconComponent className={className} />;
 };
 
 export const InformationCircleIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = Info;
-  return <IconComponent className={className} />;
+	const IconComponent = Info;
+	return <IconComponent className={className} />;
 };
 
 export const ChartBarIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = BarChart3;
-  return <IconComponent className={className} />;
+	const IconComponent = BarChart3;
+	return <IconComponent className={className} />;
 };
 
 export const DocumentTextIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = FileText;
-  return <IconComponent className={className} />;
+	const IconComponent = FileText;
+	return <IconComponent className={className} />;
 };
 
 export const MinusIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const IconComponent = Minus;
-  return <IconComponent className={className} />;
+	const IconComponent = Minus;
+	return <IconComponent className={className} />;
 };
 
 export const GoogleIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 48 48"
-    className={className}
-  >
-    <defs>
-      <linearGradient id="googleBlue" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#4285f4" />
-        <stop offset="100%" stopColor="#1976d2" />
-      </linearGradient>
-      <linearGradient id="googleRed" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#ea4335" />
-        <stop offset="100%" stopColor="#d23333" />
-      </linearGradient>
-      <linearGradient id="googleYellow" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#fbbc04" />
-        <stop offset="100%" stopColor="#f9ab00" />
-      </linearGradient>
-      <linearGradient id="googleGreen" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#34a853" />
-        <stop offset="100%" stopColor="#0f9d58" />
-      </linearGradient>
-    </defs>
-    <path
-      fill="url(#googleYellow)"
-      d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12 c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24 c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
-    />
-    <path
-      fill="url(#googleRed)"
-      d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657 C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
-    />
-    <path
-      fill="url(#googleGreen)"
-      d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36 c-5.222,0-9.655-3.417-11.297-7.938l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
-    />
-    <path
-      fill="url(#googleBlue)"
-      d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238 C42.02,35.636,44,30.138,44,24C44,22.659,43.862,21.35,43.611,20.083z"
-    />
-    <circle
-      cx="24"
-      cy="24"
-      r="20"
-      fill="none"
-      stroke="rgba(0,0,0,0.05)"
-      strokeWidth="0.5"
-    />
-  </svg>
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		viewBox='0 0 48 48'
+		className={className}>
+		<defs>
+			<linearGradient id='googleBlue' x1='0%' y1='0%' x2='100%' y2='100%'>
+				<stop offset='0%' stopColor='#4285f4' />
+				<stop offset='100%' stopColor='#1976d2' />
+			</linearGradient>
+			<linearGradient id='googleRed' x1='0%' y1='0%' x2='100%' y2='100%'>
+				<stop offset='0%' stopColor='#ea4335' />
+				<stop offset='100%' stopColor='#d23333' />
+			</linearGradient>
+			<linearGradient id='googleYellow' x1='0%' y1='0%' x2='100%' y2='100%'>
+				<stop offset='0%' stopColor='#fbbc04' />
+				<stop offset='100%' stopColor='#f9ab00' />
+			</linearGradient>
+			<linearGradient id='googleGreen' x1='0%' y1='0%' x2='100%' y2='100%'>
+				<stop offset='0%' stopColor='#34a853' />
+				<stop offset='100%' stopColor='#0f9d58' />
+			</linearGradient>
+		</defs>
+		<path
+			fill='url(#googleYellow)'
+			d='M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12 c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24 c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z'
+		/>
+		<path
+			fill='url(#googleRed)'
+			d='M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657 C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z'
+		/>
+		<path
+			fill='url(#googleGreen)'
+			d='M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36 c-5.222,0-9.655-3.417-11.297-7.938l-6.522,5.025C9.505,39.556,16.227,44,24,44z'
+		/>
+		<path
+			fill='url(#googleBlue)'
+			d='M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238 C42.02,35.636,44,30.138,44,24C44,22.659,43.862,21.35,43.611,20.083z'
+		/>
+		<circle
+			cx='24'
+			cy='24'
+			r='20'
+			fill='none'
+			stroke='rgba(0,0,0,0.05)'
+			strokeWidth='0.5'
+		/>
+	</svg>
 );
 
 export const ExclamationTriangleIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = AlertTriangle;
-  return <IconComponent className={className} />;
+	const IconComponent = AlertTriangle;
+	return <IconComponent className={className} />;
 };
 
 export const SparePartsIcon: React.FC<{ className?: string }> = ({
-  className,
+	className,
 }) => {
-  const IconComponent = Wrench;
-  return <IconComponent className={className} />;
+	const IconComponent = Wrench;
+	return <IconComponent className={className} />;
 };
 
-export const XIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M18 6 6 18" />
-    <path d="m6 6 12 12" />
-  </svg>
+export const XIcon: React.FC<{ className?: string }> = ({
+	className = "h-4 w-4",
+}) => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+		className={className}>
+		<path d='M18 6 6 18' />
+		<path d='m6 6 12 12' />
+	</svg>
 );
 
-export const CloudRainIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-    <path d="M16 14v6" />
-    <path d="M8 14v6" />
-    <path d="M12 16v6" />
-  </svg>
+export const CloudRainIcon: React.FC<{ className?: string }> = ({
+	className = "h-5 w-5",
+}) => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+		className={className}>
+		<path d='M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242' />
+		<path d='M16 14v6' />
+		<path d='M8 14v6' />
+		<path d='M12 16v6' />
+	</svg>
 );
 
-export const DropletIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
-  </svg>
+export const DropletIcon: React.FC<{ className?: string }> = ({
+	className = "h-5 w-5",
+}) => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+		className={className}>
+		<path d='M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z' />
+	</svg>
 );
 
-export const UserIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
+export const UserIcon: React.FC<{ className?: string }> = ({
+	className = "h-5 w-5",
+}) => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+		className={className}>
+		<path d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2' />
+		<circle cx='12' cy='7' r='4' />
+	</svg>
 );
 
-export const SwatchIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M12 20.94c1.88-1 3.39-2.39 4.47-4.07a9 9 0 1 0-8.94 0c1.08 1.68 2.59 3.06 4.47 4.07Z" />
-    <circle cx="12" cy="8.5" r="1.5" fill="currentColor" />
-    <circle cx="15.5" cy="11" r="1.5" fill="currentColor" />
-    <circle cx="14" cy="15" r="1.5" fill="currentColor" />
-    <circle cx="10" cy="15" r="1.5" fill="currentColor" />
-    <circle cx="8.5" cy="11" r="1.5" fill="currentColor" />
-  </svg>
+export const SwatchIcon: React.FC<{ className?: string }> = ({
+	className = "h-5 w-5",
+}) => (
+	<svg
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+		className={className}>
+		<path d='M12 20.94c1.88-1 3.39-2.39 4.47-4.07a9 9 0 1 0-8.94 0c1.08 1.68 2.59 3.06 4.47 4.07Z' />
+		<circle cx='12' cy='8.5' r='1.5' fill='currentColor' />
+		<circle cx='15.5' cy='11' r='1.5' fill='currentColor' />
+		<circle cx='14' cy='15' r='1.5' fill='currentColor' />
+		<circle cx='10' cy='15' r='1.5' fill='currentColor' />
+		<circle cx='8.5' cy='11' r='1.5' fill='currentColor' />
+	</svg>
 );
 
-export const PhotoIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-    <circle cx="9" cy="9" r="2" />
-    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-  </svg>
+export const PhotoIcon: React.FC<{ className?: string }> = ({
+	className = "h-5 w-5",
+}) => (
+	<svg
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+		className={className}>
+		<rect width='18' height='18' x='3' y='3' rx='2' ry='2' />
+		<circle cx='9' cy='9' r='2' />
+		<path d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' />
+	</svg>
+);
+
+export const ThemeBrushIcon: React.FC<{
+	className?: string;
+	style?: React.CSSProperties;
+}> = ({ className, style }) => (
+	<svg
+		id='Layer_1'
+		data-name='Layer 1'
+		xmlns='http://www.w3.org/2000/svg'
+		viewBox='0 0 101.03 122.88'
+		className={className}
+		style={style}
+		fill='currentColor'>
+		<path d='M42.88,114.05a46.55,46.55,0,0,0,24-3.15,50.83,50.83,0,0,0,9.64-5.19l.64,7.09a56.6,56.6,0,0,1-7.9,4A52.93,52.93,0,0,1,42,120.31,45.8,45.8,0,0,1,15.85,107,55.59,55.59,0,0,1,1.16,79.54,53.4,53.4,0,0,1,6.91,42.23a54.45,54.45,0,0,1,29-24.57,26.55,26.55,0,0,1,12.52-1.74,13.51,13.51,0,0,1,9.4,5.42,3.17,3.17,0,0,1,.33.6c2.93,6.69-.63,10.88-4,14.9-2,2.31-3.84,4.52-2.74,6.64a5,5,0,0,0,3.29,2,20.15,20.15,0,0,0,8,.11c2.6-.42,5.29-1,7.85-1.53,1.86-.39,3.66-.77,5.39-1.09l-1.44,6.72c-.87.17-1.75.36-2.64.55-2.55.54-5.21,1.11-8.17,1.57a26.19,26.19,0,0,1-10.55-.23c-3.41-.89-6-2.66-7.29-5.21-3.07-5.89.14-9.68,3.5-13.64,2.08-2.46,4.26-5,3.2-8a7.45,7.45,0,0,0-5-2.61,20.63,20.63,0,0,0-9.53,1.42A48.13,48.13,0,0,0,12.43,45.32,47,47,0,0,0,7.34,78.23a49.17,49.17,0,0,0,13,24.36,39.44,39.44,0,0,0,22.55,11.46ZM41,101a9.16,9.16,0,1,0,5.25-11.83A9.16,9.16,0,0,0,41,101ZM90.11,0C89.4,11.14,74.8,18,80,29.59a13,13,0,0,0,7.73,6.93,8.55,8.55,0,0,0,4.17.22,8.63,8.63,0,0,0,1.84-.61c7.59-3.44,8.5-12.75,6.25-19.9C97.89,9.64,93.36,3.81,90.11,0Zm9.74,62.1a42.27,42.27,0,0,1-18.21.17l4.93,54.26c.25,3.37.9,5.69,5,6.35a5,5,0,0,0,3.36-1.45,5.47,5.47,0,0,0,1.3-3.55L99.85,62.1ZM94.92,41.2c-2.3.95-6.44,1.45-9.34,0L81.73,59.07c6.39,1.42,12.64,1.69,18.63,0-2.18-8.69-4-8.78-5.44-17.82ZM62.49,81a10.47,10.47,0,0,0,12.35,6.38L73,66.77A10.48,10.48,0,0,0,62.49,81Zm-45.61.86A9.16,9.16,0,1,0,22.13,70a9.15,9.15,0,0,0-5.25,11.84Zm5.37-27a9.09,9.09,0,1,0,5.22-11.75,9.1,9.1,0,0,0-5.22,11.75Z' />
+	</svg>
 );
