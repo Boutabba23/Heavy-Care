@@ -11,6 +11,7 @@ import UserProfile from "./UserProfile";
 import LoginPage from "./LoginPage";
 import { Notification, View } from "../types";
 import Navbar from "./Navbar";
+import LandingPage from "./LandingPage";
 import SettingsView from "./ThemeSettingsView";
 import MachineModal from "./MachineModal";
 import { MaintenanceView } from "./MaintenanceView";
@@ -174,6 +175,18 @@ const AppContent: React.FC = () => {
 
   const renderView = () => {
     switch (state.currentView) {
+      case View.LANDING:
+        return (
+          <LandingPage
+            onSetView={actions.setCurrentView}
+            stats={{
+              machines: state.machines.length,
+              maintenanceRecords: state.maintenanceRecords.length,
+              spareParts: state.spareParts.length,
+              filterGroups: state.filterTypes.length,
+            }}
+          />
+        );
       case View.DASHBOARD:
         return (
           <DashboardView

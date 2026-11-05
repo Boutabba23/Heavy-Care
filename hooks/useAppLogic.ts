@@ -88,7 +88,7 @@ export const defaultCustomColors: CustomColors = {
 
 export const useAppLogic = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
+  const [currentView, setCurrentView] = useState<View>(View.LANDING);
   const [machines, setMachines] = useState<Machine[]>([]);
   const [filterGroups, setFilterGroups] = useState<FilterGroup[]>([]);
   const [filterTypes, setFilterTypes] = useState<FilterType[]>([]);

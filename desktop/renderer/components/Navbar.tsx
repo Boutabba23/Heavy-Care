@@ -160,7 +160,7 @@ const Navbar: React.FC<NavbarProps> = ({
       <div className="flex h-16 items-center gap-2 px-4 sm:gap-3 sm:px-6">
         {/* Brand — the landing/home button */}
         <button
-          onClick={() => navigate(View.DASHBOARD)}
+          onClick={() => navigate(View.LANDING)}
           className="flex shrink-0 items-center gap-2 border-2 border-foreground bg-card px-2 py-1 transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none"
         >
           <LogoIcon className="h-9 w-9 shrink-0" />
