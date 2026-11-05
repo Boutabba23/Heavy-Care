@@ -12,3 +12,6 @@ renderer/*.tsbuildinfo
 # Env
 .env
 .env.*
+supabase-config.json
+
+supabase-config.json

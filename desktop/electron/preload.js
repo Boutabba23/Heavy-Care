@@ -15,12 +15,18 @@ contextBridge.exposeInMainWorld("desktop", {
     query: (req) => ipcRenderer.invoke("db:query", req),
     syncStatus: () => ipcRenderer.invoke("db:sync-status"),
     syncNow: () => ipcRenderer.invoke("db:sync-now"),
+    onSyncApplied: (cb) => {
+      const handler = (_evt, payload) => cb(payload);
+      ipcRenderer.on("db:synced", handler);
+      return () => ipcRenderer.removeListener("db:synced", handler);
+    },
   },
 
-  // ---- Auth (local, offline) ----
+  // ---- Auth (Supabase OAuth/email + local offline fallback) ----
   auth: {
     getSession: () => ipcRenderer.invoke("auth:get-session"),
     signIn: (email, password) => ipcRenderer.invoke("auth:sign-in", { email, password }),
+    signInWithGoogle: () => ipcRenderer.invoke("auth:sign-in-google"),
     signUp: (email, password) => ipcRenderer.invoke("auth:sign-up", { email, password }),
     signOut: () => ipcRenderer.invoke("auth:sign-out"),
     updatePassword: (password) => ipcRenderer.invoke("auth:update-password", { password }),

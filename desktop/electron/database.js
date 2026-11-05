@@ -21,6 +21,36 @@ const JSON_COLUMNS = {
   global_monthly_settings: ["intemperie_days"],
 };
 
+// Cached column lists per table (avoid PRAGMA on every insert)
+const tableColumnsCache = new Map();
+
+function getTableColumns(table) {
+  if (tableColumnsCache.has(table)) return tableColumnsCache.get(table);
+  const cols = db.exec(`PRAGMA table_info(${q(table)})`)[0]
+    ? db.exec(`PRAGMA table_info(${q(table)})`)[0].values.map((v) => v[1])
+    : [];
+  tableColumnsCache.set(table, cols);
+  return cols;
+}
+
+// Remote schemas evolve (e.g. chantier_id added later in Supabase). When a
+// row arrives with unknown columns, add them to the local table on the fly.
+function ensureColumns(table, row) {
+  const existing = new Set(getTableColumns(table));
+  const missing = Object.keys(row).filter((k) => !existing.has(k));
+  missing.forEach((col) => {
+    try {
+      db.exec(`ALTER TABLE ${q(table)} ADD COLUMN ${q(col)} TEXT`);
+      console.log(`Added local column ${table}.${col}`);
+    } catch (e) {
+      console.error(`Could not add column ${table}.${col}:`, e.message);
+    }
+  });
+  if (missing.length) {
+    tableColumnsCache.delete(table);
+  }
+}
+
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS machines (
   id TEXT PRIMARY KEY,
@@ -214,12 +244,17 @@ async function init(userDataDir) {
 
   db.exec(SCHEMA);
 
-  if (countRows("oil_stocks") === 0) {
+  const seedMarker = path.join(dbDir, ".seeded");
+  if (fs.existsSync(seedMarker)) {
+    console.log("DB already initialized, skipping seed.");
+  } else if (countRows("oil_stocks") === 0) {
     // Seed default oil stocks on first launch (mirrors the web app defaults)
     DEFAULT_OIL_STOCKS.forEach((s) =>
       insertRow("oil_stocks", s, { queueSync: false })
     );
   }
+  // Mark DB as initialized so the seed never fights the sync engine again
+  fs.writeFileSync(seedMarker, "seeded " + nowISO());
 
   doPersist();
   return { path: dbPath() };
@@ -234,12 +269,10 @@ function countRows(table) {
 // Row serialization / deserialization
 // ---------------------------------------------------------------------------
 function serializeRow(table, row) {
-  const colMap = db.exec(`PRAGMA table_info(${table})`)[0]
-    ? db.exec(`PRAGMA table_info(${table})`)[0].values.map((v) => v[1])
-    : Object.keys(row);
+  const cols = getTableColumns(table);
   const out = {};
-  const cols = colMap.length ? colMap : Object.keys(row);
   Object.entries(row).forEach(([k, v]) => {
+    if (cols.length && !cols.includes(k)) return; // unknown column -> skip
     if (v === undefined) return; // same as "not provided"
     if (JSON_COLUMNS[table] && JSON_COLUMNS[table].includes(k)) {
       out[k] = JSON.stringify(v ?? null);
@@ -256,7 +289,6 @@ function serializeRow(table, row) {
 
 function deserializeRow(table, raw) {
   if (!raw) return null;
-  const colMap = db.exec(`PRAGMA table_info(${table})`)[0];
   const jsonCols = JSON_COLUMNS[table] || [];
   const row = {};
   const { columns, values } = raw;
@@ -272,7 +304,6 @@ function deserializeRow(table, raw) {
     if (typeof v === "number" && col.startsWith("works_on")) v = !!v;
     row[col] = v;
   });
-  void colMap;
   return row;
 }
 
@@ -317,6 +348,7 @@ function insertRow(table, row, { queueSync = true, returnRow = true } = {}) {
     created_at: row.created_at || nowISO(),
     updated_at: row.updated_at || row.created_at || nowISO(),
   };
+  ensureColumns(table, full);
   const { out } = serializeRow(table, full);
   const cols = Object.keys(out);
   const placeholders = cols.map(() => "?").join(", ");

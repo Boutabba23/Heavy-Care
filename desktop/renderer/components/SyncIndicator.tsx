@@ -71,11 +71,18 @@ const SyncIndicator: React.FC = () => {
         setSyncMessage("Synchronisation réussie");
       } else {
         setSyncError(true);
-        setSyncMessage(
-          result?.status === "not-configured"
-            ? "Synchronisation non configurée"
-            : "Échec de la synchronisation (voir le terminal)"
-        );
+        if (result?.status === "not-configured") {
+          setSyncMessage("Synchronisation non configurée");
+        } else if (result?.status === "unauthenticated") {
+          setSyncError(false);
+          setSyncMessage(
+            "Connectez-vous (Google ou email/mot de passe) pour synchroniser."
+          );
+        } else {
+          setSyncMessage(
+            "Échec de la synchronisation (voir le terminal)"
+          );
+        }
       }
     } catch {
       setSyncError(true);

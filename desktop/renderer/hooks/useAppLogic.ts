@@ -412,6 +412,16 @@ export const useAppLogic = () => {
     fetchData();
   }, [fetchData]);
 
+  // Live refresh: when the background sync pulls remote changes into the
+  // local SQLite DB, re-fetch so the UI reflects them without a restart.
+  useEffect(() => {
+    const desktop = (window as any).desktop;
+    if (!desktop?.db?.onSyncApplied) return;
+    return desktop.db.onSyncApplied(() => {
+      fetchData();
+    });
+  }, [fetchData]);
+
   useEffect(() => {
     if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
       localStorage.setItem("gestifiltres-theme", JSON.stringify(theme));

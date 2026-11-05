@@ -22,6 +22,7 @@ interface DesktopBridge {
   auth: {
     getSession: () => Promise<any>;
     signIn: (email: string, password: string) => Promise<any>;
+    signInWithGoogle: () => Promise<any>;
     signUp: (email: string, password: string) => Promise<any>;
     signOut: () => Promise<any>;
     updatePassword: (password: string) => Promise<any>;
@@ -193,13 +194,14 @@ const auth = {
     if (!bridge) return { error: { message: "Desktop bridge unavailable." } };
     return bridge.auth.updatePassword(password);
   },
-  // OAuth isn't available offline
+  // OAuth via Electron popup: returns immediately; the session arrives later
+  // through the onAuthChanged event (SIGNED_IN).
   async signInWithOAuth(_opts: any) {
-    return {
-      error: {
-        message: "Connexion Google indisponible hors ligne. Utilisez email + mot de passe.",
-      },
-    };
+    const bridge = getBridge();
+    if (!bridge) {
+      return { error: { message: "Disponible uniquement dans l'application desktop." } };
+    }
+    return bridge.auth.signInWithGoogle();
   },
   async resetPasswordForEmail(_email: string, _opts?: any) {
     return { data: null, error: null };

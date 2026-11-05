@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const dbm = require("./database");
 const sync = require("./sync");
+const supabaseAuth = require("./auth");
 
 // In dev, set ELECTRON_RENDERER_URL (e.g. http://localhost:5555) to load the
 // Next.js dev server instead of the static export.
@@ -15,6 +16,9 @@ const DESKTOP_DIR = path.join(__dirname, "..");
 
 let mainWindow = null;
 let staticServer = null;
+let oauthPopup = null;
+let callbackServer = null;
+let pendingVerifier = null; // PKCE code_verifier for the OAuth flow in progress
 
 // ---------------------------------------------------------------------------
 // Tiny static file server to serve the exported Next.js app (renderer/out/)
@@ -131,6 +135,63 @@ function emitAuthEvent(event) {
 }
 
 // ---------------------------------------------------------------------------
+// Local OAuth callback server: Google redirects to
+//   http://127.0.0.1:48621/auth/callback?code=...
+// We capture the code server-side and close the popup window.
+// ---------------------------------------------------------------------------
+function startCallbackServer(port) {
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      const url = new URL(req.url, `http://127.0.0.1:${port}`);
+      if (url.pathname === "/auth/callback") {
+        const code = url.searchParams.get("code");
+        const error =
+          url.searchParams.get("error_description") ||
+          url.searchParams.get("error");
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(
+          `<!DOCTYPE html><html><head><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#0f172a}</style></head><body>${
+            error
+              ? "<p>Connexion échouée : " + error + ". Vous pouvez fermer cette fenêtre.</p>"
+              : "<p>Connexion réussie. Vous pouvez fermer cette fenêtre…</p>"
+          }<script>setTimeout(()=>window.close(),800)</script></body></html>`
+        );
+        if (code && pendingVerifier) {
+          const verifier = pendingVerifier;
+          pendingVerifier = null;
+          supabaseAuth
+            .exchangeCode(code, verifier)
+            .then(() => console.log("Supabase session established (OAuth)."))
+            .catch((err) => console.error("OAuth exchange failed:", err.message));
+        } else if (error) {
+          console.error("OAuth error from provider:", error);
+        }
+        return;
+      }
+      res.writeHead(404);
+      res.end("Not found");
+    });
+    server.once("error", reject);
+    server.listen(port, "127.0.0.1", () => resolve(server));
+  });
+}
+
+function openOAuthPopup(authorizeUrl) {
+  if (oauthPopup && !oauthPopup.isDestroyed()) oauthPopup.destroy();
+  oauthPopup = new BrowserWindow({
+    width: 480,
+    height: 640,
+    parent: mainWindow,
+    title: "Connexion Google",
+    autoHideMenuBar: true,
+  });
+  oauthPopup.loadURL(authorizeUrl);
+  oauthPopup.on("closed", () => {
+    oauthPopup = null;
+  });
+}
+
+// ---------------------------------------------------------------------------
 // IPC handlers — mirror the subset of supabase-js the renderer uses
 // ---------------------------------------------------------------------------
 function registerIpc() {
@@ -153,9 +214,31 @@ function registerIpc() {
   });
 
   // ---- Auth ----
-  ipcMain.handle("auth:get-session", () => ({ data: { session: currentSession } }));
+  // Active session = Supabase session (preferred, gives sync credentials)
+  // falling back to the local offline session.
+  const getActiveSession = () => supabaseAuth.buildPublicShape() || currentSession;
 
-  ipcMain.handle("auth:sign-in", (_evt, { email, password }) => {
+  ipcMain.handle("auth:get-session", () => ({
+    data: { session: getActiveSession() },
+  }));
+
+  ipcMain.handle("auth:sign-in", async (_evt, { email, password }) => {
+    // 1. Try Supabase first (also gives the sync engine its JWT)
+    if (sync.isConfigured()) {
+      try {
+        await supabaseAuth.signInWithPassword(email, password);
+        return { error: null };
+      } catch (err) {
+        const networkDown = /ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|fetch failed|network/i.test(
+          err.message
+        );
+        if (!networkDown) {
+          return { error: { message: err.message } };
+        }
+        // fall through to local offline accounts
+      }
+    }
+    // 2. Local offline fallback
     const user = dbm.verifyUser(email, password);
     if (!user) {
       return { error: { message: "Email ou mot de passe incorrect." } };
@@ -164,6 +247,17 @@ function registerIpc() {
     saveSession();
     emitAuthEvent("SIGNED_IN");
     return { error: null };
+  });
+
+  ipcMain.handle("auth:sign-in-google", async () => {
+    try {
+      const { url, verifier } = supabaseAuth.buildAuthorizeUrl("google");
+      pendingVerifier = verifier;
+      openOAuthPopup(url);
+      return { error: null };
+    } catch (err) {
+      return { error: { message: err.message } };
+    }
   });
 
   ipcMain.handle("auth:sign-up", (_evt, { email, password }) => {
@@ -192,16 +286,18 @@ function registerIpc() {
     );
   }
 
-  ipcMain.handle("auth:sign-out", () => {
+  ipcMain.handle("auth:sign-out", async () => {
     currentSession = null;
     saveSession();
+    await supabaseAuth.signOut();
     emitAuthEvent("SIGNED_OUT");
     return { error: null };
   });
 
   ipcMain.handle("auth:update-password", (_evt, { password }) => {
-    if (!currentSession) return { error: { message: "Non connecté." } };
-    dbm.updatePassword(currentSession.user.id, password);
+    if (!getActiveSession()) return { error: { message: "Non connecté." } };
+    // With a Supabase session we could update remotely; keep local for offline
+    if (currentSession) dbm.updatePassword(currentSession.user.id, password);
     return { error: null };
   });
 }
@@ -252,6 +348,28 @@ app.whenReady().then(async () => {
   await dbm.init(userDataDir);
   loadSession();
   registerIpc();
+
+  sync.loadConfig(DESKTOP_DIR, userDataDir);
+  sync.setTokenProvider?.(supabaseAuth.getValidToken);
+
+  supabaseAuth.init(sync.getSupabaseConfig(), userDataDir);
+  supabaseAuth.onChange((event, session) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("auth:changed", { event, session });
+    }
+  });
+
+  // When a sync pulls changes into SQLite, tell the UI to re-fetch
+  sync.setSyncAppliedCallback(({ rowsApplied }) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("db:synced", { rowsApplied });
+    }
+  });
+
+  startCallbackServer(supabaseAuth.CALLBACK_PORT).catch((err) =>
+    console.error("OAuth callback server failed:", err.message)
+  );
+
   sync.startSyncLoop(DESKTOP_DIR, userDataDir, 10 * 60 * 1000);
 
   if (!isDev) {
