@@ -50,13 +50,18 @@ interface MachineModalProps {
     serviceHours: number;
   }) => void;
   machine: Machine | null;
+  machines: Machine[];
 }
+
+// Normalize a string for duplicate comparison (trim + case-insensitive)
+const normalize = (value?: string | null) => (value ?? "").trim().toLowerCase();
 
 const MachineModal: React.FC<MachineModalProps> = ({
   isOpen,
   onClose,
   onSave,
   machine,
+  machines = [],
 }) => {
   const [code, setCode] = useState("");
   const [designation, setDesignation] = useState("");
@@ -74,6 +79,47 @@ const MachineModal: React.FC<MachineModalProps> = ({
   const [serviceHoursError, setServiceHoursError] = useState<string | null>(
     null
   );
+
+  // Machines to check against (exclude the one being edited so updates pass validation)
+  const otherMachines = React.useMemo(
+    () => machines.filter((m) => m.id !== machine?.id),
+    [machines, machine]
+  );
+
+  // Derived duplicate errors (recomputed live as the user types)
+  const duplicateErrors = React.useMemo(() => {
+    const errs: { code?: string; designation?: string; serialNumber?: string } =
+      {};
+    if (otherMachines.length === 0) return errs;
+
+    const nCode = normalize(code);
+    const nDesignation = normalize(designation);
+    const nSerial = normalize(serialNumber);
+
+    if (
+      nCode &&
+      otherMachines.some((m) => normalize(m.code) === nCode)
+    ) {
+      errs.code = "Un engin avec ce code existe déjà.";
+    }
+    if (
+      nDesignation &&
+      otherMachines.some((m) => normalize(m.designation) === nDesignation)
+    ) {
+      errs.designation =
+        "Un engin avec cette désignation existe déjà.";
+    }
+    if (
+      nSerial &&
+      otherMachines.some(
+        (m) => m.serialNumber && normalize(m.serialNumber) === nSerial
+      )
+    ) {
+      errs.serialNumber =
+        "Un engin avec ce numéro de série existe déjà.";
+    }
+    return errs;
+  }, [otherMachines, code, designation, serialNumber]);
 
   useEffect(() => {
     if (machine) {
@@ -172,6 +218,15 @@ const MachineModal: React.FC<MachineModalProps> = ({
       return;
     }
 
+    // If any duplicate was detected, don't submit (errors are shown under the fields)
+    if (
+      duplicateErrors.code ||
+      duplicateErrors.designation ||
+      duplicateErrors.serialNumber
+    ) {
+      return;
+    }
+
     const hours = parseInt(serviceHours, 10);
     onSave({
       code,
@@ -202,7 +257,7 @@ const MachineModal: React.FC<MachineModalProps> = ({
             value={code}
             onChange={(e) => handleFieldChange("code", e.target.value, setCode)}
             placeholder="ex: CAT320D"
-            error={codeError}
+            error={codeError || duplicateErrors.code}
           />
         </div>
         <div className="space-y-2">
@@ -214,7 +269,7 @@ const MachineModal: React.FC<MachineModalProps> = ({
               handleFieldChange("designation", e.target.value, setDesignation)
             }
             placeholder="ex: Pelle sur chenilles 320D"
-            error={designationError}
+            error={designationError || duplicateErrors.designation}
           />
         </div>
         <div className="space-y-2">
@@ -246,6 +301,7 @@ const MachineModal: React.FC<MachineModalProps> = ({
             value={serialNumber}
             onChange={(e) => setSerialNumber(e.target.value)}
             placeholder="ex: CAT0320DLHDN02345"
+            error={duplicateErrors.serialNumber}
           />
         </div>
         <div className="space-y-2">
