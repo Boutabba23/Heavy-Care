@@ -15,6 +15,7 @@ import {
   DropletIcon,
   ExcavatorIcon,
   FilterIcon,
+  LogoIcon,
   LogoutIcon,
   SettingsIcon,
   SparklesIcon,
@@ -109,6 +110,7 @@ const Navbar: React.FC<NavbarProps> = ({
     "menu",
   );
   const [imageError, setImageError] = useState(false);
+  const [brandIconError, setBrandIconError] = useState(false);
   const rootRef = React.useRef<HTMLElement>(null);
 
   const closeMenus = React.useCallback(() => {
@@ -262,7 +264,16 @@ const Navbar: React.FC<NavbarProps> = ({
           className="flex shrink-0 items-center gap-2 border-2 border-foreground bg-card p-1 transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none"
           aria-label="Accueil"
         >
-          <img src="/icon.png" alt="HeavyCare" className="h-9 w-9 object-contain" />
+          {brandIconError ? (
+            <LogoIcon className="h-9 w-9 shrink-0" />
+          ) : (
+            <img
+              src="/icon.png"
+              alt="HeavyCare"
+              className="h-9 w-9 object-contain"
+              onError={() => setBrandIconError(true)}
+            />
+          )}
         </button>
 
         {/* Desktop sections — fixed, no scroll */}
