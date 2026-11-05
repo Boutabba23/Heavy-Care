@@ -10,7 +10,7 @@ import FilterManagementView from "./FilterManagementView";
 import UserProfile from "./UserProfile";
 import LoginPage from "./LoginPage";
 import { Notification, View } from "../types";
-import Sidebar from "./Sidebar";
+import Navbar from "./Navbar";
 import SettingsView from "./ThemeSettingsView";
 import MachineModal from "./MachineModal";
 import { MaintenanceView } from "./MaintenanceView";
@@ -317,13 +317,14 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Sidebar
+      <Navbar
         currentView={state.currentView}
         setCurrentView={actions.setCurrentView}
         isMobileOpen={state.isSidebarOpen}
         closeSidebar={actions.closeSidebar}
+        onToggleMenu={actions.toggleSidebar}
       />
-      <div className="flex flex-col md:pl-64">
+      <div className="flex flex-col">
         <Header
           currentView={state.currentView}
           selectedMachine={state.selectedMachine}
