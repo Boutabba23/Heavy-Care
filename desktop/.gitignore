@@ -1,0 +1,14 @@
+# Electron shell
+node_modules/
+release/
+out/
+
+# Renderer (Next.js)
+renderer/node_modules/
+renderer/out/
+renderer/.next/
+renderer/*.tsbuildinfo
+
+# Env
+.env
+.env.*

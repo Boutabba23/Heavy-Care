@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy this file to supabase-config.json (in the desktop folder) and fill in your Supabase project credentials to enable sync. Without it, the app runs 100% offline.",
+  "url": "https://YOUR-PROJECT.supabase.co",
+  "anonKey": "YOUR-ANON-KEY"
+}

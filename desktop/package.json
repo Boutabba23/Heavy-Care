@@ -1,0 +1,58 @@
+{
+  "name": "heavy-care-desktop",
+  "private": true,
+  "version": "1.0.0",
+  "description": "HeavyCare desktop (offline, Electron + SQLite + Supabase sync)",
+  "main": "electron/main.js",
+  "author": "HeavyCare",
+  "scripts": {
+    "renderer:install": "cd renderer && npm install",
+    "renderer:dev": "cd renderer && npm run dev",
+    "renderer:build": "cd renderer && npm run build",
+    "electron:dev": "node dev.js",
+    "start": "electron .",
+    "dev": "node dev.js",
+    "dist": "npm run renderer:build && electron-builder --win --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "sql.js": "^1.15.2"
+  },
+  "build": {
+    "appId": "com.heavycare.desktop",
+    "productName": "HeavyCare",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "renderer/out/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/sql.js/**"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "HeavyCare"
+    }
+  }
+}
