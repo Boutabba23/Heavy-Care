@@ -1,6 +1,8 @@
 Add-Type -AssemblyName System.Drawing
 
-$src = [System.Drawing.Bitmap]::FromFile("D:\coding\Heavy-Care\logo.png")
+# Run from anywhere: resolve paths relative to this script and the repo root
+$repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+$src = [System.Drawing.Bitmap]::FromFile((Join-Path $repoRoot "logo.png"))
 
 # Crop the 118x118 content region with a little margin
 $cx = 124; $cy = 272; $cw = 122; $ch = 122
@@ -45,7 +47,7 @@ $g.Dispose()
 
 # Layer sizes that Windows will pick from when scaling down fast
 $sizes = @(256, 128, 64, 48, 32, 16)
-$out256 = "D:\coding\Heavy-Care\desktop\icon.png"
+$out256 = Join-Path $PSScriptRoot "icon.png"
 $icon.Save($out256, [System.Drawing.Imaging.ImageFormat]::Png)
 $icon.Dispose()
 $crop.Dispose()
