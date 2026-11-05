@@ -29,7 +29,8 @@
     },
     "files": [
       "electron/**/*",
-      "renderer/out/**/*"
+      "renderer/out/**/*",
+      "icon.png"
     ],
     "asarUnpack": [
       "node_modules/sql.js/**"

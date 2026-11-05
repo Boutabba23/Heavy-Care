@@ -13,6 +13,8 @@ const isDev = !!process.env.ELECTRON_RENDERER_URL;
 
 const STATIC_PORT = 48620;
 const DESKTOP_DIR = path.join(__dirname, "..");
+// Icon always available for windows/taskbar (packaged via build.files -> app root)
+const APP_ICON = path.join(__dirname, "..", "icon.png");
 
 let mainWindow = null;
 let staticServer = null;
@@ -184,6 +186,7 @@ function openOAuthPopup(authorizeUrl) {
     parent: mainWindow,
     title: "Connexion Google",
     autoHideMenuBar: true,
+    icon: APP_ICON,
   });
   oauthPopup.loadURL(authorizeUrl);
   oauthPopup.on("closed", () => {
@@ -317,6 +320,7 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: "#f8fafc",
     title: "HeavyCare",
+    icon: APP_ICON,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
