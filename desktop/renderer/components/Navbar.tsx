@@ -259,11 +259,10 @@ const Navbar: React.FC<NavbarProps> = ({
         {/* Brand — the landing/home button */}
         <button
           onClick={() => navigate(View.LANDING)}
-          className="flex shrink-0 items-center gap-2 border-2 border-foreground bg-card px-2 py-1 transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none"
+          className="flex shrink-0 items-center gap-2 border-2 border-foreground bg-card p-1 transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none"
+          aria-label="Accueil"
         >
-          <span className="text-sm font-black uppercase tracking-widest text-foreground">
-            HeavyCare
-          </span>
+          <img src="/icon.png" alt="HeavyCare" className="h-9 w-9 object-contain" />
         </button>
 
         {/* Desktop sections — fixed, no scroll */}
