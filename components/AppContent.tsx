@@ -323,6 +323,8 @@ const AppContent: React.FC = () => {
         isMobileOpen={state.isSidebarOpen}
         closeSidebar={actions.closeSidebar}
         onToggleMenu={actions.toggleSidebar}
+        userEmail={user?.email || ""}
+        onLogout={handleLogout}
       />
       <div className="flex flex-col">
         <Header
