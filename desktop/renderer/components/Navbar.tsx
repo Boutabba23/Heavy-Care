@@ -62,25 +62,23 @@ interface NavbarProps {
 
 type MenuKey = "dashboard" | "inventory" | "theme" | "profile";
 
-const Caret = () => (
+const Caret = ({ className = "" }: { className?: string }) => (
   <svg
-    className="h-2.5 w-2.5 transition-transform duration-150"
+    className={`h-2 w-2 ${className}`}
     viewBox="0 0 10 6"
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
     aria-hidden="true"
   >
-    <path d="M1 1l4 4 4-4" strokeLinecap="square" />
+    <path d="M1 1l4 4 4-4" strokeLinecap="round" />
   </svg>
 );
 
 /**
- * Neo-brutalist single top header.
- * Brand • section navigation (Dashboard ▾ / Machines / Maintenance /
- * Inventory ▾) • global search • theme picker • profile avatar menu.
- * Former sidebar titles live under the grouped sections; the old
- * second header row is fully absorbed. No horizontal scrolling.
+ * Friendly-brutalist single top header (soft pills, thin dark outline, pastels).
+ * Brand • section navigation in a pill group (Dashboard ▾ / Machines /
+ * Maintenance / Inventory ▾) • global search • theme picker • profile avatar.
  */
 const Navbar: React.FC<NavbarProps> = ({
   currentView,
@@ -161,16 +159,13 @@ const Navbar: React.FC<NavbarProps> = ({
   const hasUnreadNotifications = notifications.some((n) => !n.read);
 
   // ---- shared styles -------------------------------------------------------
-  const chipBase =
-    "flex items-center gap-2 whitespace-nowrap border-2 border-foreground px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wider transition-all duration-150";
-  const chipIdle = `${chipBase} bg-card text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none`;
-  const chipActive = `${chipBase} bg-primary text-primary-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))]`;
+  const pillIdle =
+    "flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-foreground transition-colors duration-150 hover:bg-muted";
+  const pillActive =
+    "flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold bg-foreground text-background";
 
   const dropItem =
-    "flex w-full items-center gap-2 border-2 border-transparent px-3 py-2 text-start text-[11px] font-bold uppercase tracking-wider text-foreground transition-colors duration-100 hover:border-foreground hover:bg-muted";
-
-  const iconBtn =
-    "flex h-9 w-9 shrink-0 items-center justify-center border-2 border-foreground bg-card text-foreground transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none";
+    "flex w-full items-center gap-2.5 rounded-full px-3.5 py-2.5 text-start text-[13px] font-semibold text-foreground transition-colors duration-100 hover:bg-muted";
 
   // ---- data ----------------------------------------------------------------
   const dashboardViews = [View.DASHBOARD, View.ANALYTICS, View.MONTHLY_SUMMARY];
@@ -180,22 +175,22 @@ const Navbar: React.FC<NavbarProps> = ({
     View.OIL_MANAGEMENT,
   ];
   const isViewActive = (views: View[]) => views.includes(currentView);
-  const menuOpenClass = (menu: MenuKey, groupActive: boolean) =>
-    `${openMenu === menu || groupActive ? chipActive : chipIdle}`;
+  const groupClass = (menu: MenuKey, groupActive: boolean) =>
+    `${openMenu === menu || groupActive ? pillActive : pillIdle}`;
 
   const DashboardItems = () => (
     <>
       <button className={dropItem} onClick={() => navigate(View.DASHBOARD)}>
-        <Squares2x2Icon className="h-4 w-4" /> Tableau de bord
+        <Squares2x2Icon className="h-4 w-4 text-emerald-600" /> Tableau de bord
       </button>
       <button className={dropItem} onClick={() => navigate(View.ANALYTICS)}>
-        <ChartBarIcon className="h-4 w-4" /> Analyses
+        <ChartBarIcon className="h-4 w-4 text-purple-500" /> Analyses
       </button>
       <button
         className={dropItem}
         onClick={() => navigate(View.MONTHLY_SUMMARY)}
       >
-        <ChartBarIcon className="h-4 w-4" /> Synthese Mensuelle
+        <ChartBarIcon className="h-4 w-4 text-sky-500" /> Synthese Mensuelle
       </button>
     </>
   );
@@ -206,23 +201,23 @@ const Navbar: React.FC<NavbarProps> = ({
         className={dropItem}
         onClick={() => navigate(View.FILTER_MANAGEMENT)}
       >
-        <FilterIcon className="h-4 w-4" /> Gestion des Filtres
+        <FilterIcon className="h-4 w-4 text-sky-500" /> Gestion des Filtres
       </button>
       <button className={dropItem} onClick={() => navigate(View.SPARE_PARTS)}>
-        <SparePartsIcon className="h-4 w-4" /> Pièces de Rechange
+        <SparePartsIcon className="h-4 w-4 text-lime-600" /> Pièces de Rechange
       </button>
       <button
         className={dropItem}
         onClick={() => navigate(View.OIL_MANAGEMENT)}
       >
-        <DropletIcon className="h-4 w-4" /> Gestion des Huiles
+        <DropletIcon className="h-4 w-4 text-amber-500" /> Gestion des Huiles
       </button>
     </>
   );
 
   const ThemeSwatch = ({ color }: { color: string }) => (
     <div
-      className="h-3 w-3 shrink-0 border-2 border-foreground"
+      className="h-3 w-3 shrink-0 rounded-full border border-foreground/40"
       style={{ backgroundColor: color }}
     />
   );
@@ -237,59 +232,67 @@ const Navbar: React.FC<NavbarProps> = ({
         onThemeChange(t.id);
         closeMenus();
       }}
-      className={`flex w-full items-center px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors hover:bg-muted ${
-        currentTheme === t.id ? "text-primary" : "text-foreground"
+      className={`flex w-full items-center rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors hover:bg-muted ${
+        currentTheme === t.id ? "text-foreground" : "text-foreground/80"
       }`}
     >
       {isSaved ? (
-        <ThemeBrushIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+        <ThemeBrushIcon className="mr-2.5 h-3.5 w-3.5 text-muted-foreground" />
       ) : (
         <ThemeSwatch color={t.colors.primary} />
       )}
       <span className="flex-1 text-left">{t.name}</span>
-      {currentTheme === t.id && <CheckIcon className="h-3.5 w-3.5" />}
+      {currentTheme === t.id && (
+        <CheckIcon className="h-3.5 w-3.5 text-emerald-600" />
+      )}
     </button>
   );
 
   return (
     <header
       ref={rootRef}
-      className="sticky top-0 z-40 w-full border-b-2 border-foreground bg-card"
+      className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-sm"
     >
-      <div className="flex h-16 items-center gap-2 px-4 sm:gap-3 sm:px-6">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
         {/* Brand */}
-        {/* Brand — the landing/home button */}
         <button
           onClick={() => navigate(View.LANDING)}
-          className="flex shrink-0 items-center gap-2 border-2 border-foreground bg-card p-1 transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none"
+          className="flex shrink-0 items-center gap-0.5 rounded-full p-1 transition-colors duration-150 hover:bg-muted"
           aria-label="Accueil"
         >
           {brandIconError ? (
-            <LogoIcon className="h-9 w-9 shrink-0" />
+            <LogoIcon className="h-10 w-10 shrink-0" />
           ) : (
             <img
               src="/icon.png"
               alt="HeavyCare"
-              className="h-9 w-9 object-contain"
+              className="h-10 w-10 object-contain"
               onError={() => setBrandIconError(true)}
             />
           )}
+          <span
+            className="h-2 w-2 shrink-0 rounded-full bg-orange-500"
+            aria-hidden="true"
+          />
         </button>
 
-        {/* Desktop sections — fixed, no scroll */}
-        <nav className="hidden items-center gap-2 py-4 md:flex">
+        {/* Desktop sections — pill group, centered like the reference */}
+        <nav className="hidden items-center gap-1 rounded-full border-2 border-foreground/90 bg-card p-1.5 md:flex">
           {/* Dashboard group */}
           <div className="relative">
             <button
-              className={menuOpenClass("dashboard", isViewActive(dashboardViews))}
+              className={groupClass("dashboard", isViewActive(dashboardViews))}
               onClick={() =>
                 setOpenMenu(openMenu === "dashboard" ? null : "dashboard")
               }
             >
-              <Squares2x2Icon className="h-4 w-4" /> Dashboard <Caret />
+              Dashboard
+              <Caret
+                className={openMenu === "dashboard" ? "rotate-180" : ""}
+              />
             </button>
             {openMenu === "dashboard" && (
-              <div className="absolute left-0 top-full z-50 mt-2 flex min-w-56 flex-col gap-1 border-2 border-foreground bg-card p-2 shadow-[5px_5px_0_0_hsl(var(--foreground))]">
+              <div className="absolute left-0 top-full z-50 mt-2 flex min-w-56 flex-col rounded-3xl border-2 border-foreground/90 bg-card p-2 shadow-[0_12px_32px_rgba(0,0,0,0.12)]">
                 <DashboardItems />
               </div>
             )}
@@ -299,8 +302,8 @@ const Navbar: React.FC<NavbarProps> = ({
           <button
             className={
               isViewActive([View.MACHINE_LIST, View.MACHINE_DETAIL])
-                ? chipActive
-                : chipIdle
+                ? pillActive
+                : pillIdle
             }
             onClick={() => navigate(View.MACHINE_LIST)}
           >
@@ -309,9 +312,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
           {/* Maintenance — direct */}
           <button
-            className={
-              isViewActive([View.MAINTENANCE]) ? chipActive : chipIdle
-            }
+            className={isViewActive([View.MAINTENANCE]) ? pillActive : pillIdle}
             onClick={() => navigate(View.MAINTENANCE)}
           >
             <WrenchIcon className="h-4 w-4" /> Maintenance
@@ -320,46 +321,49 @@ const Navbar: React.FC<NavbarProps> = ({
           {/* Inventory group */}
           <div className="relative">
             <button
-              className={menuOpenClass("inventory", isViewActive(inventoryViews))}
+              className={groupClass("inventory", isViewActive(inventoryViews))}
               onClick={() =>
                 setOpenMenu(openMenu === "inventory" ? null : "inventory")
               }
             >
-              <SparePartsIcon className="h-4 w-4" /> Inventory <Caret />
+              Inventory
+              <Caret
+                className={openMenu === "inventory" ? "rotate-180" : ""}
+              />
             </button>
             {openMenu === "inventory" && (
-              <div className="absolute left-0 top-full z-50 mt-2 flex min-w-56 flex-col gap-1 border-2 border-foreground bg-card p-2 shadow-[5px_5px_0_0_hsl(var(--foreground))]">
+              <div className="absolute left-0 top-full z-50 mt-2 flex min-w-56 flex-col rounded-3xl border-2 border-foreground/90 bg-card p-2 shadow-[0_12px_32px_rgba(0,0,0,0.12)]">
                 <InventoryItems />
               </div>
             )}
           </div>
         </nav>
 
-        {/* Global search (center) */}
-        <div className="hidden flex-1 justify-center px-2 md:flex">
-          <GlobalSearch
-            machines={machines}
-            filterGroups={filterGroups}
-            spareParts={spareParts}
-            onSelectMachine={onSelectMachine}
-            onNavigateToGroup={onNavigateToGroup}
-            onSetView={setCurrentView}
-          />
-        </div>
-
         {/* Right side actions */}
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          {/* Theme picker (desktop — mobile uses Paramètres) */}
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Global search (desktop) */}
+          <div className="hidden flex-1 justify-end px-2 md:flex md:w-64 lg:w-96">
+            <GlobalSearch
+              machines={machines}
+              filterGroups={filterGroups}
+              spareParts={spareParts}
+              onSelectMachine={onSelectMachine}
+              onNavigateToGroup={onNavigateToGroup}
+              onSetView={setCurrentView}
+            />
+          </div>
+
+          {/* Theme picker (desktop) */}
           <div className="relative hidden md:block">
             <button
-              className={iconBtn}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors duration-150 hover:bg-muted"
               title="Changer le thème"
               onClick={() =>
                 setOpenMenu(openMenu === "theme" ? null : "theme")
               }
             >
               <ThemeBrushIcon
-                className="h-4 w-4"
+                className="h-5 w-5"
                 style={{
                   color:
                     (themes.find((t) => t.id === currentTheme) ||
@@ -369,8 +373,8 @@ const Navbar: React.FC<NavbarProps> = ({
               />
             </button>
             {openMenu === "theme" && (
-              <div className="absolute right-0 top-full z-50 mt-2 flex w-60 flex-col border-2 border-foreground bg-card p-2 shadow-[5px_5px_0_0_hsl(var(--foreground))]">
-                <p className="border-b-2 border-foreground bg-muted px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <div className="absolute right-0 top-full z-50 mt-3 flex w-60 flex-col rounded-3xl border-2 border-foreground/90 bg-card p-2 shadow-[0_12px_32px_rgba(0,0,0,0.12)]">
+                <p className="px-3.5 pb-1.5 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                   Thèmes Prédéfinis
                 </p>
                 <div className="max-h-40 overflow-y-auto">
@@ -378,7 +382,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 {savedThemes.length > 0 && (
                   <>
-                    <p className="border-y-2 border-foreground bg-muted px-3 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <p className="px-3.5 pb-1.5 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                       Mes Thèmes
                     </p>
                     <div className="max-h-40 overflow-y-auto">
@@ -388,7 +392,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 )}
                 <button
                   onClick={() => navigate(View.SETTINGS)}
-                  className="mt-2 w-full border-2 border-foreground bg-card py-1.5 text-[10px] font-black uppercase tracking-widest text-foreground transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none"
+                  className="mt-1 w-full rounded-full px-3.5 py-2 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted"
                 >
                   Gérer les thèmes
                 </button>
@@ -406,7 +410,9 @@ const Navbar: React.FC<NavbarProps> = ({
               aria-label="Menu utilisateur"
             >
               <div
-                className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center overflow-hidden border-2 border-foreground bg-muted transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none`}
+                className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-foreground bg-muted transition-transform duration-150 hover:scale-105 ${
+                  currentView === View.USER_PROFILE ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : ""
+                }`}
               >
                 {!imageError ? (
                   <img
@@ -423,42 +429,47 @@ const Navbar: React.FC<NavbarProps> = ({
                 )}
               </div>
               {hasUnreadNotifications && (
-                <span className="absolute -right-1.5 -top-1.5 h-3 w-3 border-2 border-foreground bg-destructive" />
+                <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-background bg-orange-500" />
               )}
             </button>
 
             {openMenu === "profile" && (
-              <div className="absolute right-0 top-full z-50 mt-2 flex max-h-[80vh] w-72 flex-col border-2 border-foreground bg-card shadow-[5px_5px_0_0_hsl(var(--foreground))] sm:w-80 lg:absolute">
+              <div className="absolute right-0 top-full z-50 mt-3 flex max-h-[80vh] w-72 flex-col overflow-hidden rounded-3xl border-2 border-foreground/90 bg-card shadow-[0_12px_32px_rgba(0,0,0,0.12)] sm:w-80">
                 {profilePane === "menu" ? (
                   <>
-                    <div className="border-b-2 border-foreground bg-muted px-4 py-3">
-                      <p className="truncate text-sm font-black uppercase tracking-wide text-foreground">
-                        {userName}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {userEmail}
-                      </p>
+                    <div className="flex items-center gap-3 border-b border-foreground/10 px-4 py-3">
+                      <img
+                        src={avatarSrc}
+                        alt={userName}
+                        className="h-10 w-10 rounded-full object-cover"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-foreground">
+                          {userName}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {userEmail}
+                        </p>
+                      </div>
                     </div>
 
                     <div className="flex flex-col p-2">
-                      <button
-                        className={dropItem}
-                        onClick={() => {
-                          onOpenScanner();
-                          closeMenus();
-                        }}
-                      >
+                      <button className={dropItem} onClick={() => {
+                        onOpenScanner();
+                        closeMenus();
+                      }}>
                         <CameraIcon className="h-4 w-4 text-muted-foreground" />{" "}
                         Scanner QR
                       </button>
-                      <button
-                        className={dropItem}
-                        onClick={() => {
-                          onOpenAIAssistant();
-                          closeMenus();
-                        }}
-                      >
-                        <SparklesIcon className="h-4 w-4 text-primary" />{" "}
+                      <button className={dropItem} onClick={() => {
+                        onOpenAIAssistant();
+                        closeMenus();
+                      }}>
+                        <SparklesIcon className="h-4 w-4 text-emerald-600" />{" "}
                         Assistant HeavyCare
                       </button>
                       <button
@@ -468,7 +479,7 @@ const Navbar: React.FC<NavbarProps> = ({
                         <span className="relative">
                           <BellIcon className="h-4 w-4 text-muted-foreground" />
                           {hasUnreadNotifications && (
-                            <span className="absolute -right-1 -top-1 h-2 w-2 border border-foreground bg-destructive" />
+                            <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-orange-500" />
                           )}
                         </span>
                         Notifications
@@ -484,13 +495,11 @@ const Navbar: React.FC<NavbarProps> = ({
                         className={dropItem}
                         onClick={() => navigate(View.USER_PROFILE)}
                       >
-                        <span className="flex h-6 w-6 items-center justify-center border-2 border-foreground bg-primary text-primary-foreground">
-                          <UserIcon className="h-3.5 w-3.5" />
-                        </span>
+                        <UserIcon className="h-4 w-4 text-muted-foreground" />{" "}
                         Mon Profil
                       </button>
                       <button
-                        className="flex w-full items-center gap-2 border-2 border-transparent px-3 py-2 text-start text-[11px] font-bold uppercase tracking-wider text-destructive transition-colors duration-100 hover:border-foreground hover:bg-destructive/10"
+                        className="flex w-full items-center gap-2.5 rounded-full px-3.5 py-2.5 text-start text-[13px] font-semibold text-orange-600 transition-colors duration-100 hover:bg-orange-500/10"
                         onClick={() => {
                           onLogout();
                           closeMenus();
@@ -502,27 +511,27 @@ const Navbar: React.FC<NavbarProps> = ({
                   </>
                 ) : (
                   <div className="flex max-h-[80vh] flex-col">
-                    <div className="sticky top-0 z-10 flex items-center justify-between border-b-2 border-foreground bg-card p-3">
+                    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-foreground/10 bg-card p-3">
                       <button
                         onClick={() => setProfilePane("menu")}
-                        className="border-2 border-foreground bg-card px-2 py-1 text-[10px] font-black uppercase tracking-widest text-foreground transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none"
+                        className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
                       >
                         ← Retour
                       </button>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         Notifications
                       </p>
                       {hasUnreadNotifications && (
                         <button
                           onClick={onMarkAllNotificationsAsRead}
-                          className="flex h-7 w-7 items-center justify-center border-2 border-foreground bg-card text-primary transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-emerald-600 transition-colors hover:bg-emerald-500/10"
                           title="Tout marquer comme lu"
                         >
                           <CheckCircleIcon className="h-4 w-4" />
                         </button>
                       )}
                     </div>
-                    <div className="divide-y-2 divide-foreground/10 flex-1 overflow-y-auto">
+                    <div className="flex-1 divide-y divide-foreground/5 overflow-y-auto">
                       {notifications.length > 0 ? (
                         notifications
                           .slice()
@@ -539,15 +548,15 @@ const Navbar: React.FC<NavbarProps> = ({
                                 closeMenus();
                                 closeSidebar();
                               }}
-                              className={`flex w-full items-start gap-3 border-2 border-transparent p-3.5 text-left transition-colors hover:border-foreground hover:bg-muted ${
-                                !notification.read ? "bg-muted" : ""
+                              className={`flex w-full items-start gap-3 p-3.5 text-left transition-colors hover:bg-muted ${
+                                !notification.read ? "bg-muted/60" : ""
                               }`}
                             >
                               <div
-                                className={`flex-shrink-0 flex h-8 w-8 items-center justify-center border-2 border-foreground ${
+                                className={`flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full ${
                                   notification.type === "maintenance"
-                                    ? "bg-warning text-warning-foreground"
-                                    : "bg-destructive text-destructive-foreground"
+                                    ? "bg-amber-100 text-amber-600"
+                                    : "bg-rose-100 text-rose-600"
                                 }`}
                               >
                                 {notification.type === "maintenance" ? (
@@ -558,15 +567,15 @@ const Navbar: React.FC<NavbarProps> = ({
                               </div>
                               <div className="min-w-0 flex-1">
                                 <p
-                                  className={`text-xs leading-relaxed ${
+                                  className={`text-[13px] leading-relaxed ${
                                     !notification.read
-                                      ? "font-black text-foreground"
+                                      ? "font-semibold text-foreground"
                                       : "text-muted-foreground"
                                   }`}
                                 >
                                   {notification.message}
                                 </p>
-                                <p className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                <p className="mt-1 text-[11px] font-medium text-muted-foreground">
                                   {new Date(
                                     notification.createdAt,
                                   ).toLocaleDateString("fr-FR", {
@@ -583,7 +592,7 @@ const Navbar: React.FC<NavbarProps> = ({
                                 </p>
                               </div>
                               {!notification.read && (
-                                <div className="mt-1.5 h-2 w-2 shrink-0 border border-foreground bg-primary" />
+                                <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
                               )}
                             </button>
                           ))
@@ -605,32 +614,17 @@ const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile burger */}
           <button
             onClick={onToggleMenu}
-            onContextMenu={(e) => e.preventDefault()}
             aria-label="Menu"
-            className="relative flex h-9 w-9 items-center justify-center border-2 border-foreground bg-card transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_hsl(var(--foreground))] md:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-foreground bg-card text-foreground transition-transform duration-150 hover:scale-105 md:hidden"
           >
-            <span
-              className={`h-0.5 w-4 bg-foreground transition-transform duration-200 ${
-                isMobileOpen ? "rotate-45" : "-translate-y-[3px]"
-              }`}
-            />
-            <span
-              className={`absolute h-0.5 w-4 bg-foreground transition-opacity duration-200 ${
-                isMobileOpen ? "opacity-0" : "opacity-100"
-              }`}
-            />
-            <span
-              className={`h-0.5 w-4 bg-foreground transition-transform duration-200 ${
-                isMobileOpen ? "-rotate-45" : "translate-y-[3px]"
-              }`}
-            />
+            <MenuLines isOpen={isMobileOpen} />
           </button>
         </div>
       </div>
 
-      {/* Mobile menu panel — stacked, no scrolling */}
+      {/* Mobile menu panel */}
       {isMobileOpen && (
-        <nav className="flex max-h-[70vh] flex-col gap-3 overflow-y-auto border-t-2 border-foreground bg-card p-3 md:hidden">
+        <nav className="mx-3 mb-3 flex max-h-[70vh] flex-col gap-2 overflow-y-auto rounded-3xl border-2 border-foreground/90 bg-card p-3 shadow-[0_12px_32px_rgba(0,0,0,0.12)] md:hidden">
           <GlobalSearch
             machines={machines}
             filterGroups={filterGroups}
@@ -639,77 +633,73 @@ const Navbar: React.FC<NavbarProps> = ({
             onNavigateToGroup={onNavigateToGroup}
             onSetView={setCurrentView}
           />
-          <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-foreground/60">
-              Dashboard
-            </p>
-            <div className="flex flex-col gap-1">
-              <DashboardItems />
-            </div>
-          </div>
+          <p className="px-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Dashboard
+          </p>
+          <DashboardItems />
           <button
-            className={`${chipIdle} w-full justify-between`}
+            className={pillIdle + " justify-between"}
             onClick={() => navigate(View.MACHINE_LIST)}
           >
             <span className="flex items-center gap-2">
               <ExcavatorIcon className="h-4 w-4" /> Machines
             </span>
+            <ArrowDot color="bg-emerald-400" />
           </button>
           <button
-            className={`${chipIdle} w-full justify-between`}
+            className={pillIdle + " justify-between"}
             onClick={() => navigate(View.MAINTENANCE)}
           >
             <span className="flex items-center gap-2">
               <WrenchIcon className="h-4 w-4" /> Maintenance
             </span>
+            <ArrowDot color="bg-orange-400" />
           </button>
-          <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-foreground/60">
-              Inventory
-            </p>
-            <div className="flex flex-col gap-1">
-              <InventoryItems />
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <button
-              className={`${chipIdle}`}
-              onClick={onOpenScanner}
-            >
-              <CameraIcon className="h-4 w-4" /> Scanner QR
-            </button>
-            <button
-              className={`${chipIdle}`}
-              onClick={onOpenAIAssistant}
-            >
-              <SparklesIcon className="h-4 w-4" /> Assistant
-            </button>
-          </div>
-          <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-foreground/60">
-              Profil
-            </p>
-            <div className="flex flex-col gap-1">
-              <button
-                className={dropItem}
-                onClick={() => navigate(View.SETTINGS)}
-              >
-                <SettingsIcon className="h-4 w-4" /> Paramètres
-              </button>
-              <button
-                className={dropItem}
-                onClick={() => onLogout()}
-              >
-                <LogoutIcon className="h-4 w-4 text-destructive" />
-                <span className="text-destructive">Déconnexion</span>
-              </button>
-            </div>
-          </div>
+          <p className="px-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Inventory
+          </p>
+          <InventoryItems />
+          <p className="px-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Profil
+          </p>
+          <button className={dropItem} onClick={() => navigate(View.SETTINGS)}>
+            <SettingsIcon className="h-4 w-4 text-muted-foreground" />{" "}
+            Paramètres
+          </button>
+          <button
+            className="flex w-full items-center gap-2.5 rounded-full px-3.5 py-2.5 text-start text-[13px] font-semibold text-orange-600 transition-colors hover:bg-orange-500/10"
+            onClick={() => onLogout()}
+          >
+            <LogoutIcon className="h-4 w-4" /> Déconnexion
+          </button>
         </nav>
       )}
-
     </header>
   );
 };
+
+const ArrowDot = ({ color }: { color: string }) => (
+  <span className={`h-2 w-2 shrink-0 rounded-full ${color}`} />
+);
+
+const MenuLines = ({ isOpen }: { isOpen: boolean }) => (
+  <span className="relative flex h-4 w-4 flex-col items-center justify-center">
+    <span
+      className={`absolute h-0.5 w-5 rounded-full bg-foreground transition-transform duration-200 ${
+        isOpen ? "rotate-45" : "-translate-y-1.5"
+      }`}
+    />
+    <span
+      className={`absolute h-0.5 w-5 rounded-full bg-foreground transition-opacity duration-200 ${
+        isOpen ? "opacity-0" : "opacity-100"
+      }`}
+    />
+    <span
+      className={`absolute h-0.5 w-5 rounded-full bg-foreground transition-transform duration-200 ${
+        isOpen ? "-rotate-45" : "translate-y-1.5"
+      }`}
+    />
+  </span>
+);
 
 export default Navbar;
