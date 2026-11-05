@@ -76,9 +76,9 @@ const Caret = ({ className = "" }: { className?: string }) => (
 );
 
 /**
- * Friendly-brutalist single top header (soft pills, thin dark outline, pastels).
- * Brand • section navigation in a pill group (Dashboard ▾ / Machines /
- * Maintenance / Inventory ▾) • global search • theme picker • profile avatar.
+ * Neo-brutalist single top header — rounded corners, thin dark outline,
+ * hard black offset shadows, accents driven by the selected theme
+ * (--primary). Brand • grouped sections • search • theme • profile.
  */
 const Navbar: React.FC<NavbarProps> = ({
   currentView,
@@ -116,7 +116,6 @@ const Navbar: React.FC<NavbarProps> = ({
     setProfilePane("menu");
   }, []);
 
-  // Close dropdowns on outside click / Escape
   useEffect(() => {
     const onMouseDown = (e: MouseEvent) => {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
@@ -159,13 +158,19 @@ const Navbar: React.FC<NavbarProps> = ({
   const hasUnreadNotifications = notifications.some((n) => !n.read);
 
   // ---- shared styles -------------------------------------------------------
+  // Hard offset shadow used by panels (theme-aware foreground)
+  const hardShadow = "shadow-[5px_6px_0_0_hsl(var(--foreground))]";
+  const dropPanel = `rounded-2xl border-2 border-foreground bg-card ${hardShadow}`;
+
   const pillIdle =
     "flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-foreground transition-colors duration-150 hover:bg-muted";
-  const pillActive =
-    "flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold bg-foreground text-background";
+  const pillActive = `flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground border-2 border-foreground`;
 
   const dropItem =
-    "flex w-full items-center gap-2.5 rounded-full px-3.5 py-2.5 text-start text-[13px] font-semibold text-foreground transition-colors duration-100 hover:bg-muted";
+    "flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-start text-[13px] font-semibold text-foreground transition-colors duration-100 hover:bg-muted";
+
+  // Small hard-shadow icon button (avatar / theme / burger)
+  const iconTile = `rounded-full border-2 border-foreground bg-card shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-transform duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none`;
 
   // ---- data ----------------------------------------------------------------
   const dashboardViews = [View.DASHBOARD, View.ANALYTICS, View.MONTHLY_SUMMARY];
@@ -181,16 +186,25 @@ const Navbar: React.FC<NavbarProps> = ({
   const DashboardItems = () => (
     <>
       <button className={dropItem} onClick={() => navigate(View.DASHBOARD)}>
-        <Squares2x2Icon className="h-4 w-4 text-emerald-600" /> Tableau de bord
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100">
+          <Squares2x2Icon className="h-4 w-4 text-emerald-700" />
+        </span>{" "}
+        Tableau de bord
       </button>
       <button className={dropItem} onClick={() => navigate(View.ANALYTICS)}>
-        <ChartBarIcon className="h-4 w-4 text-purple-500" /> Analyses
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100">
+          <ChartBarIcon className="h-4 w-4 text-purple-600" />
+        </span>{" "}
+        Analyses
       </button>
       <button
         className={dropItem}
         onClick={() => navigate(View.MONTHLY_SUMMARY)}
       >
-        <ChartBarIcon className="h-4 w-4 text-sky-500" /> Synthese Mensuelle
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-100">
+          <ChartBarIcon className="h-4 w-4 text-sky-600" />
+        </span>{" "}
+        Synthese Mensuelle
       </button>
     </>
   );
@@ -201,23 +215,32 @@ const Navbar: React.FC<NavbarProps> = ({
         className={dropItem}
         onClick={() => navigate(View.FILTER_MANAGEMENT)}
       >
-        <FilterIcon className="h-4 w-4 text-sky-500" /> Gestion des Filtres
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-100">
+          <FilterIcon className="h-4 w-4 text-sky-600" />
+        </span>{" "}
+        Gestion des Filtres
       </button>
       <button className={dropItem} onClick={() => navigate(View.SPARE_PARTS)}>
-        <SparePartsIcon className="h-4 w-4 text-lime-600" /> Pièces de Rechange
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100">
+          <SparePartsIcon className="h-4 w-4 text-rose-600" />
+        </span>{" "}
+        Pièces de Rechange
       </button>
       <button
         className={dropItem}
         onClick={() => navigate(View.OIL_MANAGEMENT)}
       >
-        <DropletIcon className="h-4 w-4 text-amber-500" /> Gestion des Huiles
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
+          <DropletIcon className="h-4 w-4 text-amber-600" />
+        </span>{" "}
+        Gestion des Huiles
       </button>
     </>
   );
 
   const ThemeSwatch = ({ color }: { color: string }) => (
     <div
-      className="h-3 w-3 shrink-0 rounded-full border border-foreground/40"
+      className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-foreground"
       style={{ backgroundColor: color }}
     />
   );
@@ -232,7 +255,7 @@ const Navbar: React.FC<NavbarProps> = ({
         onThemeChange(t.id);
         closeMenus();
       }}
-      className={`flex w-full items-center rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors hover:bg-muted ${
+      className={`flex w-full items-center rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-colors hover:bg-muted ${
         currentTheme === t.id ? "text-foreground" : "text-foreground/80"
       }`}
     >
@@ -251,13 +274,13 @@ const Navbar: React.FC<NavbarProps> = ({
   return (
     <header
       ref={rootRef}
-      className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-sm"
+      className="sticky top-0 z-40 w-full bg-background"
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
         {/* Brand */}
         <button
           onClick={() => navigate(View.LANDING)}
-          className="flex shrink-0 items-center gap-0.5 rounded-full p-1 transition-colors duration-150 hover:bg-muted"
+          className="flex shrink-0 items-center gap-1 rounded-full p-1 transition-colors duration-150 hover:bg-muted"
           aria-label="Accueil"
         >
           {brandIconError ? (
@@ -271,13 +294,13 @@ const Navbar: React.FC<NavbarProps> = ({
             />
           )}
           <span
-            className="h-2 w-2 shrink-0 rounded-full bg-orange-500"
+            className="h-2 w-2 shrink-0 rounded-full bg-primary"
             aria-hidden="true"
           />
         </button>
 
-        {/* Desktop sections — pill group, centered like the reference */}
-        <nav className="hidden items-center gap-1 rounded-full border-2 border-foreground/90 bg-card p-1.5 md:flex">
+        {/* Desktop sections */}
+        <nav className="hidden items-center gap-1 md:flex">
           {/* Dashboard group */}
           <div className="relative">
             <button
@@ -287,12 +310,10 @@ const Navbar: React.FC<NavbarProps> = ({
               }
             >
               Dashboard
-              <Caret
-                className={openMenu === "dashboard" ? "rotate-180" : ""}
-              />
+              <Caret className={openMenu === "dashboard" ? "rotate-180" : ""} />
             </button>
             {openMenu === "dashboard" && (
-              <div className="absolute left-0 top-full z-50 mt-2 flex min-w-56 flex-col rounded-3xl border-2 border-foreground/90 bg-card p-2 shadow-[0_12px_32px_rgba(0,0,0,0.12)]">
+              <div className={`absolute left-0 top-full z-50 mt-3 flex min-w-60 flex-col p-2 ${dropPanel}`}>
                 <DashboardItems />
               </div>
             )}
@@ -327,12 +348,10 @@ const Navbar: React.FC<NavbarProps> = ({
               }
             >
               Inventory
-              <Caret
-                className={openMenu === "inventory" ? "rotate-180" : ""}
-              />
+              <Caret className={openMenu === "inventory" ? "rotate-180" : ""} />
             </button>
             {openMenu === "inventory" && (
-              <div className="absolute left-0 top-full z-50 mt-2 flex min-w-56 flex-col rounded-3xl border-2 border-foreground/90 bg-card p-2 shadow-[0_12px_32px_rgba(0,0,0,0.12)]">
+              <div className={`absolute left-0 top-full z-50 mt-3 flex min-w-60 flex-col p-2 ${dropPanel}`}>
                 <InventoryItems />
               </div>
             )}
@@ -340,9 +359,9 @@ const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Right side actions */}
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2.5">
           {/* Global search (desktop) */}
-          <div className="hidden flex-1 justify-end px-2 md:flex md:w-64 lg:w-96">
+          <div className="hidden flex-1 justify-end px-1 md:flex md:w-56 lg:w-80">
             <GlobalSearch
               machines={machines}
               filterGroups={filterGroups}
@@ -356,7 +375,7 @@ const Navbar: React.FC<NavbarProps> = ({
           {/* Theme picker (desktop) */}
           <div className="relative hidden md:block">
             <button
-              className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors duration-150 hover:bg-muted"
+              className={`${iconTile} flex h-10 w-10 items-center justify-center`}
               title="Changer le thème"
               onClick={() =>
                 setOpenMenu(openMenu === "theme" ? null : "theme")
@@ -373,8 +392,8 @@ const Navbar: React.FC<NavbarProps> = ({
               />
             </button>
             {openMenu === "theme" && (
-              <div className="absolute right-0 top-full z-50 mt-3 flex w-60 flex-col rounded-3xl border-2 border-foreground/90 bg-card p-2 shadow-[0_12px_32px_rgba(0,0,0,0.12)]">
-                <p className="px-3.5 pb-1.5 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <div className={`absolute right-0 top-full z-50 mt-3 flex w-60 flex-col p-2 ${dropPanel}`}>
+                <p className="px-2 pb-1.5 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                   Thèmes Prédéfinis
                 </p>
                 <div className="max-h-40 overflow-y-auto">
@@ -382,7 +401,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 {savedThemes.length > 0 && (
                   <>
-                    <p className="px-3.5 pb-1.5 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    <p className="px-2 pb-1.5 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                       Mes Thèmes
                     </p>
                     <div className="max-h-40 overflow-y-auto">
@@ -392,7 +411,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 )}
                 <button
                   onClick={() => navigate(View.SETTINGS)}
-                  className="mt-1 w-full rounded-full px-3.5 py-2 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted"
+                  className="mt-1 w-full rounded-xl px-3.5 py-2 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted"
                 >
                   Gérer les thèmes
                 </button>
@@ -409,11 +428,7 @@ const Navbar: React.FC<NavbarProps> = ({
               className="relative focus:outline-none"
               aria-label="Menu utilisateur"
             >
-              <div
-                className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-foreground bg-muted transition-transform duration-150 hover:scale-105 ${
-                  currentView === View.USER_PROFILE ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : ""
-                }`}
-              >
+              <div className={iconTile + " overflow-hidden flex h-10 w-10 items-center justify-center"}>
                 {!imageError ? (
                   <img
                     src={avatarSrc}
@@ -429,19 +444,19 @@ const Navbar: React.FC<NavbarProps> = ({
                 )}
               </div>
               {hasUnreadNotifications && (
-                <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-background bg-orange-500" />
+                <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-foreground bg-primary" />
               )}
             </button>
 
             {openMenu === "profile" && (
-              <div className="absolute right-0 top-full z-50 mt-3 flex max-h-[80vh] w-72 flex-col overflow-hidden rounded-3xl border-2 border-foreground/90 bg-card shadow-[0_12px_32px_rgba(0,0,0,0.12)] sm:w-80">
+              <div className={`absolute right-0 top-full z-50 mt-3 flex max-h-[80vh] w-72 flex-col overflow-hidden sm:w-80 ${dropPanel}`}>
                 {profilePane === "menu" ? (
                   <>
                     <div className="flex items-center gap-3 border-b border-foreground/10 px-4 py-3">
                       <img
                         src={avatarSrc}
                         alt={userName}
-                        className="h-10 w-10 rounded-full object-cover"
+                        className="h-10 w-10 rounded-full border-2 border-foreground object-cover"
                         referrerPolicy="no-referrer"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = "none";
@@ -462,24 +477,28 @@ const Navbar: React.FC<NavbarProps> = ({
                         onOpenScanner();
                         closeMenus();
                       }}>
-                        <CameraIcon className="h-4 w-4 text-muted-foreground" />{" "}
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted">
+                          <CameraIcon className="h-4 w-4 text-muted-foreground" />
+                        </span>{" "}
                         Scanner QR
                       </button>
                       <button className={dropItem} onClick={() => {
                         onOpenAIAssistant();
                         closeMenus();
                       }}>
-                        <SparklesIcon className="h-4 w-4 text-emerald-600" />{" "}
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100">
+                          <SparklesIcon className="h-4 w-4 text-emerald-600" />
+                        </span>{" "}
                         Assistant HeavyCare
                       </button>
                       <button
                         className={dropItem}
                         onClick={() => setProfilePane("notifications")}
                       >
-                        <span className="relative">
-                          <BellIcon className="h-4 w-4 text-muted-foreground" />
+                        <span className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
+                          <BellIcon className="h-4 w-4 text-amber-600" />
                           {hasUnreadNotifications && (
-                            <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-orange-500" />
+                            <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-foreground bg-primary" />
                           )}
                         </span>
                         Notifications
@@ -488,24 +507,31 @@ const Navbar: React.FC<NavbarProps> = ({
                         className={dropItem}
                         onClick={() => navigate(View.SETTINGS)}
                       >
-                        <SettingsIcon className="h-4 w-4 text-muted-foreground" />{" "}
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100">
+                          <SettingsIcon className="h-4 w-4 text-purple-600" />
+                        </span>{" "}
                         Paramètres
                       </button>
                       <button
                         className={dropItem}
                         onClick={() => navigate(View.USER_PROFILE)}
                       >
-                        <UserIcon className="h-4 w-4 text-muted-foreground" />{" "}
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                          <UserIcon className="h-4 w-4" />
+                        </span>{" "}
                         Mon Profil
                       </button>
                       <button
-                        className="flex w-full items-center gap-2.5 rounded-full px-3.5 py-2.5 text-start text-[13px] font-semibold text-orange-600 transition-colors duration-100 hover:bg-orange-500/10"
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-start text-[13px] font-semibold text-rose-600 transition-colors duration-100 hover:bg-rose-50"
                         onClick={() => {
                           onLogout();
                           closeMenus();
                         }}
                       >
-                        <LogoutIcon className="h-4 w-4" /> Déconnexion
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100">
+                          <LogoutIcon className="h-4 w-4" />
+                        </span>
+                        Déconnexion
                       </button>
                     </div>
                   </>
@@ -553,7 +579,7 @@ const Navbar: React.FC<NavbarProps> = ({
                               }`}
                             >
                               <div
-                                className={`flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full ${
+                                className={`flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-xl ${
                                   notification.type === "maintenance"
                                     ? "bg-amber-100 text-amber-600"
                                     : "bg-rose-100 text-rose-600"
@@ -592,7 +618,7 @@ const Navbar: React.FC<NavbarProps> = ({
                                 </p>
                               </div>
                               {!notification.read && (
-                                <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                                <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                               )}
                             </button>
                           ))
@@ -615,7 +641,7 @@ const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onToggleMenu}
             aria-label="Menu"
-            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-foreground bg-card text-foreground transition-transform duration-150 hover:scale-105 md:hidden"
+            className={iconTile + " flex h-10 w-10 items-center justify-center md:hidden"}
           >
             <MenuLines isOpen={isMobileOpen} />
           </button>
@@ -624,7 +650,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile menu panel */}
       {isMobileOpen && (
-        <nav className="mx-3 mb-3 flex max-h-[70vh] flex-col gap-2 overflow-y-auto rounded-3xl border-2 border-foreground/90 bg-card p-3 shadow-[0_12px_32px_rgba(0,0,0,0.12)] md:hidden">
+        <nav className={`mx-3 mb-3 flex max-h-[70vh] flex-col gap-1 overflow-y-auto p-3 ${dropPanel}`}>
           <GlobalSearch
             machines={machines}
             filterGroups={filterGroups}
@@ -633,41 +659,34 @@ const Navbar: React.FC<NavbarProps> = ({
             onNavigateToGroup={onNavigateToGroup}
             onSetView={setCurrentView}
           />
-          <p className="px-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Dashboard
           </p>
           <DashboardItems />
           <button
-            className={pillIdle + " justify-between"}
+            className={pillIdle}
             onClick={() => navigate(View.MACHINE_LIST)}
           >
-            <span className="flex items-center gap-2">
-              <ExcavatorIcon className="h-4 w-4" /> Machines
-            </span>
-            <ArrowDot color="bg-emerald-400" />
+            <ExcavatorIcon className="h-4 w-4 text-emerald-600" /> Machines
           </button>
           <button
-            className={pillIdle + " justify-between"}
+            className={pillIdle}
             onClick={() => navigate(View.MAINTENANCE)}
           >
-            <span className="flex items-center gap-2">
-              <WrenchIcon className="h-4 w-4" /> Maintenance
-            </span>
-            <ArrowDot color="bg-orange-400" />
+            <WrenchIcon className="h-4 w-4 text-orange-500" /> Maintenance
           </button>
-          <p className="px-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Inventory
           </p>
           <InventoryItems />
-          <p className="px-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Profil
           </p>
           <button className={dropItem} onClick={() => navigate(View.SETTINGS)}>
-            <SettingsIcon className="h-4 w-4 text-muted-foreground" />{" "}
-            Paramètres
+            <SettingsIcon className="h-4 w-4 text-purple-600" /> Paramètres
           </button>
           <button
-            className="flex w-full items-center gap-2.5 rounded-full px-3.5 py-2.5 text-start text-[13px] font-semibold text-orange-600 transition-colors hover:bg-orange-500/10"
+            className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-start text-[13px] font-semibold text-rose-600 transition-colors hover:bg-rose-50"
             onClick={() => onLogout()}
           >
             <LogoutIcon className="h-4 w-4" /> Déconnexion
@@ -677,10 +696,6 @@ const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
-
-const ArrowDot = ({ color }: { color: string }) => (
-  <span className={`h-2 w-2 shrink-0 rounded-full ${color}`} />
-);
 
 const MenuLines = ({ isOpen }: { isOpen: boolean }) => (
   <span className="relative flex h-4 w-4 flex-col items-center justify-center">
