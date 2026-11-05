@@ -648,17 +648,14 @@ export const useAppLogic = () => {
     registrationNumber?: string;
     serviceHours: number;
   }) => {
-    // Prevent duplicates: another machine (different id) with the same code,
-    // designation or serial number. Keeps the modal open so the user can fix it.
+    // Prevent duplicates: the code is the unique identifier of a machine.
+    // Block saving when another machine (different id) already uses this code;
+    // keep the modal open so the user can fix it.
     const norm = (v?: string | null) => (v ?? "").trim().toLowerCase();
     const duplicateMachine = machines.find(
       (m) =>
         m.id !== editingMachine?.id &&
-        (norm(m.code) === norm(machineData.code) ||
-          norm(m.designation) === norm(machineData.designation) ||
-          (!!machineData.serialNumber &&
-            !!m.serialNumber &&
-            norm(m.serialNumber) === norm(machineData.serialNumber)))
+        norm(m.code) === norm(machineData.code)
     );
     if (duplicateMachine) {
       addToast({

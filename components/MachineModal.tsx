@@ -86,15 +86,13 @@ const MachineModal: React.FC<MachineModalProps> = ({
     [machines, machine]
   );
 
-  // Derived duplicate errors (recomputed live as the user types)
+  // Derived duplicate error (recomputed live as the user types).
+  // Code is the unique identifier of a machine.
   const duplicateErrors = React.useMemo(() => {
-    const errs: { code?: string; designation?: string; serialNumber?: string } =
-      {};
+    const errs: { code?: string } = {};
     if (otherMachines.length === 0) return errs;
 
     const nCode = normalize(code);
-    const nDesignation = normalize(designation);
-    const nSerial = normalize(serialNumber);
 
     if (
       nCode &&
@@ -102,24 +100,8 @@ const MachineModal: React.FC<MachineModalProps> = ({
     ) {
       errs.code = "Un engin avec ce code existe déjà.";
     }
-    if (
-      nDesignation &&
-      otherMachines.some((m) => normalize(m.designation) === nDesignation)
-    ) {
-      errs.designation =
-        "Un engin avec cette désignation existe déjà.";
-    }
-    if (
-      nSerial &&
-      otherMachines.some(
-        (m) => m.serialNumber && normalize(m.serialNumber) === nSerial
-      )
-    ) {
-      errs.serialNumber =
-        "Un engin avec ce numéro de série existe déjà.";
-    }
     return errs;
-  }, [otherMachines, code, designation, serialNumber]);
+  }, [otherMachines, code]);
 
   useEffect(() => {
     if (machine) {
@@ -218,12 +200,8 @@ const MachineModal: React.FC<MachineModalProps> = ({
       return;
     }
 
-    // If any duplicate was detected, don't submit (errors are shown under the fields)
-    if (
-      duplicateErrors.code ||
-      duplicateErrors.designation ||
-      duplicateErrors.serialNumber
-    ) {
+    // If a duplicate code was detected, don't submit (error is shown under the field)
+    if (duplicateErrors.code) {
       return;
     }
 
@@ -269,7 +247,7 @@ const MachineModal: React.FC<MachineModalProps> = ({
               handleFieldChange("designation", e.target.value, setDesignation)
             }
             placeholder="ex: Pelle sur chenilles 320D"
-            error={designationError || duplicateErrors.designation}
+            error={designationError}
           />
         </div>
         <div className="space-y-2">
@@ -301,7 +279,6 @@ const MachineModal: React.FC<MachineModalProps> = ({
             value={serialNumber}
             onChange={(e) => setSerialNumber(e.target.value)}
             placeholder="ex: CAT0320DLHDN02345"
-            error={duplicateErrors.serialNumber}
           />
         </div>
         <div className="space-y-2">
