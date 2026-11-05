@@ -648,6 +648,24 @@ export const useAppLogic = () => {
     registrationNumber?: string;
     serviceHours: number;
   }) => {
+    // Prevent duplicates: the code is the unique identifier of a machine.
+    // Block saving when another machine (different id) already uses this code;
+    // keep the modal open so the user can fix it.
+    const norm = (v?: string | null) => (v ?? "").trim().toLowerCase();
+    const duplicateMachine = machines.find(
+      (m) =>
+        m.id !== editingMachine?.id &&
+        norm(m.code) === norm(machineData.code)
+    );
+    if (duplicateMachine) {
+      addToast({
+        type: "error",
+        title: "Engin déjà existant",
+        description: `Un engin similaire existe déjà : ${duplicateMachine.code} (${duplicateMachine.designation}).`,
+      });
+      return;
+    }
+
     // Prepare the machine data for insertion
     const machineToSave = editingMachine
       ? {

@@ -50,13 +50,18 @@ interface MachineModalProps {
     serviceHours: number;
   }) => void;
   machine: Machine | null;
+  machines: Machine[];
 }
+
+// Normalize a string for duplicate comparison (trim + case-insensitive)
+const normalize = (value?: string | null) => (value ?? "").trim().toLowerCase();
 
 const MachineModal: React.FC<MachineModalProps> = ({
   isOpen,
   onClose,
   onSave,
   machine,
+  machines = [],
 }) => {
   const [code, setCode] = useState("");
   const [designation, setDesignation] = useState("");
@@ -74,6 +79,29 @@ const MachineModal: React.FC<MachineModalProps> = ({
   const [serviceHoursError, setServiceHoursError] = useState<string | null>(
     null
   );
+
+  // Machines to check against (exclude the one being edited so updates pass validation)
+  const otherMachines = React.useMemo(
+    () => machines.filter((m) => m.id !== machine?.id),
+    [machines, machine]
+  );
+
+  // Derived duplicate error (recomputed live as the user types).
+  // Code is the unique identifier of a machine.
+  const duplicateErrors = React.useMemo(() => {
+    const errs: { code?: string } = {};
+    if (otherMachines.length === 0) return errs;
+
+    const nCode = normalize(code);
+
+    if (
+      nCode &&
+      otherMachines.some((m) => normalize(m.code) === nCode)
+    ) {
+      errs.code = "Un engin avec ce code existe déjà.";
+    }
+    return errs;
+  }, [otherMachines, code]);
 
   useEffect(() => {
     if (machine) {
@@ -172,6 +200,11 @@ const MachineModal: React.FC<MachineModalProps> = ({
       return;
     }
 
+    // If a duplicate code was detected, don't submit (error is shown under the field)
+    if (duplicateErrors.code) {
+      return;
+    }
+
     const hours = parseInt(serviceHours, 10);
     onSave({
       code,
@@ -202,7 +235,7 @@ const MachineModal: React.FC<MachineModalProps> = ({
             value={code}
             onChange={(e) => handleFieldChange("code", e.target.value, setCode)}
             placeholder="ex: CAT320D"
-            error={codeError}
+            error={codeError || duplicateErrors.code}
           />
         </div>
         <div className="space-y-2">

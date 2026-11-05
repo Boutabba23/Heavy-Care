@@ -377,6 +377,7 @@ const AppContent: React.FC = () => {
           onClose={actions.closeMachineModal}
           onSave={actions.saveMachine}
           machine={state.editingMachine}
+          machines={state.machines}
         />
       )}
       {state.isFilterGroupModalOpen && (
