@@ -30,6 +30,7 @@ import {
 } from "../constants";
 import { themes } from "../utils/themes";
 import GlobalSearch from "./GlobalSearch";
+import SyncStatusBox from "./SyncStatusBox";
 import { useEffect, useRef, useState } from "react";
 
 interface NavbarProps {
@@ -371,6 +372,9 @@ const Navbar: React.FC<NavbarProps> = ({
               onSetView={setCurrentView}
             />
           </div>
+
+          {/* Sync status (desktop only) */}
+          <SyncStatusBox />
 
           {/* Theme picker (desktop) */}
           <div className="relative hidden md:block">

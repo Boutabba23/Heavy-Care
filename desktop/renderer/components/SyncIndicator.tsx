@@ -109,7 +109,7 @@ const SyncIndicator: React.FC = () => {
     <div className='relative' ref={panelRef}>
       <button
         onClick={() => setIsOpen((p) => !p)}
-        className='hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:bg-muted transition-colors'
+        className='hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-full border-2 border-foreground bg-card text-xs font-bold text-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-transform duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none'
         title='État de la synchronisation'>
         <span
           className={`h-2 w-2 rounded-full ${dotColor} ${
@@ -120,14 +120,14 @@ const SyncIndicator: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className='absolute right-0 mt-2 w-72 rounded-xl shadow-xl bg-card border border-border overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200'>
-          <div className='px-4 py-3 border-b border-border bg-muted/50'>
-            <p className='text-[10px] font-bold uppercase tracking-wider text-muted-foreground'>
+        <div className='absolute right-0 mt-2 w-72 rounded-2xl border-2 border-foreground bg-card shadow-[5px_6px_0_0_hsl(var(--foreground))] overflow-hidden z-50 animate-fadeIn'>
+          <div className='px-4 py-3 border-b-2 border-foreground/10 bg-muted/50'>
+            <p className='text-[10px] font-black uppercase tracking-wider text-muted-foreground'>
               Synchronisation
             </p>
             <div className='flex items-center gap-2 mt-1.5'>
               <span className={`h-2 w-2 rounded-full ${dotColor}`} />
-              <p className='text-xs font-semibold text-foreground'>
+              <p className='text-xs font-bold text-foreground'>
                 {label}
               </p>
             </div>
@@ -135,16 +135,16 @@ const SyncIndicator: React.FC = () => {
 
           <div className='px-4 py-3 text-xs text-muted-foreground space-y-1.5'>
             <p>
-              <span className='font-medium text-foreground'>Stockage local:</span>{" "}
+              <span className='font-bold text-foreground'>Stockage local:</span>{" "}
               SQLite (fonctionne hors ligne)
             </p>
             <p>
-              <span className='font-medium text-foreground'>Modifications en attente:</span>{" "}
+              <span className='font-bold text-foreground'>Modifications en attente:</span>{" "}
               {status.pending}
             </p>
             {status.lastSync && (
               <p>
-                <span className='font-medium text-foreground'>Dernière sync:</span>{" "}
+                <span className='font-bold text-foreground'>Dernière sync:</span>{" "}
                 {new Date(status.lastSync).toLocaleString("fr-FR", {
                   day: "2-digit",
                   month: "2-digit",
@@ -156,11 +156,11 @@ const SyncIndicator: React.FC = () => {
             {!status.configured && (
               <p className='pt-1 leading-relaxed'>
                 Pour activer la synchronisation Supabase, créez{" "}
-                <code className='bg-muted px-1 rounded'>
+                <code className='rounded-md border border-foreground/20 bg-muted px-1'>
                   supabase-config.json
                 </code>{" "}
                 dans le dossier desktop (voir{" "}
-                <code className='bg-muted px-1 rounded'>
+                <code className='rounded-md border border-foreground/20 bg-muted px-1'>
                   supabase-config.example.json
                 </code>
                 ).
@@ -168,7 +168,7 @@ const SyncIndicator: React.FC = () => {
             )}
             {syncMessage && (
               <p
-                className={`pt-1 font-medium ${
+                className={`pt-1 font-bold ${
                   syncError ? "text-destructive" : "text-green-600"
                 }`}>
                 {syncMessage}
@@ -176,11 +176,11 @@ const SyncIndicator: React.FC = () => {
             )}
           </div>
 
-          <div className='p-2 border-t border-border'>
+          <div className='p-3 border-t-2 border-foreground/10'>
             <button
               onClick={handleSyncNow}
               disabled={isSyncing}
-              className='w-full flex items-center justify-center py-2 text-xs font-bold rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50'>
+              className='w-full flex items-center justify-center py-2 text-xs font-black rounded-xl border-2 border-foreground bg-primary text-primary-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-transform duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-0 active:translate-y-0 active:shadow-none disabled:opacity-50 disabled:pointer-events-none'>
               {isSyncing ? (
                 <>
                   <svg
