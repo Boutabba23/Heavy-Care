@@ -310,7 +310,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 setOpenMenu(openMenu === "dashboard" ? null : "dashboard")
               }
             >
-              Dashboard
+              Tableau de bord
               <Caret className={openMenu === "dashboard" ? "rotate-180" : ""} />
             </button>
             {openMenu === "dashboard" && (
@@ -348,7 +348,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 setOpenMenu(openMenu === "inventory" ? null : "inventory")
               }
             >
-              Inventory
+              Stock
               <Caret className={openMenu === "inventory" ? "rotate-180" : ""} />
             </button>
             {openMenu === "inventory" && (

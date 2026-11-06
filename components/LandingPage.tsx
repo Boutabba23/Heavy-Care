@@ -49,7 +49,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSetView, stats }) => {
   const sections = [
     {
       view: View.DASHBOARD,
-      title: "Dashboard",
+      title: "Tableau de bord",
       subtitle: "Synthèse complète : engins, maintenances et alertes.",
       icon: <Squares2x2Icon className="h-5 w-5 text-white" />,
       tile: "bg-emerald-500",
@@ -70,7 +70,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSetView, stats }) => {
     },
     {
       view: View.FILTER_MANAGEMENT,
-      title: "Inventory",
+      title: "Stock",
       subtitle: "Filtres, pièces de rechange et gestion des huiles.",
       icon: <SparePartsIcon className="h-5 w-5 text-white" />,
       tile: "bg-pink-500",
