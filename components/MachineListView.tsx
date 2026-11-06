@@ -207,7 +207,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
           return (
             <Card
               key={machine.id}
-              className="cursor-pointer transition-all duration-150 hover:-translate-y-1 hover:shadow-[8px_9px_0_0_hsl(var(--foreground))] flex flex-col min-h-[190px]"
+              className="cursor-pointer transition-all duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1.5 active:translate-y-1.5 active:shadow-none flex flex-col min-h-[190px]"
               onClick={() => onSelectMachine(machine.id)}
             >
               <CardHeader className="pb-4">
