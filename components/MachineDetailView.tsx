@@ -215,7 +215,7 @@ const MachineDetailView: React.FC<MachineDetailViewProps> = ({
 
   return (
     <div className="animate-fadeIn">
-      <div className="flex items-center mb-6">
+      <div className="sticky top-24 z-30 mb-6 flex items-center">
         <Button variant="outline" onClick={onBack} className="mr-4">
           <BackIcon className="mr-2 h-4 w-4" />
           Retour
