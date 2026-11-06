@@ -80,13 +80,15 @@ const SyncIndicator: React.FC = () => {
           );
         } else {
           setSyncMessage(
-            "Échec de la synchronisation (voir le terminal)"
+            "Échec de la synchronisation (Veuillez connecter à internet)"
           );
         }
       }
     } catch {
       setSyncError(true);
-      setSyncMessage("Échec de la synchronisation");
+      setSyncMessage(
+        "Échec de la synchronisation (Veuillez connecter à internet)"
+      );
     } finally {
       setIsSyncing(false);
       refresh();
