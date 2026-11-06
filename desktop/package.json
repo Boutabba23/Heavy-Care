@@ -69,7 +69,8 @@
     "publish": {
       "provider": "github",
       "owner": "Boutabba23",
-      "repo": "Heavy-Care"
+      "repo": "Heavy-Care",
+      "releaseType": "release"
     }
   }
 }
