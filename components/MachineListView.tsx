@@ -293,7 +293,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
                   </div>
                   <div className="pt-3 border-t-2 border-dashed border-foreground/20">
                     <span
-                      className="inline-block text-xs font-bold px-2.5 py-1 rounded-full border-2 border-foreground bg-secondary text-secondary-foreground"
+                      className="inline-block text-xs font-bold px-2.5 py-1 rounded-full border-2 border-foreground bg-primary text-primary-foreground"
                     >
                       Code: {machine.code}
                     </span>
