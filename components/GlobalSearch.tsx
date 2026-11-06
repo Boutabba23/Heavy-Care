@@ -148,22 +148,30 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
         if (results.length === 0 || query.length < 2) return null;
 
         return (
-            <div className="bg-card border border-border rounded-lg shadow-xl overflow-hidden w-full">
+            <div className="rounded-2xl border-2 border-foreground bg-card shadow-[5px_6px_0_0_hsl(var(--foreground))] overflow-hidden w-full">
                 <div className="max-h-[60vh] md:max-h-[300px] overflow-y-auto">
                     {results.map((result) => (
                         <button
                             key={`${result.type}-${result.id}`}
                             onClick={() => handleResultClick(result)}
-                            className="w-full flex items-center gap-3 p-4 md:p-3 hover:bg-muted text-left transition-colors border-b border-border/50 last:border-0"
+                            className="w-full flex items-center gap-3 p-4 md:p-3 hover:bg-muted text-left transition-colors border-b-2 border-foreground/10 last:border-0"
                         >
-                            <div className="flex-shrink-0 h-10 w-10 md:h-8 md:w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <span
+                                className={`flex-shrink-0 flex h-10 w-10 md:h-8 md:w-8 items-center justify-center rounded-xl border-2 border-foreground ${
+                                    result.type === "machine"
+                                        ? "bg-sky-200 text-sky-700"
+                                        : result.type === "filter"
+                                        ? "bg-rose-200 text-rose-600"
+                                        : "bg-amber-200 text-amber-700"
+                                }`}
+                            >
                                 {result.type === "machine" && <TruckIcon className="h-5 w-5 md:h-4 md:w-4" />}
                                 {result.type === "filter" && <FilterIcon className="h-5 w-5 md:h-4 md:w-4" />}
                                 {result.type === "spare_part" && <WrenchIcon className="h-5 w-5 md:h-4 md:w-4" />}
-                            </div>
+                            </span>
                             <div>
-                                <p className="font-medium text-foreground text-sm md:text-base">{result.title}</p>
-                                <p className="text-xs text-muted-foreground">{result.subtitle}</p>
+                                <p className="font-bold text-foreground text-sm md:text-base">{result.title}</p>
+                                <p className="text-xs font-medium text-muted-foreground">{result.subtitle}</p>
                             </div>
                         </button>
                     ))}
@@ -175,7 +183,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     const renderNoResults = () => {
         if (query.length >= 2 && results.length === 0) {
             return (
-                <div className="p-4 bg-card border border-border rounded-lg shadow-xl text-center w-full mt-2">
+                <div className="p-4 rounded-2xl border-2 border-foreground bg-card shadow-[5px_6px_0_0_hsl(var(--foreground))] text-center w-full mt-2">
                     <p className="text-sm text-muted-foreground">Aucun résultat pour "{query}"</p>
                 </div>
             );
@@ -207,7 +215,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                         setIsOpen(true);
                     }}
                     onFocus={() => setIsOpen(true)}
-                    className="pl-10 h-9 bg-background/50 border-border/50 focus:bg-card w-full"
+                    className="pl-10 h-9 w-full rounded-full bg-card"
                 />
 
                 {isOpen && (
@@ -230,7 +238,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                                 placeholder="Rechercher..."
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                className="pl-11 pr-10 h-12 text-lg bg-card shadow-lg w-full rounded-full border-primary/20"
+                                className="pl-11 pr-10 h-12 text-lg bg-card w-full rounded-full"
                             />
                             <button
                                 onClick={() => setIsMobileSearchOpen(false)}

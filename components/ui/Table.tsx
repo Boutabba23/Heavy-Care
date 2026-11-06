@@ -54,7 +54,7 @@ const TableHead: React.FC<React.ThHTMLAttributes<HTMLTableCellElement>> = ({
   ...props
 }) => (
   <th
-    className={`h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 ${
+    className={`h-10 px-4 text-left align-middle text-xs font-black uppercase tracking-wider text-muted-foreground [&:has([role=checkbox])]:pr-0 ${
       className || ""
     }`}
     {...props}

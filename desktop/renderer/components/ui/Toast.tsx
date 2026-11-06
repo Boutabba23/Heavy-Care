@@ -47,8 +47,7 @@ const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
 
   return (
     <div
-      className={`
-        flex items-start w-full max-w-sm p-4 space-x-4 rounded-xl shadow-lg bg-card border border-border
+      className={`flex items-start w-full max-w-sm p-4 space-x-4 rounded-2xl bg-card text-card-foreground border-2 border-foreground shadow-[5px_6px_0_0_hsl(var(--foreground))]
         transition-all duration-300 ease-in-out
         ${
           isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
@@ -57,7 +56,7 @@ const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       role="alert"
       aria-live="assertive"
     >
-      <div className="flex-shrink-0">{icons[toast.type]}</div>
+      <div className="mt-1 flex-shrink-0">{icons[toast.type]}</div>
       <div className="flex-1">
         <p className="text-sm font-semibold text-card-foreground">
           {toast.title}

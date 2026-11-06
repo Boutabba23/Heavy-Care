@@ -23,14 +23,20 @@ const ValidatedInput = React.forwardRef<HTMLInputElement, ValidatedInputProps>(
       <div className="space-y-1">
         <input
           ref={ref}
-          className={`flex h-10 w-full rounded-lg border ${
-            error ? "border-destructive" : "border-input"
-          } bg-secondary px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={`flex h-10 w-full rounded-xl border-2 ${
+            error
+              ? "border-destructive"
+              : "border-foreground/90 focus:border-primary"
+          } bg-card px-3 py-2 text-sm font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
             className || ""
           }`}
           {...props}
         />
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && (
+          <p className="text-[13px] font-semibold text-destructive">
+            ⚠ {error}
+          </p>
+        )}
       </div>
     );
   }

@@ -254,7 +254,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
           return (
             <Card
               key={machine.id}
-              className={`cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] flex flex-col min-h-[190px] ${cardClassName}`}
+              className={`cursor-pointer transition-all duration-150 hover:-translate-y-1 hover:shadow-[8px_9px_0_0_hsl(var(--foreground))] flex flex-col min-h-[190px] ${cardClassName}`}
               style={cardStyle}
               onClick={() => onSelectMachine(machine.id)}
             >
@@ -283,7 +283,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
                       <EllipsisVerticalIcon />
                     </Button>
                     {openMenuId === machine.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-md shadow-lg z-50 animate-fadeIn">
+                      <div className="absolute right-0 mt-2 w-48 bg-card border-2 border-foreground rounded-xl shadow-[4px_4px_0_0_hsl(var(--foreground))] z-50 animate-fadeIn">
                         <ul className="py-1">
                           <li>
                             <button
@@ -339,9 +339,9 @@ const MachineListView: React.FC<MachineListViewProps> = ({
                       {machine.serviceHours.toLocaleString()} hs
                     </span>
                   </div>
-                  <div className="pt-3 border-t border-dashed border-border">
+                  <div className="pt-3 border-t-2 border-dashed border-foreground/20">
                     <span
-                      className={`text-xs font-semibold px-2 py-1 rounded-md ${color.bg} ${color.text}`}
+                      className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full border-2 border-foreground ${color.bg} ${color.text}`}
                     >
                       Code: {machine.code}
                     </span>
@@ -357,8 +357,8 @@ const MachineListView: React.FC<MachineListViewProps> = ({
 
   return (
     <div>
-      <Card className="mb-6 rounded-xl">
-        <CardHeader className="rounded-xl">
+      <Card className="mb-6">
+        <CardHeader>
           <div className="flex flex-col min-[1160px]:flex-row justify-between min-[1160px]:items-center gap-4">
             <div>
               <CardTitle className="text-2xl">Votre Parc de Matériel</CardTitle>
@@ -440,17 +440,17 @@ const MachineListView: React.FC<MachineListViewProps> = ({
             {(searchQuery || selectedMarque || selectedType) && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {searchQuery && (
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                  <span className="inline-flex items-center rounded-full border-2 border-foreground bg-card px-3 py-1 text-xs font-bold text-primary">
                     Recherche: "{searchQuery}"
                   </span>
                 )}
                 {selectedMarque && (
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                  <span className="inline-flex items-center rounded-full border-2 border-foreground bg-card px-3 py-1 text-xs font-bold text-primary">
                     Marque: {selectedMarque}
                   </span>
                 )}
                 {selectedType && (
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                  <span className="inline-flex items-center rounded-full border-2 border-foreground bg-card px-3 py-1 text-xs font-bold text-primary">
                     Type: {selectedType}
                   </span>
                 )}

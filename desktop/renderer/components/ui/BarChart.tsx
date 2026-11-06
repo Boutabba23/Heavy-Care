@@ -84,9 +84,9 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
             className="flex-1 flex flex-col items-center justify-end group"
             style={{ minWidth: "20px", maxWidth: "60px" }}
           >
-            <div className="relative w-full bg-primary/20 rounded-t-lg transition-all duration-300 group-hover:bg-primary/40 flex flex-col justify-end h-full">
+            <div className="relative w-full bg-primary/20 rounded-t-md border-2 border-foreground/15 transition-all duration-300 group-hover:bg-primary/30 flex flex-col justify-end h-full">
               <div
-                className="w-full bg-primary rounded-t-lg origin-bottom animate-slideInUp"
+                className="w-full bg-primary rounded-t-md border-2 border-foreground origin-bottom animate-slideInUp"
                 style={{
                   height: `${barHeight}%`,
                   animationDelay,
@@ -94,7 +94,7 @@ const BarChart: React.FC<BarChartProps> = ({ data }) => {
                 }}
                 title={`${item.label}: ${item.value}`}
               ></div>
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs font-bold bg-card px-2 py-1 rounded-lg shadow-lg border">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs font-bold bg-card px-2 py-1 rounded-lg border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))]">
                 {item.value}
               </div>
             </div>
