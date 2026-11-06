@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View } from "../types";
 import {
   LogoIcon,
@@ -26,6 +26,19 @@ interface LandingPageProps {
  * theme picked with the theme button: hsl(var(--primary)).
  */
 const LandingPage: React.FC<LandingPageProps> = ({ onSetView, stats }) => {
+  // Looping card deck on the right — cycles forever, pauses on hover.
+  const [deckOrder, setDeckOrder] = useState(0);
+  const deckPausedRef = useRef(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!deckPausedRef.current) {
+        setDeckOrder((o) => (o + 1) % 3);
+      }
+    }, 2800);
+    return () => clearInterval(id);
+  }, []);
+
   const quickLinks = [
     { view: View.MACHINE_LIST, label: "Gestion du matériel", dot: "bg-emerald-400" },
     { view: View.MAINTENANCE, label: "Maintenance préventive", dot: "bg-orange-400" },
@@ -61,6 +74,68 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSetView, stats }) => {
       subtitle: "Filtres, pièces de rechange et gestion des huiles.",
       icon: <SparePartsIcon className="h-5 w-5 text-white" />,
       tile: "bg-pink-500",
+    },
+  ];
+
+  // Data shown by the three looping cards (fed from real app stats)
+  const deckCards = [
+    {
+      key: "maint",
+      tag: "Maintenances",
+      unit: "interventions",
+      title: "Suivi préventif",
+      value: stats?.maintenanceRecords ?? "—",
+      view: View.MAINTENANCE,
+      bg: "bg-rose-200",
+      pill: "bg-rose-500",
+      icon: <WrenchIcon className="h-3.5 w-3.5 text-white" />,
+      tile: "bg-rose-500",
+      chips: ["6 derniers mois", "Planifiées"],
+    },
+    {
+      key: "parts",
+      tag: "Pièces en stock",
+      unit: "pièces",
+      title: "Inventaire pièces",
+      value: stats?.spareParts ?? "—",
+      view: View.SPARE_PARTS,
+      bg: "bg-sky-200",
+      pill: "bg-sky-500",
+      icon: <SparePartsIcon className="h-3.5 w-3.5 text-white" />,
+      tile: "bg-sky-500",
+      chips: ["Pièces & Huiles", "SQLite local"],
+    },
+    {
+      key: "parc",
+      tag: "Parc actif",
+      unit: "engins",
+      title: "Gestion du matériel",
+      value: stats?.machines ?? "—",
+      view: View.MACHINE_LIST,
+      bg: "bg-amber-200",
+      pill: "bg-primary",
+      icon: <ExcavatorIcon className="h-3.5 w-3.5 text-primary-foreground" />,
+      tile: "bg-primary",
+      chips: [`${stats?.filterGroups ?? "—"} filtres`, "Temps réel", "Supabase"],
+    },
+  ];
+
+  // Three stack slots the cards glide between
+  const deckSlots = [
+    {
+      pos: "top-0 right-6 z-10 w-3/4",
+      tilt: "rotate-2",
+      dim: "opacity-70 scale-95",
+    },
+    {
+      pos: "top-20 right-0 z-20 w-[88%]",
+      tilt: "-rotate-1",
+      dim: "opacity-90",
+    },
+    {
+      pos: "top-44 -translate-x-1/2 left-1/2 z-30 w-[92%] sm:w-[88%]",
+      tilt: "rotate-0",
+      dim: "opacity-100",
     },
   ];
 
@@ -152,105 +227,82 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSetView, stats }) => {
           </div>
         </div>
 
-        {/* ---- Right : stacked decorative cards (Deco style) ---- */}
-        <div className="relative mx-auto w-full max-w-md pb-8 pt-4 lg:mx-0 lg:max-w-lg">
-          {/* Back card */}
-          <div className="absolute right-0 top-0 hidden w-4/5 rounded-2xl border-2 border-foreground bg-rose-200 p-5 shadow-[5px_5px_0_0_hsl(var(--foreground))] sm:block">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 rounded-xl bg-rose-500 px-3 py-1.5 text-[13px] font-bold text-white">
-                <WrenchIcon className="h-3.5 w-3.5" /> Maintenances
-              </span>
-              <span className="text-2xl font-black text-foreground">
-                {stats?.maintenanceRecords ?? "—"}
-              </span>
-            </div>
-          </div>
-          {/* Middle card */}
-          <div className="absolute right-3 top-16 hidden w-[86%] rounded-2xl border-2 border-foreground bg-sky-200 p-5 shadow-[5px_5px_0_0_hsl(var(--foreground))] sm:block">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 rounded-xl bg-sky-500 px-3 py-1.5 text-[13px] font-bold text-white">
-                <SparePartsIcon className="h-3.5 w-3.5" /> Pièces en stock
-              </span>
-              <span className="text-2xl font-black text-foreground">
-                {stats?.spareParts ?? "—"}
-              </span>
-            </div>
-          </div>
+        {/* ---- Right : looping 3-card deck (Deco style) ---- */}
+        <div
+          className="relative mx-auto h-[400px] w-full max-w-md pb-8 pt-4 lg:mx-0 lg:max-w-lg"
+          onMouseEnter={() => (deckPausedRef.current = true)}
+          onMouseLeave={() => (deckPausedRef.current = false)}
+        >
+          {deckCards.map((card, i) => {
+            const slot = (i + deckOrder) % 3;
+            const s = deckSlots[slot];
+            const isFront = slot === 2;
+            return (
+              <div
+                key={card.key}
+                onClick={() => onSetView(card.view)}
+                className={`absolute cursor-pointer rounded-2xl border-2 border-foreground p-5 shadow-[6px_7px_0_0_hsl(var(--foreground))] transition-all duration-700 ease-in-out sm:p-6 ${
+                  s.pos
+                } ${s.tilt} ${s.dim} ${isFront ? "bg-card" : card.bg}`}
+              >
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`flex items-center gap-2 rounded-full border-2 border-foreground px-3 py-1.5 text-[13px] font-bold text-white ${card.pill}`}
+                  >
+                    {card.icon}
+                    {card.tag}
+                  </span>
+                  <span
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg border-2 border-foreground text-white shadow-[2px_2px_0_0_hsl(var(--foreground))] ${card.tile}`}
+                  >
+                    {card.icon}
+                  </span>
+                </div>
+                <div className="mt-4 flex items-baseline gap-2">
+                  <span
+                    className={`text-5xl font-black tracking-tight ${
+                      isFront ? "text-primary" : "text-foreground"
+                    }`}
+                  >
+                    {card.value}
+                  </span>
+                  <span className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {card.unit}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm font-black text-foreground">
+                  {card.title}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {card.chips.map((chip) => (
+                    <span
+                      key={chip}
+                      className="rounded-lg border-2 border-foreground/15 bg-muted/70 px-2.5 py-1 text-[11px] font-bold text-foreground/80"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
 
-          {/* Front card — big theme-coloured number */}
-          <div className="relative mt-36 rounded-2xl border-2 border-foreground bg-card p-6 shadow-[8px_8px_0_0_hsl(var(--foreground))] sm:mt-24">
-            <div className="flex items-start justify-between">
-              <span className="flex items-center gap-2 rounded-full bg-primary px-3.5 py-1.5 text-[13px] font-bold text-primary-foreground">
-                ♥ Parc actif
-              </span>
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/90 text-lg font-black text-primary-foreground">
-                HC
-              </span>
-            </div>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-6xl font-black tracking-tight text-primary">
-                {stats?.machines ?? "—"}
-              </span>
-              <span className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
-                engins
-              </span>
-            </div>
-            <p className="mt-2 text-lg font-black text-foreground">
-              Gestion du matériel
-            </p>
-            <p className="text-[13px] font-medium text-muted-foreground">
-              Hors-ligne · Synchronisé Supabase
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-lg bg-muted px-3 py-1.5 text-xs font-semibold text-foreground/80">
-                {stats?.filterGroups ?? "—"} filtres
-              </span>
-              <span className="rounded-lg bg-muted px-3 py-1.5 text-xs font-semibold text-foreground/80">
-                Temps réel
-              </span>
-              <span className="rounded-lg bg-muted px-3 py-1.5 text-xs font-semibold text-foreground/80">
-                SQLite local
-              </span>
-            </div>
-            {/* Progress bar — theme accent */}
-            <div className="mt-5 h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div className="h-full w-3/4 rounded-full bg-primary" />
-            </div>
-            {/* Action row */}
-            <div className="mt-5 flex items-center gap-3">
-              <button
-                onClick={() => onSetView(View.MACHINE_LIST)}
-                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] ring-2 ring-foreground transition-transform duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[1px_1px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none"
-              >
-                Parcourir
-              </button>
-              <button
-                onClick={() => onSetView(View.MAINTENANCE)}
-                title="Maintenance"
-                className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground transition-colors duration-150 hover:bg-muted"
-              >
-                <WrenchIcon className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => onSetView(View.OIL_MANAGEMENT)}
-                title="Huiles"
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-400 text-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] ring-2 ring-foreground transition-transform duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[1px_1px_0_0_hsl(var(--foreground))] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
-              >
-                ★
-              </button>
-            </div>
-          </div>
-
-          {/* Floating badge */}
-          <div className="absolute -right-2 top-44 hidden h-24 w-24 items-center justify-center rounded-full border-2 border-foreground bg-secondary text-center shadow-[4px_4px_0_0_hsl(var(--foreground))] sm:flex lg:right-0">
-            <div>
-              <p className="text-xl font-black text-secondary-foreground">
-                {stats?.machines ?? "—"}
-              </p>
-              <p className="text-[11px] font-bold text-muted-foreground">
-                engins suivis
-              </p>
-            </div>
+          {/* Deck progress dots (clickable + hover to jump) */}
+          <div className="absolute -bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-2">
+            {deckCards.map((card, i) => {
+              const isFront = (i + deckOrder) % 3 === 2;
+              return (
+                <button
+                  key={card.key}
+                  onClick={() => setDeckOrder((i - 2 + 3) % 3)}
+                  onMouseEnter={() => setDeckOrder((i - 2 + 3) % 3)}
+                  title={`Aller à ${card.tag}`}
+                  className={`h-2.5 rounded-full border-2 border-foreground transition-all duration-300 ${
+                    isFront ? "w-8 bg-primary" : "w-2.5 bg-card hover:bg-muted"
+                  }`}
+                />
+              );
+            })}
           </div>
         </div>
       </div>
