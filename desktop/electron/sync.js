@@ -1,7 +1,12 @@
 // Sync engine: pushes local changes (journaled in _sync_queue) to Supabase and
 // pulls remote changes, merging last-write-wins by updated_at.
 //
-// Configure by dropping a supabase-config.json next to desktop/package.json:
+// Zero-config for regular users: the Supabase url + anon key (public values,
+// identical to the web app's NEXT_PUBLIC_SUPABASE_* env) are baked in below.
+// Users simply sign in (Google or email/password) in the app UI and sync is
+// authenticated with THEIR OWN session — no supabase-config.json required.
+// The file still works as a per-install override, e.g. to point at another
+// Supabase project (search order: userData dir, then the desktop source dir).
 //   { "url": "https://xxxxx.supabase.co", "anonKey": "ey..." }
 const fs = require("fs");
 const path = require("path");
@@ -12,6 +17,15 @@ let lastSyncPath = null;
 let timer = null;
 let syncing = false;
 let syncAppliedCb = null; // notified when pulled changes hit the local DB
+
+// Built-in default — same public Supabase project as the web app.
+// NEVER put a shared email/password here: every user syncs with their own
+// authenticated session instead.
+const BUILTIN_CONFIG = {
+  url: "https://yklkxvvoeovksyslcfjy.supabase.co",
+  anonKey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrbGt4dnZvZW92a3N5c2xjZmp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAyMjcsImV4cCI6MjA2OTQ5NjIyN30.j7Whr8rPAtSwNbSyZ2iTTFEQAGsDI51022l4ZfsIlmo",
+};
 
 function setSyncAppliedCallback(fn) {
   syncAppliedCb = fn;
@@ -65,7 +79,15 @@ function loadConfig(desktopDir, userDataDir) {
     };
     return;
   }
-  config = null;
+  // Zero-config default for regular users: baked-in public project.
+  // Sync stays anonymous until the user signs in in the UI, then it runs
+  // authenticated with their own session (token provider in auth.js).
+  config = {
+    url: BUILTIN_CONFIG.url,
+    anonKey: BUILTIN_CONFIG.anonKey,
+    email: process.env.SUPABASE_SYNC_EMAIL || undefined,
+    password: process.env.SUPABASE_SYNC_PASSWORD || undefined,
+  };
 }
 
 function getLastSync() {
