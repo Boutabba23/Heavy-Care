@@ -1,0 +1,41 @@
+# Build the Linux desktop installers (AppImage + .deb) in the cloud.
+# Windows can't run the Linux packaging toolchains (mksquashfs / fpm),
+# so this is the release path for Linux assets.
+# Run manually: Actions tab -> "Build Linux desktop" -> Run workflow.
+name: Build Linux desktop
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install renderer deps
+        working-directory: desktop/renderer
+        run: npm install
+
+      - name: Build renderer
+        working-directory: desktop/renderer
+        run: npm run build
+
+      - name: Install desktop deps
+        working-directory: desktop
+        run: npm install
+
+      - name: Build & publish Linux packages
+        working-directory: desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --linux --publish always
