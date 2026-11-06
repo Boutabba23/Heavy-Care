@@ -166,7 +166,7 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
                 <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="px-3 py-2 rounded-xl border-2 border-foreground/90 bg-card font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    className="px-3 rounded-xl border-2 border-foreground/90 bg-card font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 >
                     <option value="all">Toutes les catégories</option>
                     {categories.map((cat) => (
