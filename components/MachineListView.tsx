@@ -202,7 +202,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
     }
 
     return (
-      <div className="grid gap-6 sm:grid-cols-1 max-[1000px]:grid-cols-1 min-[1000px]:grid-cols-2 min-[1280px]:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-1 max-[1000px]:grid-cols-1 min-[1000px]:grid-cols-2 min-[1280px]:grid-cols-4">
         {filteredMachines.map((machine) => {
           return (
             <Card
