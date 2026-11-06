@@ -503,7 +503,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 							/>
 						</div>
 
-						<div className='flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto lg:max-h-[400px] pb-2 lg:pb-0 scrollbar-hide'>
+						<div className='flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto lg:max-h-[400px] pb-6 lg:pb-0 lg:pr-3 scrollbar-hide'>
 							{filteredMachines.map((m) => {
 								const stat = monthlyStats.find((s) => s.machineId === m.id);
 								const isSelected = selectedMachineId === m.id;
