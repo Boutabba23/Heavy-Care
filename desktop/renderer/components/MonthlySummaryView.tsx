@@ -485,7 +485,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 					<div className='bg-card rounded-2xl shadow-[5px_6px_0_0_hsl(var(--foreground))] p-4 sm:p-6 border-2 border-foreground'>
 						<div className='flex justify-between items-center mb-4'>
 							<h3 className='text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider'>
-								FLOTTE ({filteredMachines.length})
+								MACHINES ({filteredMachines.length})
 							</h3>
 						</div>
 
