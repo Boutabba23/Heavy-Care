@@ -12,7 +12,8 @@
     "electron:dev": "node dev.js",
     "start": "electron .",
     "dev": "node dev.js",
-    "dist": "npm run renderer:build && electron-builder --win --publish never"
+    "dist": "npm run renderer:build && electron-builder --win --publish never",
+    "release": "npm run renderer:build && electron-builder --win --publish always"
   },
   "devDependencies": {
     "electron": "^33.0.0",
@@ -54,6 +55,11 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "shortcutName": "HeavyCare"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Boutabba23",
+      "repo": "Heavy-Care"
     }
   }
 }
