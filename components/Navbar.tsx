@@ -170,8 +170,8 @@ const Navbar: React.FC<NavbarProps> = ({
   const dropItem =
     "flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-start text-[13px] font-semibold text-foreground transition-colors duration-100 hover:bg-muted";
 
-  // Small hard-shadow icon button (avatar / theme / burger)
-  const iconTile = `rounded-full border-2 border-foreground bg-card shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-transform duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none`;
+  // Small hard-shadow icon button (avatar / theme / burger) — hover presses onto the shadow like the landing "Commencer" button
+  const iconTile = `rounded-full bg-card shadow-[4px_4px_0_0_hsl(var(--foreground))] ring-2 ring-foreground transition-transform duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none`;
 
   // ---- data ----------------------------------------------------------------
   const dashboardViews = [View.DASHBOARD, View.ANALYTICS, View.MONTHLY_SUMMARY];

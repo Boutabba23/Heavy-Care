@@ -109,7 +109,7 @@ const SyncIndicator: React.FC = () => {
     <div className='relative' ref={panelRef}>
       <button
         onClick={() => setIsOpen((p) => !p)}
-        className='hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-full border-2 border-foreground bg-card text-xs font-bold text-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-transform duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none'
+        className='hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-full bg-card text-xs font-bold text-foreground shadow-[4px_4px_0_0_hsl(var(--foreground))] ring-2 ring-foreground transition-transform duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1 active:translate-y-1 active:shadow-none'
         title='État de la synchronisation'>
         <span
           className={`h-2 w-2 rounded-full ${dotColor} ${
