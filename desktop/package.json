@@ -5,6 +5,7 @@
   "description": "HeavyCare desktop (offline, Electron + SQLite + Supabase sync)",
   "main": "electron/main.js",
   "author": "HeavyCare",
+  "homepage": "https://github.com/Boutabba23/Heavy-Care",
   "scripts": {
     "renderer:install": "cd renderer && npm install",
     "renderer:dev": "cd renderer && npm run dev",
@@ -56,7 +57,8 @@
         "deb"
       ],
       "category": "Utility",
-      "icon": "icon.png"
+      "icon": "icon.png",
+      "maintainer": "HeavyCare <Boutabba23@users.noreply.github.com>"
     },
     "nsis": {
       "oneClick": false,
