@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "Permissions for the main HeavyCare window. core:default grants the IPC plumbing plus event listen/unlisten/emit, which the desktop bridge shim and its auth:changed / db:synced listeners rely on.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

@@ -17,10 +17,22 @@ export const metadata: Metadata = {
 const DESKTOP_SHIM = `
 (function () {
   if (typeof window === "undefined") return;
-  var t = window.__TAURI__;
-  if (!t || !t.ipc || !t.event) return;
-  var invoke = t.ipc.invoke;
-  var listen = t.event.listen;
+  // Tauri v2 exposes the API as window.__TAURI__.{core,event,...}: invoke lives
+  // at __TAURI__.core.invoke (v1/alpha used other shapes). Resolve it from every
+  // known location so a CLI bump cannot silently kill the bridge again.
+  var t = window.__TAURI__ || {};
+  var core = t.core || {};
+  var legacy = t.ipc || {};
+  var internals = window.__TAURI_INTERNALS__ || {};
+  var invoke = core.invoke || legacy.invoke || t.invoke || internals.invoke;
+  if (typeof invoke !== "function") return;
+  var listen = t.event && t.event.listen;
+
+  function on(event, handler) {
+    if (typeof listen !== "function") return function () {};
+    var p = listen(event, handler);
+    return function () { if (p && p.then) p.then(function (u) { u(); }); };
+  }
 
   window.desktop = {
     isDesktop: true,
@@ -31,8 +43,7 @@ const DESKTOP_SHIM = `
       syncStatus: function () { return invoke("db_sync_status"); },
       syncNow: function () { return invoke("db_sync_now"); },
       onSyncApplied: function (cb) {
-        var p = listen("db:synced", function (e) { cb(e.payload); });
-        return function () { p.then(function (u) { u(); }); };
+        return on("db:synced", function (e) { cb(e.payload); });
       }
     },
     auth: {
@@ -49,11 +60,10 @@ const DESKTOP_SHIM = `
         return invoke("auth_update_password", { password: password });
       },
       onAuthChanged: function (cb) {
-        var p = listen("auth:changed", function (e) {
+        return on("auth:changed", function (e) {
           var d = e.payload || {};
           cb(d.event, d.session);
         });
-        return function () { p.then(function (u) { u(); }); };
       }
     },
     invoke: function (channel, payload) { return invoke(channel, payload); }
