@@ -1,7 +1,7 @@
 {
   "name": "heavy-care-desktop",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "HeavyCare desktop (offline, Tauri + SQLite + Supabase sync)",
   "author": "HeavyCare",
   "homepage": "https://github.com/Boutabba23/Heavy-Care",

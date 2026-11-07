@@ -184,7 +184,8 @@ const Navbar: React.FC<NavbarProps> = ({
   const groupClass = (menu: MenuKey, groupActive: boolean) =>
     `${openMenu === menu || groupActive ? pillActive : pillIdle}`;
 
-  const DashboardItems = () => (
+  const              Tableau de bord
+Items = () => (
     <>
       <button className={dropItem} onClick={() => navigate(View.DASHBOARD)}>
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100">
@@ -210,7 +211,8 @@ const Navbar: React.FC<NavbarProps> = ({
     </>
   );
 
-  const InventoryItems = () => (
+  const              Inventaire
+Items = () => (
     <>
       <button
         className={dropItem}
@@ -302,7 +304,8 @@ const Navbar: React.FC<NavbarProps> = ({
 
         {/* Desktop sections */}
         <nav className="hidden items-center gap-1 md:flex">
-          {/* Dashboard group */}
+          {/*              Tableau de bord
+ group */}
           <div className="relative">
             <button
               className={groupClass("dashboard", isViewActive(dashboardViews))}
@@ -310,17 +313,19 @@ const Navbar: React.FC<NavbarProps> = ({
                 setOpenMenu(openMenu === "dashboard" ? null : "dashboard")
               }
             >
-              Dashboard
+              Tableau de bord
               <Caret className={openMenu === "dashboard" ? "rotate-180" : ""} />
             </button>
             {openMenu === "dashboard" && (
               <div className={`absolute left-0 top-full z-50 mt-3 flex min-w-60 flex-col p-2 ${dropPanel}`}>
-                <DashboardItems />
+                <              Tableau de bord
+Items />
               </div>
             )}
           </div>
 
-          {/* Machines — direct */}
+          {/*              Engins
+ — direct */}
           <button
             className={
               isViewActive([View.MACHINE_LIST, View.MACHINE_DETAIL])
@@ -329,7 +334,8 @@ const Navbar: React.FC<NavbarProps> = ({
             }
             onClick={() => navigate(View.MACHINE_LIST)}
           >
-            <ExcavatorIcon className="h-4 w-4" /> Machines
+            <ExcavatorIcon className="h-4 w-4" />              Engins
+
           </button>
 
           {/* Maintenance — direct */}
@@ -340,7 +346,8 @@ const Navbar: React.FC<NavbarProps> = ({
             <WrenchIcon className="h-4 w-4" /> Maintenance
           </button>
 
-          {/* Inventory group */}
+          {/*              Inventaire
+ group */}
           <div className="relative">
             <button
               className={groupClass("inventory", isViewActive(inventoryViews))}
@@ -348,12 +355,13 @@ const Navbar: React.FC<NavbarProps> = ({
                 setOpenMenu(openMenu === "inventory" ? null : "inventory")
               }
             >
-              Inventory
+              Inventaire
               <Caret className={openMenu === "inventory" ? "rotate-180" : ""} />
             </button>
             {openMenu === "inventory" && (
               <div className={`absolute left-0 top-full z-50 mt-3 flex min-w-60 flex-col p-2 ${dropPanel}`}>
-                <InventoryItems />
+                <              Inventaire
+Items />
               </div>
             )}
           </div>
@@ -664,14 +672,16 @@ const Navbar: React.FC<NavbarProps> = ({
             onSetView={setCurrentView}
           />
           <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            Dashboard
+            Tableau de bord
           </p>
-          <DashboardItems />
+          <              Tableau de bord
+Items />
           <button
             className={pillIdle}
             onClick={() => navigate(View.MACHINE_LIST)}
           >
-            <ExcavatorIcon className="h-4 w-4 text-emerald-600" /> Machines
+            <ExcavatorIcon className="h-4 w-4 text-emerald-600" />              Engins
+
           </button>
           <button
             className={pillIdle}
@@ -680,9 +690,10 @@ const Navbar: React.FC<NavbarProps> = ({
             <WrenchIcon className="h-4 w-4 text-orange-500" /> Maintenance
           </button>
           <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            Inventory
+            Inventaire
           </p>
-          <InventoryItems />
+          <              Inventaire
+Items />
           <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Profil
           </p>
