@@ -2,8 +2,7 @@
   "name": "heavy-care-desktop",
   "private": true,
   "version": "1.0.0",
-  "description": "HeavyCare desktop (offline, Electron + SQLite + Supabase sync)",
-  "main": "electron/main.js",
+  "description": "HeavyCare desktop (offline, Tauri + SQLite + Supabase sync)",
   "author": "HeavyCare",
   "homepage": "https://github.com/Boutabba23/Heavy-Care",
   "scripts": {
@@ -17,61 +16,6 @@
     "dist:linux": "tauri build --bundles deb,appimage"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.12.4",
-    "electron": "^33.0.0",
-    "electron-builder": "^25.1.8"
-  },
-  "dependencies": {
-    "sql.js": "^1.15.2"
-  },
-  "build": {
-    "appId": "com.heavycare.desktop",
-    "productName": "HeavyCare",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "electron/**/*",
-      "renderer/out/**/*",
-      "icon.png"
-    ],
-    "asarUnpack": [
-      "node_modules/sql.js/**"
-    ],
-    "extraMetadata": {
-      "main": "electron/main.js"
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "icon.png"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "category": "Utility",
-      "icon": "icon.png",
-      "maintainer": "HeavyCare <Boutabba23@users.noreply.github.com>"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "shortcutName": "HeavyCare"
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "Boutabba23",
-      "repo": "Heavy-Care",
-      "releaseType": "release"
-    }
+    "@tauri-apps/cli": "^2.12.4"
   }
 }
