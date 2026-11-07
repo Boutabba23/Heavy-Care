@@ -1,10 +1,10 @@
 // Tauri 2 app: window + IPC commands mirroring the Electron preload bridge.
 // The renderer keeps calling window.desktop.{db,auth} — created by the shim
 // in the renderer layout over tauri::invoke. Events: "db:synced" & "auth:changed".
-mod auth;
-mod db;
-mod state;
-mod sync;
+pub mod auth;
+pub mod db;
+pub mod state;
+pub mod sync;
 
 use serde_json::{json, Value};
 use std::sync::Arc;

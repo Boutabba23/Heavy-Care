@@ -8,7 +8,7 @@ fn test_db(tag: &str) -> (PathBuf, db::Db) {
     let dir = std::env::temp_dir().join(format!("hc-test-{}-{}", std::process::id(), tag));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
-    (dir, db::init(dir.clone()).unwrap())
+    (dir.clone(), db::init(dir).unwrap())
 }
 
 #[test]
@@ -85,7 +85,9 @@ fn update_delete_and_upsert() {
     );
     assert!(upd["error"].is_null(), "{:?}", upd);
     let row = db::query_one(&db, "oil_stocks", "id = ?", &[json!("oil-x")]).unwrap();
-    assert_eq!(row["current_level"], 45);
+    // REAL-affinity columns read back as f64; in JS land 45.0 === 45, and the
+    // renderer JSON-parses this identically, so compare numerically.
+    assert_eq!(row["current_level"].as_f64(), Some(45.0));
     // updated_at must have been stamped
     assert!(!row["updated_at"].as_str().unwrap_or("").is_empty());
 
@@ -100,7 +102,7 @@ fn update_delete_and_upsert() {
     );
     assert!(up["error"].is_null(), "upsert failed: {:?}", up);
     let row = db::query_one(&db, "oil_stocks", "id = ?", &[json!("oil-x")]).unwrap();
-    assert_eq!(row["current_level"], 60);
+    assert_eq!(row["current_level"].as_f64(), Some(60.0));
 
     let del = db::handle_query(
         &db,
