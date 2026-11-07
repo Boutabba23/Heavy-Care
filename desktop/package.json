@@ -10,13 +10,14 @@
     "renderer:install": "cd renderer && npm install",
     "renderer:dev": "cd renderer && npm run dev",
     "renderer:build": "cd renderer && npm run build",
-    "electron:dev": "node dev.js",
-    "start": "electron .",
-    "dev": "node dev.js",
-    "dist": "npm run renderer:build && electron-builder --win --publish never",
-    "release": "npm run renderer:build && electron-builder --win --publish always"
+    "dev": "tauri dev",
+    "start": "tauri dev",
+    "dist": "tauri build",
+    "dist:win": "tauri build --bundles nsis,msi",
+    "dist:linux": "tauri build --bundles deb,appimage"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4",
     "electron": "^33.0.0",
     "electron-builder": "^25.1.8"
   },
