@@ -1,6 +1,8 @@
 # Build the Linux desktop installers (AppImage + .deb) in the cloud.
 # The backend is Rust (Tauri 2 with bundled SQLite); Linux bundles must be
 # produced on Linux, so this is the release path for Linux assets.
+# Windows can't run the Linux packaging toolchains (mksquashfs / fpm),
+# so this is the release path for Linux assets.
 # Run manually: Actions tab -> "Build Linux desktop" -> Run workflow.
 name: Build Linux desktop
 
@@ -52,6 +54,16 @@ jobs:
         working-directory: desktop
         run: npx tauri build --bundles deb,appimage
 
+      - name: Install desktop deps
+        working-directory: desktop
+        run: npm install
+
+      - name: Build Linux packages
+        working-directory: desktop
+        run: npx electron-builder --linux --publish never
+
+      # electron-builder's GitHub publisher refuses releases older than 2 hours,
+      # so upload the artifacts directly with the gh CLI instead.
       - name: Upload Linux assets to GitHub release
         working-directory: desktop
         env:
@@ -63,3 +75,6 @@ jobs:
             src-tauri/target/release/bundle/deb/*.deb \
             src-tauri/target/release/bundle/appimage/*.AppImage \
             --clobber
+          TAG="v$(node -p "require('./package.json').version")"
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "HeavyCare ${TAG#v}" --generate-notes
+          gh release upload "$TAG" release/*.AppImage release/*.deb release/latest-linux.yml --clobber
