@@ -287,7 +287,7 @@ fn json_cols_for(table: &str) -> Vec<&'static str> {
 
 // Serialized values in their JSON shape (strings for JSON/object columns,
 // numbers for bools) exactly like the sql.js layer produced.
-fn serialize_row<'a>(db: &Db, table: &str, row: &'a Map<String, Value>) -> Vec<(String, &'a Value)> {
+fn serialize_row(db: &Db, table: &str, row: &Map<String, Value>) -> Vec<(String, Value)> {
     let cols = get_columns(db, table);
     let json_cols = json_cols_for(table);
     row.iter()

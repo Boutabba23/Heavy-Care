@@ -4,7 +4,7 @@ use sha2::{Digest, Sha256};
 
 pub type Auth = AuthState;
 
-const CALLBACK_PORT: u16 = 48621;
+pub const CALLBACK_PORT: u16 = 48621;
 pub const CALLBACK_URL: &str = "http://127.0.0.1:48621/auth/callback";
 
 pub fn init(auth: &Auth, url: String, anon_key: String, user_data_dir: std::path::PathBuf) {
@@ -44,10 +44,6 @@ fn persist(auth: &Auth) {
             }
         }
     }
-}
-
-pub fn get_session(auth: &Auth) -> Option<Value> {
-    auth.session.lock().unwrap().clone()
 }
 
 pub fn build_public_shape(auth: &Auth) -> Option<Value> {

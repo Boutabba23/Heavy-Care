@@ -123,7 +123,7 @@ fn auth_sign_in_google(state: State<'_, AppState>) -> Value {
     match auth::build_authorize_url(&app.auth, "google") {
         Ok((url, verifier)) => {
             app.pending_verifier.lock().unwrap().replace(verifier);
-            match open_in_system_browser(&app.app_handle, &url) {
+            match open_in_system_browser(&url) {
                 Ok(()) => json!({ "error": Value::Null }),
                 Err(e) => json!({ "error": { "message": e } }),
             }
@@ -181,8 +181,8 @@ fn auth_update_password(state: State<'_, AppState>, password: String) -> Value {
     json!({ "error": Value::Null })
 }
 
-fn open_in_system_browser(app: &AppHandle, url: &str) -> Result<(), String> {
-    tauri_plugin_opener::open_url(app, url, None::<&str>).map_err(|e| e.to_string())
+fn open_in_system_browser(url: &str) -> Result<(), String> {
+    tauri_plugin_opener::open_url(url, None::<&str>).map_err(|e| e.to_string())
 }
 
 // ---------------------------------------------------------------------------
@@ -234,7 +234,9 @@ async fn handle_callback_conn(app: Arc<AppCtx>, mut stream: tokio::net::TcpStrea
             }
         }
         if !code.is_empty() {
-            if let Some(verifier) = app.pending_verifier.lock().unwrap().take() {
+            // Bind the take() result first so no MutexGuard is held across await
+            let verifier: Option<String> = app.pending_verifier.lock().unwrap().take();
+            if let Some(verifier) = verifier {
                 match auth::exchange_code(&app.auth, &code, &verifier).await {
                     Ok(()) => {
                         eprintln!("Supabase session established (OAuth).");

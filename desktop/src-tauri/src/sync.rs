@@ -183,7 +183,7 @@ impl Sync {
     ) -> Result<Value, String> {
         let (url, anon_key) = self.get_supplier_url_key();
         let token = ensure_token(self, auth).await;
-        let auth = match &token {
+        let auth_header = match &token {
             Some(t) => format!("Bearer {}", t),
             None => format!("Bearer {}", anon_key),
         };
@@ -206,7 +206,7 @@ impl Sync {
             }
             req.send()
         };
-        let res = send(&client, auth).await.map_err(|e| e.to_string())?;
+        let res = send(&client, auth_header).await.map_err(|e| e.to_string())?;
         if res.status().as_u16() == 401 && token.is_some() {
             // token expired mid-flight -> re-auth once and retry
             {
@@ -224,7 +224,7 @@ impl Sync {
                 if !(200..300).contains(&status) {
                     return Err(format!("{} {} -> {} {}", method, table, status, text));
                 }
-                return serde_json::from_str(&text).unwrap_or(json!(text));
+                return Ok(serde_json::from_str::<Value>(&text).unwrap_or(json!(text)));
             }
         }
         let status = res.status().as_u16();
