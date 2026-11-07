@@ -7,7 +7,7 @@ const Card = React.forwardRef<
 >(({ children, className, ...props }, ref) => (
   <div
     ref={ref}
-    className={`rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-300 hover:shadow-md ${
+    className={`rounded-2xl border-2 border-foreground bg-card text-card-foreground shadow-[5px_6px_0_0_hsl(var(--foreground))] transition-all duration-200 ${
       className || ""
     }`}
     {...props}
@@ -22,9 +22,7 @@ const CardHeader: React.FC<{
   className?: string;
 }> = ({ children, className }) => (
   <div
-    className={`flex flex-col space-y-1.5 p-6 rounded-t-xl bg-gradient-to-br from-card to-muted/50 ${
-      className || ""
-    }`}
+    className={`flex flex-col space-y-1.5 p-6 ${className || ""}`}
   >
     {children}
   </div>
@@ -35,7 +33,7 @@ const CardTitle: React.FC<{
   className?: string;
 }> = ({ children, className }) => (
   <h3
-    className={`text-2xl font-semibold leading-none tracking-tight ${
+    className={`text-xl font-black leading-tight tracking-tight ${
       className || ""
     }`}
   >

@@ -42,11 +42,11 @@ const Dialog: React.FC<DialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 animate-fadeIn"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 animate-fadeIn"
       onClick={closeOnOutsideClick ? onClose : undefined}
     >
       <div
-        className={`relative z-50 flex flex-col w-4/5 border bg-background shadow-lg duration-200 sm:rounded-xl max-h-[90vh] animate-slideInUp ${sizeClasses[size]}`}
+        className={`relative z-50 flex flex-col w-4/5 rounded-2xl border-2 border-foreground bg-card text-card-foreground shadow-[8px_9px_0_0_hsl(var(--foreground))] duration-200 max-h-[90vh] animate-slideInUp ${sizeClasses[size]}`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -73,7 +73,7 @@ const DialogTitle: React.FC<{
   className?: string;
 }> = ({ children, className }) => (
   <h2
-    className={`text-lg font-semibold leading-none tracking-tight ${
+    className={`text-xl font-black leading-tight tracking-tight ${
       className || ""
     }`}
   >
@@ -104,7 +104,7 @@ const DialogFooter: React.FC<{
   className?: string;
 }> = ({ children, className }) => (
   <div
-    className={`flex-shrink-0 flex gap-3 flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 p-6 border-t ${
+    className={`flex-shrink-0 flex gap-3 flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 p-6 border-t-2 border-foreground/10 ${
       className || ""
     }`}
   >

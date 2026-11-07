@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy to supabase-config.json. url/anonKey enable sync; add email+password (of the Supabase user you log in with in the web app) so sync traffic is authenticated and RLS-visible rows are pulled.",
+   "anonKey":  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrbGt4dnZvZW92a3N5c2xjZmp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAyMjcsImV4cCI6MjA2OTQ5NjIyN30.j7Whr8rPAtSwNbSyZ2iTTFEQAGsDI51022l4ZfsIlmo",
+    "url":  "https://yklkxvvoeovksyslcfjy.supabase.co"
+}

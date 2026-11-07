@@ -430,17 +430,17 @@ const MonthlySummaryView: React.FC<Props> = ({
 		<div className='space-y-6 font-sans text-foreground'>
 			{/* Top Header Row within View */}
 			{/* Top Header Row within View */}
-			<div className='flex flex-col sm:flex-row justify-between items-center bg-card text-card-foreground p-3 sm:p-4 rounded-3xl sm:rounded-[2rem] shadow-sm border border-border gap-4 sm:gap-0'>
+			<div className='flex flex-col sm:flex-row justify-between items-center bg-card text-card-foreground p-3 sm:p-4 rounded-2xl border-2 border-foreground shadow-[5px_6px_0_0_hsl(var(--foreground))] gap-4 sm:gap-0'>
 				<div className='flex items-center gap-3 sm:gap-4 w-full sm:w-auto'>
-					<div className='bg-primary/10 p-2 rounded-xl hidden sm:block'>
-						<CalendarIcon className='w-6 h-6 text-primary' />
+					<div className='bg-primary p-2 rounded-xl border-2 border-foreground shadow-[2px_2px_0_0_hsl(var(--foreground))] hidden sm:block'>
+						<CalendarIcon className='w-6 h-6 text-primary-foreground' />
 					</div>
 					<div className='flex-1 sm:flex-none'>
 						<h2 className='text-lg sm:text-xl font-black tracking-tight text-foreground uppercase'>
 							Pointage Pro
 						</h2>
 						<div className='flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-muted-foreground mt-1'>
-							<div className='flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-xl border border-border/50'>
+							<div className='flex items-center gap-2 bg-card px-3 py-1.5 rounded-full border-2 border-foreground'>
 								<input
 									type='month'
 									value={month}
@@ -456,7 +456,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 										month: "2-digit",
 									});
 								return (
-									<div className='text-[9px] sm:text-[10px] font-bold bg-primary/5 text-primary px-3 py-1.5 rounded-xl border border-primary/10 whitespace-nowrap'>
+									<div className='text-[9px] sm:text-[10px] font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-full border-2 border-foreground whitespace-nowrap'>
 										{format(start)} AU {format(end)}
 									</div>
 								);
@@ -464,15 +464,15 @@ const MonthlySummaryView: React.FC<Props> = ({
 						</div>
 					</div>
 				</div>
-				<div className='flex bg-muted rounded-full p-1 gap-1 w-full sm:w-auto shrink-0'>
+				<div className='flex bg-card rounded-full p-1.5 gap-1.5 border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] w-full sm:w-auto shrink-0'>
 					<button
 						onClick={() => setViewMode("dashboard")}
-						className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-full text-[10px] sm:text-xs font-extrabold transition-all uppercase tracking-wide ${viewMode === "dashboard" ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground"}`}>
+						className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-full text-[10px] sm:text-xs font-extrabold transition-all uppercase tracking-wide ${viewMode === "dashboard" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
 						Dashboard
 					</button>
 					<button
 						onClick={() => setViewMode("calendar")}
-						className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-full text-[10px] sm:text-xs font-extrabold transition-all uppercase tracking-wide ${viewMode === "calendar" ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground"}`}>
+						className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-full text-[10px] sm:text-xs font-extrabold transition-all uppercase tracking-wide ${viewMode === "calendar" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
 						Calendrier
 					</button>
 				</div>
@@ -482,10 +482,10 @@ const MonthlySummaryView: React.FC<Props> = ({
 				{/* Left Sidebar: Fleet & Config */}
 				<div className='lg:col-span-1 space-y-6'>
 					{/* Fleet List */}
-					<div className='bg-card rounded-3xl sm:rounded-[2rem] shadow-sm p-4 sm:p-6 border border-border'>
+					<div className='bg-card rounded-2xl shadow-[5px_6px_0_0_hsl(var(--foreground))] p-4 sm:p-6 border-2 border-foreground'>
 						<div className='flex justify-between items-center mb-4'>
 							<h3 className='text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider'>
-								FLOTTE ({filteredMachines.length})
+								MACHINES ({filteredMachines.length})
 							</h3>
 						</div>
 
@@ -499,11 +499,11 @@ const MonthlySummaryView: React.FC<Props> = ({
 								placeholder='Rechercher...'
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
-								className='pl-10 h-10 rounded-xl bg-muted/30 border-transparent focus:bg-card focus:border-primary/30 text-xs font-bold'
+								className='pl-10 h-10 rounded-full text-xs font-bold'
 							/>
 						</div>
 
-						<div className='flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto lg:max-h-[400px] pb-2 lg:pb-0 scrollbar-hide'>
+						<div className='flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto lg:max-h-[400px] pb-6 lg:pb-0 lg:pr-3 scrollbar-hide'>
 							{filteredMachines.map((m) => {
 								const stat = monthlyStats.find((s) => s.machineId === m.id);
 								const isSelected = selectedMachineId === m.id;
@@ -511,10 +511,10 @@ const MonthlySummaryView: React.FC<Props> = ({
 									<div
 										key={m.id}
 										onClick={() => setSelectedMachineId(m.id)}
-										className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl cursor-pointer transition-all border whitespace-nowrap lg:whitespace-normal shrink-0 lg:shrink ${
+										className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl cursor-pointer transition-all border-2 whitespace-nowrap lg:whitespace-normal shrink-0 lg:shrink ${
 											isSelected
-												? "bg-primary/5 border-primary/20 shadow-sm"
-												: "bg-muted/30 border-transparent hover:bg-card hover:shadow-sm"
+												? "bg-primary/5 border-primary shadow-[2px_2px_0_0_hsl(var(--primary))]"
+												: "bg-card border-foreground/20 hover:border-foreground hover:shadow-[2px_2px_0_0_hsl(var(--foreground))]"
 										}`}>
 										<div className='flex flex-row lg:flex-row justify-between items-start gap-4 lg:gap-2'>
 											<div className='min-w-[100px] lg:min-w-0'>
@@ -527,7 +527,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 												</div>
 											</div>
 											{stat && stat.endHours > stat.startHours && (
-												<div className='text-[9px] sm:text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full shrink-0'>
+												<div className='text-[9px] sm:text-[10px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded-full border-2 border-foreground shrink-0'>
 													{(stat.endHours - stat.startHours).toFixed(0)}H
 												</div>
 											)}
@@ -540,12 +540,12 @@ const MonthlySummaryView: React.FC<Props> = ({
 
 					{/* Inline Configuration */}
 					{selectedMachine && (
-						<div className='bg-card rounded-[2rem] shadow-sm p-6 border border-border'>
+						<div className='bg-card rounded-2xl shadow-[5px_6px_0_0_hsl(var(--foreground))] p-6 border-2 border-foreground'>
 							<h3 className='text-xs font-bold text-muted-foreground uppercase tracking-wider mb-6'>
 								CONFIGURATION
 							</h3>
 							{/* Weekend Toggle */}
-							<div className='bg-muted/50 p-4 rounded-2xl flex items-center justify-between mb-6'>
+							<div className='bg-muted/50 p-4 rounded-xl border-2 border-foreground/15 flex items-center justify-between mb-6'>
 								<span className='text-sm font-semibold text-foreground'>
 									TRAVAIL 7J/7
 								</span>
@@ -576,7 +576,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 											setConfigStartHours(Number(e.target.value));
 											setConfigDirty(true);
 										}}
-										className='h-12 rounded-xl bg-muted/50 border-transparent focus:bg-card focus:border-primary/30 text-lg font-bold text-center'
+										className='h-12 rounded-xl text-lg font-black text-center'
 										placeholder='0'
 									/>
 								</div>
@@ -591,7 +591,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 											setConfigEndHours(Number(e.target.value));
 											setConfigDirty(true);
 										}}
-										className='h-12 rounded-xl bg-muted/50 border-transparent focus:bg-card focus:border-primary/30 text-lg font-bold text-center'
+										className='h-12 rounded-xl text-lg font-black text-center'
 										placeholder='0'
 									/>
 								</div>
@@ -600,11 +600,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 							<div className='mt-6'>
 								<Button
 									onClick={handleSaveConfig}
-									className={`w-full h-12 rounded-xl font-bold shadow-lg transition-all ${
-										configDirty
-											? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
-											: "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-									}`}
+									className='w-full h-12'
 									disabled={!configDirty}>
 									ENREGISTRER
 								</Button>
@@ -656,7 +652,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 							].map((stat, i) => (
 								<div
 									key={i}
-									className={`bg-card px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-[1.5rem] shadow-sm flex flex-col items-center border border-border ${i === 4 ? "col-span-2 sm:col-span-1" : ""} lg:min-w-[120px]`}>
+									className={`bg-card px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-[3px_4px_0_0_hsl(var(--foreground))] flex flex-col items-center border-2 border-foreground ${i === 4 ? "col-span-2 sm:col-span-1" : ""} lg:min-w-[120px]`}>
 									<div className='flex items-center gap-1.5 mb-1'>
 										{stat.label === "INTEMPÉRÉ" && (
 											<CloudRainIcon className='w-3 h-3 text-blue-500' />
@@ -677,12 +673,13 @@ const MonthlySummaryView: React.FC<Props> = ({
 						<div className='flex flex-row gap-3 w-full lg:w-auto shrink-0'>
 							<Button
 								onClick={handleExportExcel}
-								className='flex-1 lg:flex-none bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl px-4 sm:px-6 h-12 lg:h-16 font-bold shadow-md shadow-emerald-500/20 gap-2 border-none transition-all hover:shadow-lg'>
+								variant="adding"
+								className='flex-1 lg:flex-none px-4 sm:px-6 h-12 lg:h-16 gap-2'>
 								<Download size={18} strokeWidth={2.5} />
 							</Button>
 							<Button
 								onClick={() => setIsAIModalOpen(true)}
-								className='flex-1 lg:flex-none bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-4 sm:px-6 h-12 lg:h-16 font-bold shadow-lg shadow-primary/20 gap-2 border-none'>
+								className='flex-1 lg:flex-none px-4 sm:px-6 h-12 lg:h-16 gap-2'>
 								<Sparkles size={18} strokeWidth={2.5} />
 							</Button>
 						</div>
@@ -693,8 +690,8 @@ const MonthlySummaryView: React.FC<Props> = ({
 					{viewMode === "dashboard" ? (
 						<>
 							{/* Chart Section */}
-							<div className='bg-card p-4 sm:p-8 rounded-3xl sm:rounded-[2rem] shadow-sm border border-border'>
-								<h3 className='text-[10px] sm:text-sm font-bold text-foreground uppercase tracking-wider mb-6 sm:mb-8'>
+							<div className='bg-card p-4 sm:p-8 rounded-2xl shadow-[5px_6px_0_0_hsl(var(--foreground))] border-2 border-foreground'>
+								<h3 className='text-[10px] sm:text-sm font-black text-foreground uppercase tracking-wider mb-6 sm:mb-8'>
 									PERFORMANCE QUOTIDIENNE
 								</h3>
 								<div className='h-[200px] sm:h-[300px] w-full'>
@@ -719,16 +716,19 @@ const MonthlySummaryView: React.FC<Props> = ({
 												cursor={{ fill: "hsl(var(--muted) / 0.5)" }}
 												contentStyle={{
 													borderRadius: "12px",
-													border: "none",
-													boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+													border: "2px solid hsl(var(--foreground))",
+													boxShadow: "3px 3px 0 0 hsl(var(--foreground))",
 													backgroundColor: "hsl(var(--card))",
 													color: "hsl(var(--foreground))",
+													fontWeight: 700,
 												}}
 											/>
 											<Bar
 												dataKey='work'
 												fill='hsl(var(--primary))'
-												radius={[4, 4, 4, 4]}
+												stroke='hsl(var(--foreground))'
+												strokeWidth={2}
+												radius={[6, 6, 0, 0]}
 												barSize={12}
 											/>
 										</BarChart>
@@ -738,18 +738,18 @@ const MonthlySummaryView: React.FC<Props> = ({
 
 							{/* Table Section */}
 							{distribution && (
-								<div className='bg-card p-4 sm:p-6 rounded-3xl sm:rounded-[2rem] shadow-sm border border-border overflow-hidden'>
-									<h3 className='text-[10px] sm:text-sm font-bold text-foreground uppercase tracking-wider mb-4'>
+								<div className='bg-card p-4 sm:p-6 rounded-2xl shadow-[5px_6px_0_0_hsl(var(--foreground))] border-2 border-foreground overflow-hidden'>
+									<h3 className='text-[10px] sm:text-sm font-black text-foreground uppercase tracking-wider mb-4'>
 										SYNTHÈSE DE LA DISTRIBUTION
 									</h3>
 
 									{/* Distribution Grouping Bar */}
-									<div className='flex flex-wrap gap-2 mb-6 p-2 bg-muted/30 rounded-2xl border border-border/50'>
+									<div className='flex flex-wrap gap-2 mb-6 p-2 bg-muted/30 rounded-xl border-2 border-foreground/15'>
 										{distributionSummary.map((group, idx) => (
 											<div
 												key={idx}
-												className='bg-card px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold border border-border shadow-sm flex items-center gap-3'>
-												<span className='bg-primary text-primary-foreground px-2 py-0.5 rounded-lg text-[9px]'>
+												className='bg-card px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold border-2 border-foreground shadow-[2px_2px_0_0_hsl(var(--foreground))] flex items-center gap-3'>
+												<span className='bg-primary border-2 border-foreground text-primary-foreground px-2 py-0.5 rounded-lg text-[9px]'>
 													{group.count} JOURS
 												</span>
 												<span className='text-muted-foreground uppercase tracking-tight'>
@@ -792,7 +792,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 														</TableCell>
 														<TableCell className='text-center text-sm font-bold text-primary'>
 															{day.workHours + day.overtimeHours > 0 ? (
-																<div className='w-full bg-primary/10 h-8 rounded-lg flex items-center justify-center'>
+																<div className='w-full bg-primary/10 h-8 rounded-lg border-2 border-foreground/10 flex items-center justify-center'>
 																	{(day.workHours + day.overtimeHours).toFixed(
 																		0,
 																	)}
@@ -804,7 +804,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 														</TableCell>
 														<TableCell className='text-center text-sm font-bold text-warning'>
 															{day.idleHours > 0 ? (
-																<div className='w-full bg-warning/10 h-8 rounded-lg flex items-center justify-center'>
+																<div className='w-full bg-warning/10 h-8 rounded-lg border-2 border-foreground/10 flex items-center justify-center'>
 																	{day.idleHours.toFixed(0)}h
 																</div>
 															) : (
@@ -813,7 +813,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 														</TableCell>
 														<TableCell className='text-center text-sm font-bold text-destructive'>
 															{day.breakdownHours > 0 ? (
-																<div className='w-full bg-destructive/10 h-8 rounded-lg flex items-center justify-center'>
+																<div className='w-full bg-destructive/10 h-8 rounded-lg border-2 border-foreground/10 flex items-center justify-center'>
 																	{day.breakdownHours.toFixed(0)}h
 																</div>
 															) : (
@@ -830,7 +830,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 						</>
 					) : (
 						/* Calendar View */
-						<div className='bg-card p-4 sm:p-8 rounded-3xl sm:rounded-[2rem] shadow-sm border border-border min-h-[400px] sm:min-h-[600px]'>
+						<div className='bg-card p-4 sm:p-8 rounded-2xl shadow-[5px_6px_0_0_hsl(var(--foreground))] border-2 border-foreground min-h-[400px] sm:min-h-[600px]'>
 							<h3 className='text-lg sm:text-xl font-black text-foreground uppercase tracking-tight mb-6 sm:mb-8'>
 								CALENDRIER
 							</h3>
@@ -854,16 +854,16 @@ const MonthlySummaryView: React.FC<Props> = ({
 
 									// Determine visuals based on status
 									let cardStyle =
-										"bg-card border-border text-foreground hover:border-primary/50 hover:shadow-md";
+										"bg-card border-foreground/25 text-foreground hover:border-foreground hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] hover:-translate-y-0.5";
 									let numStyle = "text-foreground";
 
 									if (day.status === "PANNE") {
 										cardStyle =
-											"bg-card border-destructive/30 shadow-sm relative overflow-visible";
+											"bg-card border-destructive relative overflow-visible";
 									} else if (day.status === "INTEMPERIE") {
 										cardStyle =
-											"bg-blue-50/50 border-blue-200 text-blue-700 shadow-sm relative";
-										numStyle = "text-blue-700";
+											"bg-sky-100 border-sky-400 text-sky-700 relative";
+										numStyle = "text-sky-700";
 									} else if (day.workHours > 0) {
 										// Active work day styling if needed
 									}
@@ -879,9 +879,9 @@ const MonthlySummaryView: React.FC<Props> = ({
 												colStart ? { gridColumnStart: colStart } : undefined
 											}
 											className={`
-                                        aspect-square rounded-lg sm:rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 sm:gap-1 relative group
+                                        aspect-square rounded-xl border-2 border-foreground/25 transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 sm:gap-1 relative group
                                         ${cardStyle}
-                                        ${day.status === "WEEKEND" ? "bg-muted/50 opacity-60 border-transparent" : ""}
+                                        ${day.status === "WEEKEND" ? "bg-muted/50 opacity-60 border-foreground/10" : ""}
                                         ${day.status === "PANNE" ? "ring-2 ring-destructive/10 border-destructive/30" : ""}
                                         ${isDaySelected ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20" : ""}
                                     `}>
@@ -894,29 +894,29 @@ const MonthlySummaryView: React.FC<Props> = ({
 											<div className='flex gap-1 mt-1'>
 												{day.status === "PANNE" ? (
 													<div
-														className='flex items-center gap-1.5 bg-destructive/10 px-2.5 py-1 rounded-full border border-destructive/20 cursor-pointer hover:bg-destructive/20 transition-colors shadow-sm'
+														className='flex items-center gap-1.5 bg-rose-500 px-2.5 py-1 rounded-full border-2 border-foreground cursor-pointer hover:bg-rose-600 transition-colors'
 														onClick={(e) => {
 															e.stopPropagation();
 															setTempBreakdownDate(day.date);
 															setTempBreakdownHours(day.breakdownHours || 8);
 															setIsBreakdownModalOpen(true);
 														}}>
-														<ExclamationTriangleIcon className='w-4 h-4 text-destructive' />
-														<span className='text-xs font-black text-destructive'>
+														<ExclamationTriangleIcon className='w-4 h-4 text-white' />
+														<span className='text-xs font-black text-white'>
 															{day.breakdownHours}h
 														</span>
 													</div>
 												) : day.status === "CHOMAGE" ? (
 													<div
-														className='flex items-center gap-1.5 bg-warning/10 px-2.5 py-1 rounded-full border border-warning/20 cursor-pointer hover:bg-warning/20 transition-colors shadow-sm'
+														className='flex items-center gap-1.5 bg-amber-400 px-2.5 py-1 rounded-full border-2 border-foreground cursor-pointer hover:bg-amber-300 transition-colors'
 														onClick={(e) => {
 															e.stopPropagation();
 															setTempIdleDate(day.date);
 															setTempIdleHours(day.idleHours || 8);
 															setIsIdleModalOpen(true);
 														}}>
-														<MoonIcon className='w-4 h-4 text-warning' />
-														<span className='text-xs font-black text-warning'>
+														<MoonIcon className='w-4 h-4 text-foreground' />
+														<span className='text-xs font-black text-foreground'>
 															{day.idleHours}h
 														</span>
 													</div>
@@ -943,7 +943,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 															e.stopPropagation();
 															toggleIdleDay(day.date);
 														}}
-														className='w-8 h-8 bg-card border border-border shadow-md rounded-full flex items-center justify-center text-muted-foreground hover:text-warning hover:border-warning/30 hover:scale-110 active:scale-95 transition-all'
+														className='w-8 h-8 bg-card border-2 border-foreground shadow-[2px_2px_0_0_hsl(var(--foreground))] rounded-full flex items-center justify-center text-muted-foreground hover:text-warning hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all'
 														title='Marquer comme Chômage'>
 														<MoonIcon className='w-4 h-4' />
 													</button>
@@ -952,7 +952,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 															e.stopPropagation();
 															toggleBreakdownDay(day.date);
 														}}
-														className='w-8 h-8 bg-card border border-border shadow-md rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:scale-110 active:scale-95 transition-all'
+														className='w-8 h-8 bg-card border-2 border-foreground shadow-[2px_2px_0_0_hsl(var(--foreground))] rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all'
 														title='Marquer comme Panne'>
 														<ExclamationTriangleIcon className='w-4 h-4' />
 													</button>
@@ -968,11 +968,11 @@ const MonthlySummaryView: React.FC<Props> = ({
 			</div>
 
 			{isBreakdownModalOpen && tempBreakdownDate && (
-				<div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200'>
-					<div className='bg-card w-full max-w-sm rounded-[2rem] border border-border shadow-2xl p-8 animate-in zoom-in-95 duration-200'>
+				<div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fadeIn'>
+					<div className='bg-card w-full max-w-sm rounded-2xl border-2 border-foreground shadow-[8px_9px_0_0_hsl(var(--foreground))] p-8 animate-slideInUp'>
 						<div className='flex flex-col items-center text-center'>
-							<div className='w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center mb-6'>
-								<ExclamationTriangleIcon className='w-8 h-8 text-destructive' />
+							<div className='w-16 h-16 bg-rose-500 rounded-2xl border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] flex items-center justify-center mb-6'>
+								<ExclamationTriangleIcon className='w-8 h-8 text-white' />
 							</div>
 
 							<h3 className='text-xl font-black text-foreground uppercase tracking-tight mb-2'>
@@ -995,7 +995,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 										onChange={(e) =>
 											setTempBreakdownHours(parseFloat(e.target.value) || 0)
 										}
-										className='h-16 rounded-2xl bg-muted/50 border-transparent focus:bg-card focus:border-destructive/30 text-3xl font-black text-center text-destructive pr-10'
+										className='h-16 rounded-xl text-3xl font-black text-center text-destructive pr-10'
 										onKeyDown={(e) => {
 											if (e.key === "Enter") {
 												handleUpdateBreakdownHours(
@@ -1016,7 +1016,8 @@ const MonthlySummaryView: React.FC<Props> = ({
 											setIsBreakdownModalOpen(false);
 											setTempBreakdownDate(null);
 										}}
-										className='h-12 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-bold border-none'>
+										variant="outline"
+										className='h-12 flex-1'>
 										ANNULER
 									</Button>
 									<Button
@@ -1026,7 +1027,8 @@ const MonthlySummaryView: React.FC<Props> = ({
 												tempBreakdownHours,
 											)
 										}
-										className='h-12 rounded-xl bg-destructive hover:bg-destructive/90 text-white font-bold border-none shadow-lg shadow-destructive/20'>
+										variant="destructive"
+										className='h-12 flex-1'>
 										VALIDER
 									</Button>
 								</div>
@@ -1037,11 +1039,11 @@ const MonthlySummaryView: React.FC<Props> = ({
 			)}
 
 			{isIdleModalOpen && tempIdleDate && (
-				<div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200'>
-					<div className='bg-card w-full max-w-sm rounded-[2rem] border border-border shadow-2xl p-8 animate-in zoom-in-95 duration-200'>
+				<div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fadeIn'>
+					<div className='bg-card w-full max-w-sm rounded-2xl border-2 border-foreground shadow-[8px_9px_0_0_hsl(var(--foreground))] p-8 animate-slideInUp'>
 						<div className='flex flex-col items-center text-center'>
-							<div className='w-16 h-16 bg-warning/10 rounded-2xl flex items-center justify-center mb-6'>
-								<MoonIcon className='w-8 h-8 text-warning' />
+							<div className='w-16 h-16 bg-amber-400 rounded-2xl border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] flex items-center justify-center mb-6'>
+								<MoonIcon className='w-8 h-8 text-foreground' />
 							</div>
 
 							<h3 className='text-xl font-black text-foreground uppercase tracking-tight mb-2'>
@@ -1064,7 +1066,7 @@ const MonthlySummaryView: React.FC<Props> = ({
 										onChange={(e) =>
 											setTempIdleHours(parseFloat(e.target.value) || 0)
 										}
-										className='h-16 rounded-2xl bg-muted/50 border-transparent focus:bg-card focus:border-warning/30 text-3xl font-black text-center text-warning pr-10'
+										className='h-16 rounded-xl text-3xl font-black text-center text-warning pr-10'
 										onKeyDown={(e) => {
 											if (e.key === "Enter") {
 												handleUpdateIdleHours(tempIdleDate, tempIdleHours);
@@ -1082,14 +1084,15 @@ const MonthlySummaryView: React.FC<Props> = ({
 											setIsIdleModalOpen(false);
 											setTempIdleDate(null);
 										}}
-										className='h-12 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-bold border-none'>
+										variant="outline"
+										className='h-12 flex-1'>
 										ANNULER
 									</Button>
 									<Button
 										onClick={() =>
 											handleUpdateIdleHours(tempIdleDate, tempIdleHours)
 										}
-										className='h-12 rounded-xl bg-warning hover:bg-warning/90 text-white font-bold border-none shadow-lg shadow-warning/20'>
+										className='h-12 flex-1'>
 										VALIDER
 									</Button>
 								</div>

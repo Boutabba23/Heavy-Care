@@ -11,7 +11,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-hidden bg-gradient-to-br from-primary/60 to-slate-900 text-white">
+    <div className="min-h-screen overflow-hidden bg-gradient-to-br from-primary/70 via-primary/40 to-foreground text-white">
       <div
         className={`flex w-[200%] md:w-full md:flex-row-reverse h-full min-h-screen transition-transform duration-500 ease-in-out ${currentStep === 'login' ? '-translate-x-1/2 md:translate-x-0' : 'translate-x-0'
           }`}
@@ -25,20 +25,20 @@ const LoginPage: React.FC = () => {
           <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center max-w-sm w-full">
             <LogoIcon className="h-40 sm:h-60 w-auto mb-6 md:mb-8 drop-shadow-2xl" />
 
-            <div className="h-1.5 w-16 bg-primary mb-8 rounded-full" />
-            <p className="text-xl text-slate-300 font-medium leading-relaxed mb-6 md:mb-12">
+            <div className="h-1.5 w-16 bg-white mb-8" />
+            <p className="text-xl text-white/80 font-medium leading-relaxed mb-6 md:mb-12">
               Plateforme complète de gestion de maintenance, pièces et stocks d'huile pour engins lourds
             </p>
 
             {/* Cards: hidden on mobile, visible on desktop */}
             <div className="hidden md:grid grid-cols-2 gap-4 text-left w-full">
-              <div className="bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
-                <p className="text-primary font-bold text-sm uppercase tracking-widest mb-1">Maintenance</p>
-                <p className="text-slate-400 text-xs">Suivi & Planification</p>
+              <div className="bg-white/10 p-4 rounded-none border-2 border-white/25 shadow-[3px_3px_0_0_rgba(255,255,255,0.35)]">
+                <p className="text-white font-black text-sm uppercase tracking-widest mb-1">Maintenance</p>
+                <p className="text-white/60 text-xs">Suivi & Planification</p>
               </div>
-              <div className="bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
-                <p className="text-primary font-bold text-sm uppercase tracking-widest mb-1">Stocks</p>
-                <p className="text-slate-400 text-xs">Huiles & Consommables</p>
+              <div className="bg-white/10 p-4 rounded-none border-2 border-white/25 shadow-[3px_3px_0_0_rgba(255,255,255,0.35)]">
+                <p className="text-white font-black text-sm uppercase tracking-widest mb-1">Stocks</p>
+                <p className="text-white/60 text-xs">Huiles & Consommables</p>
               </div>
             </div>
           </div>
@@ -47,7 +47,7 @@ const LoginPage: React.FC = () => {
           <div className="mt-auto md:hidden w-full max-w-sm relative z-10 pb-4">
             <button
               onClick={() => setCurrentStep('login')}
-              className="w-full py-4 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+              className="w-full py-4 px-6 bg-primary text-primary-foreground border-2 border-white font-bold rounded-none shadow-[6px_6px_0_0_rgba(255,255,255,0.9)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0_0_rgba(255,255,255,0.9)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none disabled:opacity-50"
             >
               Bienvenue
             </button>

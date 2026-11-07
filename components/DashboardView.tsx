@@ -56,17 +56,21 @@ const StatCard: React.FC<{
 }> = ({ title, value, icon, onClick, className, style }) => (
   <Card
     onClick={onClick}
-    className={`cursor-pointer hover:shadow-md hover:border-primary/50 ${
+    className={`cursor-pointer transition-all duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1.5 active:translate-y-1.5 active:shadow-none ${
       className || ""
     }`}
     style={style}
   >
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      <div className="text-muted-foreground">{icon}</div>
+      <CardTitle className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+        {title}
+      </CardTitle>
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-foreground bg-secondary text-secondary-foreground shadow-[2px_2px_0_0_hsl(var(--foreground))]">
+        {icon}
+      </span>
     </CardHeader>
     <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
+      <div className="text-3xl font-black tracking-tight">{value}</div>
     </CardContent>
   </Card>
 );
@@ -220,8 +224,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-6 animate-fadeIn">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-4xl font-black tracking-tight">Tableau de bord</h1>
+        <p className="mt-1 font-medium text-muted-foreground">
           Un aperçu de votre parc et de votre inventaire.
         </p>
       </div>
@@ -283,7 +287,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               {upcomingMaintenance.map((machine) => (
                 <div
                   key={machine.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                  className="flex items-center justify-between gap-3 rounded-xl border-2 border-foreground/90 bg-card p-3"
                 >
                   <div>
                     <p className="font-semibold">{machine.designation}</p>
@@ -364,7 +368,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           </CardHeader>
           <CardContent className="flex-1 mt-6">
             {lowStockItems.length > 0 ? (
-              <div className="relative w-full border rounded-md max-h-96 overflow-y-auto">
+              <div className="relative w-full rounded-xl border-2 border-foreground max-h-96 overflow-y-auto bg-card">
                 <Table>
                   <TableHeader className="sticky top-0 bg-background/95 backdrop-blur-sm">
                     <TableRow>
@@ -463,12 +467,18 @@ const AnalyticsStatCard: React.FC<{
 }> = ({ title, value, icon, description, className, style }) => (
   <Card className={className} style={style}>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      <div className="text-muted-foreground">{icon}</div>
+      <CardTitle className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+        {title}
+      </CardTitle>
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-foreground bg-secondary text-secondary-foreground shadow-[2px_2px_0_0_hsl(var(--foreground))]">
+        {icon}
+      </span>
     </CardHeader>
     <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
-      <p className="text-xs text-muted-foreground">{description}</p>
+      <div className="text-2xl font-black tracking-tight">{value}</div>
+      <p className="mt-1 text-xs font-medium text-muted-foreground">
+        {description}
+      </p>
     </CardContent>
   </Card>
 );
@@ -696,10 +706,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   return (
     <div className="space-y-6 animate-fadeIn">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-4xl font-black tracking-tight">
           Analyses & Rapports
         </h1>
-        <p className="text-muted-foreground">
+        <p className="mt-1 font-medium text-muted-foreground">
           Informations clés sur la santé et les coûts de votre flotte.
         </p>
       </div>
@@ -755,7 +765,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {(isGeneratingSummary || aiSummary) && (
               <div
                 id="ai-report-print-area"
-                className="mt-4 p-4 border rounded-lg bg-muted/30 flex-1 space-y-2 text-sm"
+                className="mt-4 rounded-xl border-2 border-foreground/90 bg-muted/40 p-4 flex-1 space-y-2 text-sm"
               >
                 {isGeneratingSummary && (
                   <p className="text-sm text-muted-foreground animate-pulse">
@@ -799,7 +809,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                     : "Coût total des filtres par catégorie."}
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-1 p-1 rounded-md bg-muted self-start sm:self-center">
+              <div className="flex items-center gap-1 rounded-xl border-2 border-foreground bg-card p-1 self-start sm:self-center">
                 <Button
                   size="sm"
                   variant={activeChart === "machine" ? "secondary" : "ghost"}

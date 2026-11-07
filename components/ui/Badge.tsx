@@ -10,19 +10,17 @@ const Badge: React.FC<BadgeProps> = ({
   ...props
 }) => {
   const variants = {
-    default: "border-transparent bg-secondary text-secondary-foreground",
-    destructive:
-      "border-transparent bg-destructive/20 text-destructive dark:font-semibold",
-    warning: "border-transparent bg-warning/20 text-warning-foreground",
+    default: "bg-secondary text-secondary-foreground",
+    destructive: "bg-destructive text-white",
+    warning: "bg-warning/25 text-warning-foreground",
     success:
-      "border-transparent bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
-    info:
-      "border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
+      "bg-emerald-500 text-white dark:bg-emerald-600 dark:text-white",
+    info: "bg-sky-500 text-white dark:bg-sky-600 dark:text-white",
     customInfo:
-      "border-transparent bg-yellow-200 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
+      "bg-amber-300 text-foreground dark:bg-amber-400 dark:text-foreground",
   };
 
-  const badgeClasses = `inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+  const badgeClasses = `inline-flex items-center rounded-full border-2 border-foreground px-2.5 py-0.5 text-xs font-bold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
     variants[variant]
   } ${className || ""}`;
 

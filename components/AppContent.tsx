@@ -3,14 +3,13 @@
 import React from "react";
 import { useAppLogic } from "../hooks/useAppLogic";
 import { useAuth } from "../contexts/AuthContext";
-import Header from "./Header";
-import MachineListView from "./MachineListView";
-import MachineDetailView from "./MachineDetailView";
-import FilterManagementView from "./FilterManagementView";
+import LandingPage from "./LandingPage";
+import MachineDetailView from "./MachineDetailView";import FilterManagementView from "./FilterManagementView";
 import UserProfile from "./UserProfile";
 import LoginPage from "./LoginPage";
 import { Notification, View } from "../types";
-import Sidebar from "./Sidebar";
+import Navbar from "./Navbar";
+import MachineListView from "./MachineListView";
 import SettingsView from "./ThemeSettingsView";
 import MachineModal from "./MachineModal";
 import { MaintenanceView } from "./MaintenanceView";
@@ -37,8 +36,6 @@ import { LogoIcon } from "../constants";
 const AppContent: React.FC = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { state, actions } = useAppLogic();
-
-  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -174,6 +171,18 @@ const AppContent: React.FC = () => {
 
   const renderView = () => {
     switch (state.currentView) {
+      case View.LANDING:
+        return (
+          <LandingPage
+            onSetView={actions.setCurrentView}
+            stats={{
+              machines: state.machines.length,
+              maintenanceRecords: state.maintenanceRecords.length,
+              spareParts: state.spareParts.length,
+              filterGroups: state.filterTypes.length,
+            }}
+          />
+        );
       case View.DASHBOARD:
         return (
           <DashboardView
@@ -307,7 +316,6 @@ const AppContent: React.FC = () => {
 
   const handleNotificationClick = (notification: Notification) => {
     actions.handleNotificationClick(notification);
-    setIsNotificationsOpen(false);
   };
 
   const handleScanSuccess = (filterGroupId: string) => {
@@ -317,38 +325,34 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Sidebar
+      <Navbar
         currentView={state.currentView}
         setCurrentView={actions.setCurrentView}
         isMobileOpen={state.isSidebarOpen}
         closeSidebar={actions.closeSidebar}
+        onToggleMenu={actions.toggleSidebar}
+        // search
+        machines={state.machines}
+        filterGroups={state.filterGroups}
+        spareParts={state.spareParts}
+        onSelectMachine={actions.selectMachine}
+        onNavigateToGroup={actions.navigateToFilterGroup}
+        // theme
+        savedThemes={state.savedThemes}
+        currentTheme={state.theme}
+        onThemeChange={actions.setTheme}
+        // user / profile
+        user={user}
+        userEmail={user?.email || ""}
+        onLogout={handleLogout}
+        onOpenAIAssistant={actions.openAIAssistant}
+        onOpenScanner={actions.openScanner}
+        // notifications
+        notifications={state.notifications}
+        onNotificationClick={handleNotificationClick}
+        onMarkAllNotificationsAsRead={actions.markAllNotificationsAsRead}
       />
-      <div className="flex flex-col md:pl-64">
-        <Header
-          currentView={state.currentView}
-          selectedMachine={state.selectedMachine}
-          onMenuClick={actions.toggleSidebar}
-          notifications={state.notifications}
-          isNotificationsOpen={isNotificationsOpen}
-          onToggleNotifications={() => setIsNotificationsOpen((p) => !p)}
-          onCloseNotifications={() => setIsNotificationsOpen(false)}
-          onNotificationClick={handleNotificationClick}
-          onMarkAllNotificationsAsRead={actions.markAllNotificationsAsRead}
-          onOpenAIAssistant={actions.openAIAssistant}
-          onOpenScanner={actions.openScanner}
-          machines={state.machines}
-          filterGroups={state.filterGroups}
-          spareParts={state.spareParts}
-          onSelectMachine={actions.selectMachine}
-          onNavigateToGroup={actions.navigateToFilterGroup}
-          onSetView={actions.setCurrentView}
-          user={user}
-          userEmail={user?.email || ""}
-          onLogout={handleLogout}
-          savedThemes={state.savedThemes}
-          currentTheme={state.theme}
-          onThemeChange={actions.setTheme}
-        />
+      <div className="flex flex-col">
         <main className="relative flex-1 p-4 sm:p-6 lg:p-8">
           {renderView()}
         </main>

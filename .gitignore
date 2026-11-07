@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 .env
 
+
+# Tauri build artifacts
+desktop/src-tauri/target/
+desktop/src-tauri/gen/

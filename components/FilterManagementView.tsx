@@ -279,7 +279,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                       <EllipsisVerticalIcon />
                     </Button>
                     {openGroupMenuId === group.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-md shadow-lg z-50 animate-fadeIn">
+                      <div className="absolute right-0 mt-2 w-48 bg-card border-2 border-foreground rounded-xl shadow-[4px_4px_0_0_hsl(var(--foreground))] z-50 animate-fadeIn">
                         <ul className="py-1">
                           <li>
                             <button
@@ -319,7 +319,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                     <h4 className="font-semibold text-muted-foreground mb-2">
                       Référence originale :
                     </h4>
-                    <div className="rounded-md border">
+                    <div className="rounded-xl border-2 border-foreground overflow-hidden bg-card shadow-[2px_2px_0_0_hsl(var(--foreground))]">
                       <Table className="table-zebra">
                         <TableHeader>
                           <TableRow>
@@ -381,7 +381,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                   Références compatibles :
                 </h4>
                 {compatibleReferences.length > 0 ? (
-                  <div className="rounded-md border">
+                  <div className="rounded-xl border-2 border-foreground overflow-hidden bg-card shadow-[2px_2px_0_0_hsl(var(--foreground))]">
                     <Table className="table-zebra">
                       <TableHeader>
                         <TableRow>
@@ -457,8 +457,8 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
 
   return (
     <div>
-      <Card className="mb-6 rounded-xl">
-        <CardHeader className="rounded-xl">
+      <Card className="mb-6">
+        <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div>
               <CardTitle className="text-2xl">

@@ -43,39 +43,6 @@ interface MachineListViewProps {
   onOpenImportModal: () => void;
 }
 
-const cardColors = [
-  {
-    border: "border-l-blue-500",
-    bg: "bg-blue-50 dark:bg-blue-900/40",
-    text: "text-blue-800 dark:text-blue-200",
-  },
-  {
-    border: "border-l-emerald-500",
-    bg: "bg-emerald-50 dark:bg-emerald-900/40",
-    text: "text-emerald-800 dark:text-emerald-200",
-  },
-  {
-    border: "border-l-amber-500",
-    bg: "bg-amber-50 dark:bg-amber-900/40",
-    text: "text-amber-800 dark:text-amber-200",
-  },
-  {
-    border: "border-l-rose-500",
-    bg: "bg-rose-50 dark:bg-rose-900/40",
-    text: "text-rose-800 dark:text-rose-200",
-  },
-  {
-    border: "border-l-violet-500",
-    bg: "bg-violet-50 dark:bg-violet-900/40",
-    text: "text-violet-800 dark:text-violet-200",
-  },
-  {
-    border: "border-l-sky-500",
-    bg: "bg-sky-50 dark:bg-sky-900/40",
-    text: "text-sky-800 dark:text-sky-200",
-  },
-];
-
 const MachineListView: React.FC<MachineListViewProps> = ({
   machines,
   onSelectMachine,
@@ -83,8 +50,6 @@ const MachineListView: React.FC<MachineListViewProps> = ({
   onEditMachine,
   onDeleteMachine,
   onOpenConfirmationDialog,
-  theme,
-  customCardBorders,
   onOpenImportModal,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -237,25 +202,12 @@ const MachineListView: React.FC<MachineListViewProps> = ({
     }
 
     return (
-      <div className="grid gap-6 sm:grid-cols-1 max-[1000px]:grid-cols-1 min-[1000px]:grid-cols-2 min-[1280px]:grid-cols-3">
-        {filteredMachines.map((machine, index) => {
-          const color = cardColors[index % cardColors.length];
-
-          const cardStyle: React.CSSProperties = {};
-          let cardClassName = "border-l-4";
-
-          if (theme === "custom" && customCardBorders.length > 0) {
-            cardStyle.borderLeftColor =
-              customCardBorders[index % customCardBorders.length];
-          } else {
-            cardClassName += ` ${color.border}`;
-          }
-
+      <div className="grid gap-5 sm:grid-cols-1 max-[1000px]:grid-cols-1 min-[1000px]:grid-cols-2 min-[1280px]:grid-cols-4">
+        {filteredMachines.map((machine) => {
           return (
             <Card
               key={machine.id}
-              className={`cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] flex flex-col min-h-[190px] ${cardClassName}`}
-              style={cardStyle}
+              className="cursor-pointer transition-all duration-150 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-1.5 active:translate-y-1.5 active:shadow-none flex flex-col min-h-[190px]"
               onClick={() => onSelectMachine(machine.id)}
             >
               <CardHeader className="pb-4">
@@ -283,7 +235,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
                       <EllipsisVerticalIcon />
                     </Button>
                     {openMenuId === machine.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-md shadow-lg z-50 animate-fadeIn">
+                      <div className="absolute right-0 mt-2 w-48 bg-card border-2 border-foreground rounded-xl shadow-[4px_4px_0_0_hsl(var(--foreground))] z-50 animate-fadeIn">
                         <ul className="py-1">
                           <li>
                             <button
@@ -339,9 +291,9 @@ const MachineListView: React.FC<MachineListViewProps> = ({
                       {machine.serviceHours.toLocaleString()} hs
                     </span>
                   </div>
-                  <div className="pt-3 border-t border-dashed border-border">
+                  <div className="pt-3 border-t-2 border-dashed border-foreground/20">
                     <span
-                      className={`text-xs font-semibold px-2 py-1 rounded-md ${color.bg} ${color.text}`}
+                      className="inline-block text-xs font-bold px-2.5 py-1 rounded-full border-2 border-foreground bg-primary text-primary-foreground"
                     >
                       Code: {machine.code}
                     </span>
@@ -357,8 +309,8 @@ const MachineListView: React.FC<MachineListViewProps> = ({
 
   return (
     <div>
-      <Card className="mb-6 rounded-xl">
-        <CardHeader className="rounded-xl">
+      <Card className="mb-6">
+        <CardHeader>
           <div className="flex flex-col min-[1160px]:flex-row justify-between min-[1160px]:items-center gap-4">
             <div>
               <CardTitle className="text-2xl">Votre Parc de Matériel</CardTitle>
@@ -440,17 +392,17 @@ const MachineListView: React.FC<MachineListViewProps> = ({
             {(searchQuery || selectedMarque || selectedType) && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {searchQuery && (
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                  <span className="inline-flex items-center rounded-full border-2 border-foreground bg-card px-3 py-1 text-xs font-bold text-primary">
                     Recherche: "{searchQuery}"
                   </span>
                 )}
                 {selectedMarque && (
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                  <span className="inline-flex items-center rounded-full border-2 border-foreground bg-card px-3 py-1 text-xs font-bold text-primary">
                     Marque: {selectedMarque}
                   </span>
                 )}
                 {selectedType && (
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                  <span className="inline-flex items-center rounded-full border-2 border-foreground bg-card px-3 py-1 text-xs font-bold text-primary">
                     Type: {selectedType}
                   </span>
                 )}

@@ -126,17 +126,17 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <form onSubmit={handleResetPassword}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+              <div className="p-3 text-sm font-semibold text-destructive bg-destructive/10 border-2 border-destructive/30 rounded-xl">
                 {error}
               </div>
             )}
             {message && (
-              <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+              <div className="p-3 text-sm font-semibold text-green-600 bg-green-50 border-2 border-green-200 rounded-xl">
                 {message}
               </div>
             )}
             <div className="space-y-2">
-              <label htmlFor="reset-email" className="text-sm font-medium">
+              <label htmlFor="reset-email" className="text-[13px] font-bold">
                 Email
               </label>
               <Input
@@ -184,18 +184,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && (
-            <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+            <div className="p-3 text-sm font-semibold text-destructive bg-destructive/10 border-2 border-destructive/30 rounded-xl">
               {error}
             </div>
           )}
           {message && (
-            <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+            <div className="p-3 text-sm font-semibold text-green-600 bg-green-50 border-2 border-green-200 rounded-xl">
               {message}
             </div>
           )}
 
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
+            <label htmlFor="email" className="text-[13px] font-bold">
               Email
             </label>
             <Input
@@ -209,7 +209,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
+            <label htmlFor="password" className="text-[13px] font-bold">
               Mot de passe
             </label>
             <div className="relative">
@@ -238,7 +238,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
           {isSignUp && (
             <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium">
+              <label htmlFor="confirmPassword" className="text-[13px] font-bold">
                 Confirmer le mot de passe
               </label>
               <div className="relative">
@@ -275,16 +275,16 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 : "Se connecter"}
           </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t-2 border-foreground/10" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase font-bold">
+                <span className="bg-card px-2 text-muted-foreground">
+                  Ou
+                </span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Ou
-              </span>
-            </div>
-          </div>
 
           <Button
             type="button"

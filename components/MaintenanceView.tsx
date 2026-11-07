@@ -431,7 +431,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                         <EllipsisVerticalIcon />
                       </Button>
                       {openMenuId === record.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-md shadow-lg z-50 animate-fadeIn">
+                        <div className="absolute right-0 mt-2 w-48 bg-card border-2 border-foreground rounded-xl shadow-[4px_4px_0_0_hsl(var(--foreground))] z-50 animate-fadeIn">
                           {actionMenuItems(record)}
                         </div>
                       )}
@@ -439,7 +439,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-6 pt-4 border-t">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-6 pt-4 border-t-2 border-foreground/10">
                     <div>
                       <p className="text-sm text-muted-foreground">
                         Heures de Service
@@ -471,7 +471,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                         Gamme Exécutée
                       </p>
                       <span
-                        className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-sm ${rangeColors[record.maintenanceRange]
+                        className={`font-black inline-block text-center w-8 h-8 leading-8 rounded-full border-2 border-foreground text-sm ${rangeColors[record.maintenanceRange]
                           }`}
                       >
                         {record.maintenanceRange}
@@ -483,7 +483,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                       </p>
                       <div className="flex items-center gap-2">
                         <span
-                          className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-sm ${rangeColors[
+                          className={`font-black inline-block text-center w-8 h-8 leading-8 rounded-full border-2 border-foreground text-sm ${rangeColors[
                             nextMaint.gamme as keyof typeof rangeColors
                             ]
                             }`}
@@ -508,7 +508,6 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
             <CardContent className="p-0">
               <Table
                 className="table-zebra"
-                wrapperClassName="rounded-lg"
                 isMenuOpen={!!openMenuId}
               >
                 <TableHeader>
@@ -544,7 +543,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                         </TableCell>
                         <TableCell>
                           <span
-                            className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-xs ${rangeColors[record.maintenanceRange]
+                            className={`font-black inline-block text-center w-8 h-8 leading-7 rounded-lg border-2 border-foreground text-xs ${rangeColors[record.maintenanceRange]
                               }`}
                           >
                             {record.maintenanceRange}
@@ -553,7 +552,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span
-                              className={`font-bold inline-block text-center w-8 h-8 leading-8 rounded-full border text-xs ${rangeColors[
+                              className={`font-black inline-block text-center w-8 h-8 leading-8 rounded-full border-2 border-foreground text-xs ${rangeColors[
                                 nextMaint.gamme as keyof typeof rangeColors
                                 ]
                                 }`}
@@ -589,7 +588,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                             </Button>
                             {openMenuId === record.id && (
                               <div
-                                className={`absolute right-0 w-48 bg-card border border-border rounded-md shadow-lg z-50 ${isLastRow
+                                className={`absolute right-0 w-48 bg-card border-2 border-foreground rounded-xl shadow-[4px_4px_0_0_hsl(var(--foreground))] z-50 ${isLastRow
                                     ? "bottom-full mb-2"
                                     : "top-full mt-2"
                                   } animate-fadeIn`}
@@ -613,8 +612,8 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
 
   return (
     <div>
-      <Card className="mb-6 rounded-xl">
-        <CardHeader className="rounded-xl">
+      <Card className="mb-6">
+        <CardHeader>
           <div className="flex flex-col min-[1160px]:flex-row justify-between min-[1160px]:items-center gap-4">
             <div>
               <CardTitle className="text-2xl">

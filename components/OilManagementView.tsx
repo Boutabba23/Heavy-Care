@@ -174,20 +174,20 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <DropletIcon className="h-8 w-8 text-primary" />
+        <h1 className="text-4xl font-black tracking-tight text-foreground flex items-center gap-3">
+          <div className="p-2.5 bg-primary rounded-xl border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))]">
+            <DropletIcon className="h-8 w-8 text-primary-foreground" />
           </div>
           Gestion des Huiles
         </h1>
 
         {/* Tabs Navigation */}
-        <div className="flex bg-muted/50 p-1 rounded-xl overflow-x-auto">
+        <div className="flex bg-card p-1.5 rounded-full border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] overflow-x-auto">
           <button
             onClick={() => setActiveTab('stock')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'stock'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'stock'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-muted'
               }`}
           >
             <Squares2x2Icon className="h-4 w-4" />
@@ -195,9 +195,9 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
           </button>
           <button
             onClick={() => setActiveTab('add')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'add'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'add'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-muted'
               }`}
           >
             <PlusIcon className="h-4 w-4" />
@@ -205,9 +205,9 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
           </button>
           <button
             onClick={() => setActiveTab('reception')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'reception'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'reception'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-muted'
               }`}
           >
             <ArrowDownTrayIcon className="h-4 w-4" />
@@ -215,9 +215,9 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'history'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'history'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:bg-muted'
               }`}
           >
             <ClockIcon className="h-4 w-4" />
@@ -231,12 +231,12 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
         {activeTab === 'stock' && (
           <div className="space-y-6 animate-in slide-in-from-left-2 duration-300">
             <div className="flex items-center justify-between">
-              <div className="px-4 py-2 bg-card rounded-lg border border-border shadow-sm text-sm">
-                <span className="font-semibold text-primary">{oilStocks.reduce((acc: number, s: OilStock) => acc + s.totalBarrels, 0)}</span> Fûts en réserve
+              <div className="px-4 py-2 bg-card rounded-full border-2 border-foreground shadow-[2px_2px_0_0_hsl(var(--foreground))] text-sm font-medium">
+                <span className="font-black text-primary">{oilStocks.reduce((acc: number, s: OilStock) => acc + s.totalBarrels, 0)}</span> Fûts en réserve
               </div>
               <button
                 onClick={() => setIsAddTypeOpen(true)}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2 text-sm font-medium"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-xl border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none flex items-center gap-2 text-sm font-bold"
               >
                 <PlusIcon className="h-4 w-4" />
                 Nouveau Type
@@ -250,14 +250,14 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
                 const isEmpty = stock.currentLevel <= 0;
 
                 return (
-                  <Card key={stock.id} className={`border ${isLow ? 'border-destructive/50' : 'border-border'} overflow-hidden relative group`}>
+                  <Card key={stock.id} className={`overflow-hidden relative group ${isLow ? 'ring-4 ring-destructive/25' : ''}`}>
                     {isLow && (
                       <div className="absolute top-2 right-2 animate-pulse text-destructive">
                         <ExclamationTriangleIcon className="h-5 w-5" />
                       </div>
                     )}
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-semibold flex items-center justify-between">
+                      <CardTitle className="text-lg font-black flex items-center justify-between">
                         {stock.type}
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">{stock.totalBarrels} fûts pleins en stock</p>
@@ -270,23 +270,23 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
                         <span className="text-muted-foreground">200 L</span>
                       </div>
 
-                      <div className="h-32 w-full bg-muted/50 rounded-lg relative overflow-hidden border border-border/50">
+                      <div className="h-32 w-full bg-muted/50 rounded-b-xl relative overflow-hidden border-x-2 border-b-2 border-foreground">
                         <div
-                          className={`absolute bottom-0 left-0 right-0 transition-all duration-700 ease-in-out ${isLow ? 'bg-destructive/80' : 'bg-primary/80'
+                          className={`absolute bottom-0 left-0 right-0 transition-all duration-700 ease-in-out ${isLow ? 'bg-destructive' : 'bg-primary'
                             }`}
                           style={{ height: `${percentage}%` }}
                         >
-                          <div className="absolute top-0 left-0 right-0 h-1 bg-white/20"></div>
+                          <div className="absolute top-0 left-0 right-0 h-1.5 bg-black/15"></div>
                         </div>
                         {[25, 50, 75].map(p => (
-                          <div key={p} className="absolute w-full border-t border-white/10" style={{ bottom: `${p}%` }}></div>
+                          <div key={p} className="absolute w-full border-t-2 border-white/15" style={{ bottom: `${p}%` }}></div>
                         ))}
                       </div>
 
                       {isEmpty ? (
                         <button
                           onClick={() => handleReplaceBarrel(stock.id)}
-                          className="w-full mt-4 bg-destructive hover:bg-destructive/90 text-destructive-foreground py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
+                          className="w-full mt-4 bg-destructive text-white py-2 rounded-xl border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] text-sm font-bold transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
                         >
                           Remplacer Fût
                         </button>
@@ -315,11 +315,11 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
               <CardContent>
                 <form onSubmit={handleAddTopUp} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Engin</label>
+                    <label className="block text-[13px] font-bold mb-1">Engin</label>
                     <select
                       value={selectedMachineId}
                       onChange={(e) => setSelectedMachineId(e.target.value)}
-                      className="w-full p-2 rounded-md bg-background border border-border focus:ring-2 focus:ring-primary/20"
+                      className="w-full p-2.5 rounded-xl border-2 border-foreground/90 bg-card font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
                       required
                     >
                       <option value="">Sélectionner un engin</option>
@@ -329,23 +329,23 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Heures Service</label>
+                    <label className="block text-[13px] font-bold mb-1">Heures Service</label>
                     <input
                       type="number"
                       min="0"
                       value={serviceHours}
                       onChange={(e) => setServiceHours(e.target.value)}
-                      className="w-full p-2 rounded-md bg-background border border-border focus:ring-2 focus:ring-primary/20"
+                      className="w-full p-2.5 rounded-xl border-2 border-foreground/90 bg-card font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
                       placeholder="ex: 12500"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Type d'Huile</label>
+                    <label className="block text-[13px] font-bold mb-1">Type d'Huile</label>
                     <select
                       value={selectedOilId}
                       onChange={(e) => setSelectedOilId(e.target.value)}
-                      className="w-full p-2 rounded-md bg-background border border-border focus:ring-2 focus:ring-primary/20"
+                      className="w-full p-2.5 rounded-xl border-2 border-foreground/90 bg-card font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
                       required
                     >
                       <option value="">Sélectionner une huile</option>
@@ -355,21 +355,21 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Quantité (Litres)</label>
+                    <label className="block text-[13px] font-bold mb-1">Quantité (Litres)</label>
                     <input
                       type="number"
                       min="0.1"
                       step="0.1"
                       value={quantity}
                       onChange={(e) => setQuantity(e.target.value)}
-                      className="w-full p-2 rounded-md bg-background border border-border focus:ring-2 focus:ring-primary/20"
+                      className="w-full p-2.5 rounded-xl border-2 border-foreground/90 bg-card font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
                       placeholder="ex: 5.5"
                       required
                     />
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 rounded-md font-medium transition-all shadow-md active:scale-95"
+                    className="w-full bg-primary text-primary-foreground py-2.5 rounded-xl font-bold border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
                   >
                     Enregistrer Rajout
                   </button>
@@ -391,11 +391,11 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
               <CardContent>
                 <form onSubmit={handleReceiveStock} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Type d'Huile</label>
+                    <label className="block text-[13px] font-bold mb-1">Type d'Huile</label>
                     <select
                       value={receptionOilId}
                       onChange={(e) => setReceptionOilId(e.target.value)}
-                      className="w-full p-2 rounded-md bg-background border border-border focus:ring-2 focus:ring-primary/20"
+                      className="w-full p-2.5 rounded-xl border-2 border-foreground/90 bg-card font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
                       required
                     >
                       <option value="">Sélectionner une huile</option>
@@ -412,14 +412,14 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
                       step="1"
                       value={receptionQuantity}
                       onChange={(e) => setReceptionQuantity(e.target.value)}
-                      className="w-full p-2 rounded-md bg-background border border-border focus:ring-2 focus:ring-primary/20"
+                      className="w-full p-2.5 rounded-xl border-2 border-foreground/90 bg-card font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
                       placeholder="ex: 1"
                       required
                     />
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground py-2 rounded-md font-medium transition-all shadow-md active:scale-95"
+                    className="w-full bg-secondary text-secondary-foreground py-2.5 rounded-xl font-bold border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
                   >
                     Ajouter au Stock
                   </button>
@@ -444,17 +444,17 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
                     <div className="text-center py-8 text-muted-foreground">Aucun historique disponible</div>
                   ) : (
                     <table className="w-full text-sm">
-                      <thead className="bg-muted/50 sticky top-0">
+                      <thead className="bg-card sticky top-0">
                         <tr>
-                          <th className="px-4 py-2 text-left font-medium">Date</th>
-                          <th className="px-4 py-2 text-left font-medium">Engin</th>
-                          <th className="px-4 py-2 text-left font-medium">H. Service</th>
-                          <th className="px-4 py-2 text-left font-medium">Huile</th>
-                          <th className="px-4 py-2 text-right font-medium">Qté</th>
-                          <th className="px-4 py-2 text-right font-medium">Status</th>
+                          <th className="px-4 py-2.5 text-left font-black uppercase tracking-wider text-xs text-muted-foreground">Date</th>
+                          <th className="px-4 py-2.5 text-left font-black uppercase tracking-wider text-xs text-muted-foreground">Engin</th>
+                          <th className="px-4 py-2.5 text-left font-black uppercase tracking-wider text-xs text-muted-foreground">H. Service</th>
+                          <th className="px-4 py-2.5 text-left font-black uppercase tracking-wider text-xs text-muted-foreground">Huile</th>
+                          <th className="px-4 py-2.5 text-right font-black uppercase tracking-wider text-xs text-muted-foreground">Qté</th>
+                          <th className="px-4 py-2.5 text-right font-black uppercase tracking-wider text-xs text-muted-foreground">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border">
+                      <tbody className="divide-y-2 divide-foreground/10">
                         {transactions.map(tx => {
                           const machine = machines.find(m => m.id === tx.machineId);
                           const oil = oilStocks.find((s: OilStock) => s.id === tx.oilStockId);
@@ -466,7 +466,7 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
                               <td className="px-4 py-3 text-muted-foreground">{oil?.type || 'Inconnu'}</td>
                               <td className="px-4 py-3 text-right font-bold">{tx.quantity} L</td>
                               <td className="px-4 py-3 text-right">
-                                <span className="inline-flex items-center text-xs text-green-500 bg-green-500/10 px-2 py-1 rounded-full">
+                                <span className="inline-flex items-center text-xs font-bold text-white bg-emerald-500 border-2 border-foreground px-2 py-0.5 rounded-full">
                                   <CheckCircleIcon className="w-3 h-3 mr-1" /> OK
                                 </span>
                               </td>
@@ -485,14 +485,14 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
 
       {/* Add Type Modal */}
       {isAddTypeOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <Card className="w-full max-w-md mx-4 shadow-xl border-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-fadeIn">
+          <Card className="w-full max-w-md mx-4 shadow-[8px_9px_0_0_hsl(var(--foreground))]">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Ajouter un Type d'Huile</CardTitle>
               <button
                 type="button"
                 onClick={() => setIsAddTypeOpen(false)}
-                className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-foreground bg-card shadow-[2px_2px_0_0_hsl(var(--foreground))] text-muted-foreground transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
                 aria-label="Fermer"
               >
                 <CheckCircleIcon className="h-6 w-6 rotate-45" /> {/* Mimic X icon */}
@@ -501,7 +501,7 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
             <CardContent>
               <form onSubmit={handleAddType} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Nom / Type d'Huile</label>
+                  <label className="block text-[13px] font-bold mb-1">Nom / Type d'Huile</label>
                   <input
                     type="text"
                     value={newOilType}
@@ -513,7 +513,7 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Seuil d'Alerte (Litres)</label>
+                  <label className="block text-[13px] font-bold mb-1">Seuil d'Alerte (Litres)</label>
                   <input
                     type="number"
                     min="1"
@@ -529,13 +529,13 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
                   <button
                     type="button"
                     onClick={() => setIsAddTypeOpen(false)}
-                    className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                    className="px-4 py-2 text-sm font-bold text-foreground bg-card rounded-xl border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md shadow-sm transition-colors"
+                    className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-xl border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
                   >
                     Créer Référence
                   </button>

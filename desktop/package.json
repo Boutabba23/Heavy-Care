@@ -1,0 +1,21 @@
+{
+  "name": "heavy-care-desktop",
+  "private": true,
+  "version": "1.1.2",
+  "description": "HeavyCare desktop (offline, Tauri + SQLite + Supabase sync)",
+  "author": "HeavyCare",
+  "homepage": "https://github.com/Boutabba23/Heavy-Care",
+  "scripts": {
+    "renderer:install": "cd renderer && npm install",
+    "renderer:dev": "cd renderer && npm run dev",
+    "renderer:build": "cd renderer && npm run build",
+    "dev": "tauri dev",
+    "start": "tauri dev",
+    "dist": "tauri build",
+    "dist:win": "tauri build --bundles nsis,msi",
+    "dist:linux": "tauri build --bundles deb,appimage"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4"
+  }
+}

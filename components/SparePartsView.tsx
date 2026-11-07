@@ -114,8 +114,8 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-foreground">Pièces de Rechange</h1>
-                    <p className="text-muted-foreground mt-1">
+                    <h1 className="text-4xl font-black tracking-tight text-foreground">Pièces de Rechange</h1>
+                    <p className="font-medium text-muted-foreground mt-1">
                         Gérez votre stock de pièces et suivez les installations
                     </p>
                 </div>
@@ -134,18 +134,18 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card className="p-4">
-                    <p className="text-sm text-muted-foreground">Total Pièces</p>
-                    <p className="text-2xl font-bold text-foreground">{spareParts.length}</p>
+                    <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Total Pièces</p>
+                    <p className="text-3xl font-black tracking-tight text-foreground">{spareParts.length}</p>
                 </Card>
                 <Card className="p-4">
-                    <p className="text-sm text-muted-foreground">Valeur Stock</p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Valeur Stock</p>
+                    <p className="text-3xl font-black tracking-tight text-foreground">
                         {totalStockValue.toLocaleString("fr-FR")} DA
                     </p>
                 </Card>
                 <Card className="p-4">
-                    <p className="text-sm text-muted-foreground">Stock Bas</p>
-                    <p className={`text-2xl font-bold ${lowStockCount > 0 ? "text-destructive" : "text-success"}`}>
+                    <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Stock Bas</p>
+                    <p className={`text-3xl font-black tracking-tight ${lowStockCount > 0 ? "text-destructive" : "text-success"}`}>
                         {lowStockCount}
                     </p>
                 </Card>
@@ -166,7 +166,7 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
                 <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="px-3 py-2 rounded-md border border-input bg-background text-foreground"
+                    className="px-3 rounded-xl border-2 border-foreground/90 bg-card font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 >
                     <option value="all">Toutes les catégories</option>
                     {categories.map((cat) => (
@@ -199,7 +199,7 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
                                         {/* Part Info */}
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <h3 className="font-semibold text-foreground">{part.designation}</h3>
+                                                <h3 className="font-black text-foreground">{part.designation}</h3>
                                                 <Badge variant={getStockBadgeVariant(part.stockQuantity, part.minStock)}>
                                                     Stock: {part.stockQuantity}
                                                 </Badge>
@@ -267,8 +267,8 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
 
                                 {/* Installation History */}
                                 {isExpanded && (
-                                    <div className="border-t border-border bg-muted/50 p-4">
-                                        <h4 className="font-medium text-foreground mb-3">
+                                    <div className="border-t-2 border-foreground/10 bg-muted/40 p-4">
+                                        <h4 className="font-black uppercase tracking-wide text-xs text-muted-foreground mb-3">
                                             Historique des montages ({partInstallations.length})
                                         </h4>
                                         {partInstallations.length === 0 ? (
@@ -280,7 +280,7 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
                                                 {partInstallations.slice(0, 5).map((inst) => (
                                                     <div
                                                         key={inst.id}
-                                                        className="flex flex-col sm:flex-row justify-between gap-2 p-3 bg-background rounded-md border border-border"
+                                                        className="flex flex-col sm:flex-row justify-between gap-2 p-3 bg-card rounded-xl border-2 border-foreground/20"
                                                     >
                                                         <div>
                                                             <p className="font-medium text-foreground">
