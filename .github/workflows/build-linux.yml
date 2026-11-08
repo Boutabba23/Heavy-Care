@@ -32,6 +32,9 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             patchelf
+          # AppImage bundling needs FUSE (package name differs across Ubuntu
+          # releases: 24.04+ uses libfuse2t64; older images use libfuse2)
+          sudo apt-get install -y libfuse2t64 || sudo apt-get install -y libfuse2
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -50,9 +53,13 @@ jobs:
         working-directory: desktop
         run: npm install
 
-      - name: Build Linux packages (deb + AppImage)
+      - name: Build Linux deb
         working-directory: desktop
-        run: npx tauri build --bundles deb,appimage
+        run: npx tauri build --bundles deb
+
+      - name: Build Linux AppImage
+        working-directory: desktop
+        run: npx tauri build --bundles appimage
 
       # Upload the artifacts directly with the gh CLI into the release
       # matching tauri.conf.json's version (e.g. v1.1.2). The release must
