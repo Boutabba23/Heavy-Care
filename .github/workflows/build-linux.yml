@@ -54,16 +54,9 @@ jobs:
         working-directory: desktop
         run: npx tauri build --bundles deb,appimage
 
-      - name: Install desktop deps
-        working-directory: desktop
-        run: npm install
-
-      - name: Build Linux packages
-        working-directory: desktop
-        run: npx electron-builder --linux --publish never
-
-      # electron-builder's GitHub publisher refuses releases older than 2 hours,
-      # so upload the artifacts directly with the gh CLI instead.
+      # Upload the artifacts directly with the gh CLI into the release
+      # matching tauri.conf.json's version (e.g. v1.1.2). The release must
+      # already exist (it is created on Windows publish) — create as fallback.
       - name: Upload Linux assets to GitHub release
         working-directory: desktop
         env:
@@ -75,6 +68,3 @@ jobs:
             src-tauri/target/release/bundle/deb/*.deb \
             src-tauri/target/release/bundle/appimage/*.AppImage \
             --clobber
-          TAG="v$(node -p "require('./package.json').version")"
-          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "HeavyCare ${TAG#v}" --generate-notes
-          gh release upload "$TAG" release/*.AppImage release/*.deb release/latest-linux.yml --clobber
