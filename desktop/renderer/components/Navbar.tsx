@@ -184,8 +184,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const groupClass = (menu: MenuKey, groupActive: boolean) =>
     `${openMenu === menu || groupActive ? pillActive : pillIdle}`;
 
-  const              Tableau de bord
-Items = () => (
+  const DashboardItems = () => (
     <>
       <button className={dropItem} onClick={() => navigate(View.DASHBOARD)}>
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100">
@@ -211,8 +210,7 @@ Items = () => (
     </>
   );
 
-  const              Inventaire
-Items = () => (
+  const InventoryItems = () => (
     <>
       <button
         className={dropItem}
@@ -304,8 +302,7 @@ Items = () => (
 
         {/* Desktop sections */}
         <nav className="hidden items-center gap-1 md:flex">
-          {/*              Tableau de bord
- group */}
+          {/* Dashboard group */}
           <div className="relative">
             <button
               className={groupClass("dashboard", isViewActive(dashboardViews))}
@@ -318,14 +315,12 @@ Items = () => (
             </button>
             {openMenu === "dashboard" && (
               <div className={`absolute left-0 top-full z-50 mt-3 flex min-w-60 flex-col p-2 ${dropPanel}`}>
-                <              Tableau de bord
-Items />
+                <DashboardItems />
               </div>
             )}
           </div>
 
-          {/*              Engins
- — direct */}
+          {/* Machines — direct */}
           <button
             className={
               isViewActive([View.MACHINE_LIST, View.MACHINE_DETAIL])
@@ -334,8 +329,7 @@ Items />
             }
             onClick={() => navigate(View.MACHINE_LIST)}
           >
-            <ExcavatorIcon className="h-4 w-4" />              Engins
-
+            <ExcavatorIcon className="h-4 w-4" /> Engins
           </button>
 
           {/* Maintenance — direct */}
@@ -346,8 +340,7 @@ Items />
             <WrenchIcon className="h-4 w-4" /> Maintenance
           </button>
 
-          {/*              Inventaire
- group */}
+          {/* Inventory group */}
           <div className="relative">
             <button
               className={groupClass("inventory", isViewActive(inventoryViews))}
@@ -355,13 +348,12 @@ Items />
                 setOpenMenu(openMenu === "inventory" ? null : "inventory")
               }
             >
-              Inventaire
+              Stock
               <Caret className={openMenu === "inventory" ? "rotate-180" : ""} />
             </button>
             {openMenu === "inventory" && (
               <div className={`absolute left-0 top-full z-50 mt-3 flex min-w-60 flex-col p-2 ${dropPanel}`}>
-                <              Inventaire
-Items />
+                <InventoryItems />
               </div>
             )}
           </div>
@@ -674,14 +666,12 @@ Items />
           <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Tableau de bord
           </p>
-          <              Tableau de bord
-Items />
+          <DashboardItems />
           <button
             className={pillIdle}
             onClick={() => navigate(View.MACHINE_LIST)}
           >
-            <ExcavatorIcon className="h-4 w-4 text-emerald-600" />              Engins
-
+            <ExcavatorIcon className="h-4 w-4 text-emerald-600" /> Engins
           </button>
           <button
             className={pillIdle}
@@ -692,8 +682,7 @@ Items />
           <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Inventaire
           </p>
-          <              Inventaire
-Items />
+          <InventoryItems />
           <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Profil
           </p>
