@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 type SyncStatus = {
   configured: boolean;
+  authenticated?: boolean;
   pending: number;
   lastSync: string | null;
 };
@@ -18,6 +19,7 @@ const SyncIndicator: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<SyncStatus>({
     configured: false,
+    authenticated: false,
     pending: 0,
     lastSync: null,
   });
@@ -99,13 +101,17 @@ const SyncIndicator: React.FC = () => {
     ? "bg-muted-foreground"
     : status.pending > 0
       ? "bg-warning"
-      : "bg-green-500";
+      : status.authenticated === false
+        ? "bg-orange-500"
+        : "bg-green-500";
 
   const label = !status.configured
     ? "Hors ligne (local)"
     : status.pending > 0
       ? `${status.pending} modif.${status.pending > 1 ? "s" : ""} en attente`
-      : "Synchronisé";
+      : status.authenticated === false
+        ? "Connexion requise"
+        : "Synchronisé";
 
   return (
     <div className='relative' ref={panelRef}>
@@ -166,6 +172,12 @@ const SyncIndicator: React.FC = () => {
                   supabase-config.example.json
                 </code>
                 ).
+              </p>
+            )}
+            {status.authenticated === false && (
+              <p className="pt-1 leading-relaxed">
+                Connectez-vous avec Google (ou email/mot de passe) pour
+                synchroniser les données depuis le serveur.
               </p>
             )}
             {syncMessage && (

@@ -38,6 +38,7 @@ fn db_sync_status(state: State<'_, AppState>) -> Value {
     let last = app.sync.last_sync();
     json!({
         "configured": app.sync.is_configured(),
+        "authenticated": auth::build_public_shape(&app.auth).is_some(),
         "pending": pending,
         "lastSync": last
     })
@@ -86,6 +87,8 @@ async fn auth_sign_in(
                         json!({ "event": "SIGNED_IN", "session": get_active_session(&app) }),
                     )
                     .ok();
+                // Pull data right away instead of waiting for the loop.
+                run_and_notify(&app).await;
                 return Ok(json!({ "error": Value::Null }));
             }
             Err(err_msg) => {
@@ -236,7 +239,7 @@ async fn handle_callback_conn(app: Arc<AppCtx>, mut stream: tokio::net::TcpStrea
         if !code.is_empty() {
             // Bind the take() result first so no MutexGuard is held across await
             let verifier: Option<String> = app.pending_verifier.lock().unwrap().take();
-            if let Some(verifier) = verifier {
+                    if let Some(verifier) = verifier {
                 match auth::exchange_code(&app.auth, &code, &verifier).await {
                     Ok(()) => {
                         eprintln!("Supabase session established (OAuth).");
@@ -246,6 +249,9 @@ async fn handle_callback_conn(app: Arc<AppCtx>, mut stream: tokio::net::TcpStrea
                                 json!({ "event": "SIGNED_IN", "session": get_active_session(&app) }),
                             )
                             .ok();
+                        // Pull data right away — don't make the user wait for
+                        // the 10-minute loop after a fresh sign-in.
+                        run_and_notify(&app).await;
                     }
                     Err(e) => eprintln!("OAuth exchange failed: {}", e),
                 }
