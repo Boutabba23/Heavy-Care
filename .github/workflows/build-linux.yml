@@ -59,7 +59,22 @@ jobs:
 
       - name: Build Linux AppImage
         working-directory: desktop
-        run: npx tauri build --bundles appimage
+        run: npx tauri build --verbose --bundles appimage > appimage-build.log 2>&1
+
+      # If AppImage bundling fails, emit the tail of the log as ::error
+      # annotations so the failure is visible from the API without log access.
+      - name: Report AppImage failure details
+        if: failure()
+        working-directory: desktop
+        run: |
+          if [ -f appimage-build.log ]; then
+            echo "==== last 60 lines of appimage build log ====";
+            tail -n 60 appimage-build.log;
+            echo "==== error lines ====";
+            grep -aiE "error|failed|panicked|denied|not found" appimage-build.log | tail -n 25 | while IFS= read -r l; do
+              echo "::error::${l}"
+            done
+          fi
 
       # Upload the artifacts directly with the gh CLI into the release
       # matching tauri.conf.json's version (e.g. v1.1.2). The release must
