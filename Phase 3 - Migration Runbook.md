@@ -108,12 +108,16 @@ BEGIN
   );
 END; $$;
 
-CREATE OR REPLACE FUNCTION public.has_pole_access(pole uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.has_pole_access(pole_id uuid) RETURNS boolean
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
   IF is_super_admin() THEN RETURN TRUE; END IF;
+  -- positional ref ($1) avoids name ambiguity between the column and the
+  -- parameter, and keeps the original parameter name (CREATE OR REPLACE
+  -- cannot rename input parameters).
   RETURN EXISTS (
-    SELECT 1 FROM public.profiles WHERE id = auth.uid() AND pole_id = pole
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND profiles.pole_id = $1
   );
 END; $$;
 
