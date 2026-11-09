@@ -13,6 +13,10 @@ pub struct Sync {
     pub last_sync_path: Mutex<Option<PathBuf>>,
     pub syncing: AtomicBool,
     pub dirty: AtomicBool,
+    // Cached profiles row of the signed-in user (role / pole_id). Refreshed
+    // each sync cycle; drives pole injection on pushed rows (RLS demands a
+    // valid pole_id on every new business row).
+    pub profile: Mutex<Option<Value>>,
 }
 
 // Zero-config default — same public Supabase project as the web app.
@@ -28,6 +32,7 @@ impl Sync {
             last_sync_path: Mutex::new(None),
             syncing: AtomicBool::new(false),
             dirty: AtomicBool::new(true),
+            profile: Mutex::new(None),
         }
     }
 
@@ -172,6 +177,49 @@ async fn ensure_token(sync: &Sync, auth: &crate::auth::Auth) -> Option<String> {
 }
 
 impl Sync {
+    /// Fetch (or refresh) the signed-in user's profiles row (role + pole_id).
+    /// Uses the app session token via rest(); a transient failure keeps the
+    /// previous cache. Only meaningful for session-authenticated syncing.
+    pub async fn refresh_profile(&self, auth: &crate::auth::Auth) {
+        let uid = crate::auth::build_public_shape(auth)
+            .and_then(|s| s["user"]["id"].as_str().map(|s| s.to_string()));
+        let uid = match uid {
+            Some(u) => u,
+            None => {
+                // Not a session-authenticated context (local/config sync user)
+                *self.profile.lock().unwrap() = None;
+                return;
+            }
+        };
+        match self
+            .rest(
+                auth,
+                "GET",
+                "profiles",
+                &format!("?id=eq.{}&select=role,pole_id", uid),
+                None,
+                None,
+            )
+            .await
+        {
+            Ok(v) => {
+                let row = v.as_array().and_then(|a| a.first().cloned());
+                *self.profile.lock().unwrap() = row;
+            }
+            Err(e) => eprintln!("Profile fetch failed (keeping cache): {}", e),
+        }
+    }
+
+    pub fn profile_pole_id(&self) -> Option<String> {
+        self.profile
+            .lock()
+            .unwrap()
+            .as_ref()
+            .and_then(|p| p["pole_id"].as_str().map(|s| s.to_string()))
+    }
+}
+
+impl Sync {
     pub async fn rest(
         &self,
         auth: &crate::auth::Auth,
@@ -269,6 +317,10 @@ async fn run_sync_inner(sync: &Sync, db: &db::Db, auth: &crate::auth::Auth) -> V
     }
     sync.dirty.store(false, Ordering::SeqCst);
 
+    // Refresh the profile cache once per cycle: pole injection on push and
+    // the UI's pole awareness both rely on it.
+    sync.refresh_profile(auth).await;
+
     let push = push_pending(sync, db, auth).await;
     let pull = pull_remote(sync, db, auth).await;
     sync.set_last_sync(db::now_iso());
@@ -285,6 +337,8 @@ async fn run_sync_inner(sync: &Sync, db: &db::Db, auth: &crate::auth::Auth) -> V
 async fn push_pending(sync: &Sync, db: &db::Db, auth: &crate::auth::Auth) -> Value {
     let pending = db::pending_queue(db, "", &[]);
     let mut pushed = 0usize;
+    let mut skipped: usize = 0;
+    let pole_of_session = sync.profile_pole_id();
     for item in pending {
         let table = item["table_name"].as_str().unwrap_or_default().to_string();
         let op = item["op"].as_str().unwrap_or_default().to_string();
@@ -306,13 +360,39 @@ async fn push_pending(sync: &Sync, db: &db::Db, auth: &crate::auth::Auth) -> Val
             )
             .await
         } else {
+            // Rows created locally before a pole was known don't satisfy the
+            // pole_id WITH CHECK; stamp them with the signed-in user's pole.
+            // If neither the row nor the session knows a pole yet, leave the
+            // row queued (it pushes automatically once the user is assigned).
+            let mut payload = match payload {
+                Some(p) => p,
+                None => {
+                    eprintln!("Sync push skipped ({}/{}): empty payload", table, row_id);
+                    continue;
+                }
+            };
+            if payload.get("pole_id").map(|v| v.is_null()).unwrap_or(true) {
+                match &pole_of_session {
+                    Some(pole) => {
+                        payload["pole_id"] = json!(pole);
+                    }
+                    None => {
+                        skipped += 1;
+                        eprintln!(
+                            "Sync push held back ({}/{}): no pole assigned yet",
+                            table, row_id
+                        );
+                        continue;
+                    }
+                }
+            }
             // upsert by primary key (resolution=merge-duplicates)
             sync.rest(
                 auth,
                 "POST",
                 &table,
                 "",
-                payload.map(|p| json!([p])),
+                Some(json!([payload])),
                 Some("return=minimal,resolution=merge-duplicates".to_string()),
             )
             .await
@@ -324,11 +404,11 @@ async fn push_pending(sync: &Sync, db: &db::Db, auth: &crate::auth::Auth) -> Val
             }
             Err(e) => {
                 eprintln!("Sync push failed ({}/{}): {}", table, row_id, e);
-                return json!({ "pushed": 0, "error": e });
+                return json!({ "pushed": pushed, "skipped": skipped, "error": e });
             }
         }
     }
-    json!({ "pushed": pushed, "error": Value::Null })
+    json!({ "pushed": pushed, "skipped": skipped, "error": Value::Null })
 }
 
 async fn pull_remote(sync: &Sync, db: &db::Db, auth: &crate::auth::Auth) -> Value {

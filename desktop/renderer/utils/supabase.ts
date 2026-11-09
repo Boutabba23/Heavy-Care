@@ -124,6 +124,45 @@ class QueryBuilder {
   }
 }
 
+// Public Supabase project — zero-config, mirrors src-tauri's BUILTIN_* consts.
+// The anon key is public by design (RLS guards the data).
+export const SUPABASE_URL = "https://yklkxvvoeovksyslcfjy.supabase.co";
+export const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrbGt4dnZvZW92a3N5c2xjZmp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM5MjAyMjcsImV4cCI6MjA2OTQ5NjIyN30.j7Whr8rPAtSwNbSyZ2iTTFEQAGsDI51022l4ZfsIlmo";
+
+// Fetch the signed-in user's profiles row straight from Supabase REST (the
+// local bridge has no profiles table; the cloud row is the multi-pole source
+// of truth). Returns null when the user has no profile row; THROWS on
+// transport/HTTP failure so callers can retry later (e.g. on db:synced).
+export async function fetchSupabaseProfile(): Promise<{
+  role: string | null;
+  pole_id: string | null;
+} | null> {
+  const bridge = getBridge();
+  if (!bridge) return null;
+  const res = await bridge.auth.getSession();
+  const session: any = res?.data?.session;
+  const uid = session?.user?.id;
+  const token = session?.access_token;
+  if (!uid || !token) return null;
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(
+      uid
+    )}&select=role,pole_id`,
+    {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!r.ok) {
+    throw new Error(`profiles fetch failed: ${r.status}`);
+  }
+  const rows: any[] = await r.json();
+  return rows && rows.length > 0 ? rows[0] : null;
+}
+
 // ---------------------------------------------------------------------------
 // supabase-compatible client
 // ---------------------------------------------------------------------------

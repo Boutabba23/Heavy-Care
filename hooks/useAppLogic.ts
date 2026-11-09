@@ -21,6 +21,7 @@ import {
   SparePartInstallation,
   OilStock,
 } from "../types";
+import { useAuth } from "../contexts/AuthContext";
 import { calculateNextMaintenance } from "../utils/maintenance";
 import { supabase } from "../utils/supabase";
 import { themes, ThemeInfo } from "../utils/themes";
@@ -87,6 +88,7 @@ export const defaultCustomColors: CustomColors = {
 };
 
 export const useAppLogic = () => {
+  const { poleId } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<View>(View.LANDING);
   const [machines, setMachines] = useState<Machine[]>([]);
@@ -120,6 +122,8 @@ export const useAppLogic = () => {
       downtime_hours: adj.downtimeHours || 0,
       panne_hours: adj.panneHours || 0,
       notes: adj.notes || null,
+      chantier_id: poleId || null,
+      pole_id: poleId || null,
     };
     const { data, error } = await supabase
       .from('monthly_daily_adjustments')
@@ -155,7 +159,8 @@ export const useAppLogic = () => {
     const { error } = await supabase
       .from('monthly_daily_adjustments')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('pole_id', poleId);
     if (error) {
       addToast({ type: 'error', title: 'Erreur', description: error.message });
       return false;
@@ -678,6 +683,8 @@ export const useAppLogic = () => {
         registration_number: machineData.registrationNumber || null, // Use null instead of empty string
         service_hours: machineData.serviceHours,
         assigned_filters: editingMachine.assignedFilters || [],
+        chantier_id: poleId || null,
+        pole_id: poleId || null,
       }
       : {
         id: `m-${Date.now()}`,
@@ -735,7 +742,8 @@ export const useAppLogic = () => {
     const { error } = await supabase
       .from("machines")
       .delete()
-      .eq("id", machineId);
+      .eq("id", machineId)
+      .eq("pole_id", poleId);
     if (error) {
       addToast({ type: "error", title: "Erreur", description: error.message });
     } else {
@@ -845,6 +853,8 @@ export const useAppLogic = () => {
       service_hours: record.serviceHours,
       maintenance_range: record.maintenanceRange,
       filters_used: [],
+      chantier_id: poleId || null,
+      pole_id: poleId || null,
     }));
 
     const { error } = await supabase
@@ -893,6 +903,8 @@ export const useAppLogic = () => {
       registration_number: nm.registrationNumber || null, // Use null instead of empty string
       service_hours: nm.serviceHours,
       assigned_filters: [],
+      chantier_id: poleId || null,
+      pole_id: poleId || null,
     }));
 
     // Filter out any records that might have invalid data
@@ -982,7 +994,8 @@ export const useAppLogic = () => {
     const { error } = await supabase
       .from("filter_groups")
       .delete()
-      .eq("id", groupId);
+      .eq("id", groupId)
+      .eq("pole_id", poleId);
     if (error) {
       addToast({ type: "error", title: "Erreur", description: error.message });
     } else {
@@ -1027,6 +1040,8 @@ export const useAppLogic = () => {
           oils_used: recordData.oilsUsed,
           downtime_hours: (recordData as any).downtimeHours || 0,
           panne_hours: (recordData as any).panneHours || 0,
+          chantier_id: poleId || null,
+          pole_id: poleId || null,
         }
         : {
           id: `maint-${Date.now()}`,
@@ -1038,6 +1053,8 @@ export const useAppLogic = () => {
           oils_used: recordData.oilsUsed,
           downtime_hours: (recordData as any).downtimeHours || 0,
           panne_hours: (recordData as any).panneHours || 0,
+          chantier_id: poleId || null,
+          pole_id: poleId || null,
         };
 
     const { error } = await supabase
@@ -1146,7 +1163,8 @@ export const useAppLogic = () => {
     const { error } = await supabase
       .from("maintenance_records")
       .delete()
-      .eq("id", recordId);
+      .eq("id", recordId)
+      .eq("pole_id", poleId);
     if (error) {
       if (showNotification) {
         addToast({ type: "error", title: "Erreur", description: error.message });
@@ -1340,6 +1358,8 @@ export const useAppLogic = () => {
       const res = await supabase.from("spare_parts").insert([{
         ...payload,
         id: `sp-${Date.now()}`,
+        chantier_id: poleId || null,
+        pole_id: poleId || null,
       }]);
       error = res.error;
     }
@@ -1365,7 +1385,8 @@ export const useAppLogic = () => {
     const { error } = await supabase
       .from("spare_parts")
       .delete()
-      .eq("id", partId);
+      .eq("id", partId)
+      .eq("pole_id", poleId);
 
     if (error) {
       addToast({
@@ -1407,6 +1428,8 @@ export const useAppLogic = () => {
     const { error } = await supabase.from("spare_part_installations").insert([{
       ...payload,
       id: `inst-${Date.now()}`,
+      chantier_id: poleId || null,
+      pole_id: poleId || null,
     }]);
 
     if (error) {

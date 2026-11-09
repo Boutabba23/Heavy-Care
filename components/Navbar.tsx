@@ -52,6 +52,9 @@ interface NavbarProps {
   // user / profile
   user: any;
   userEmail: string;
+  pole: any;
+  userRole: string;
+  isSuperAdmin: boolean;
   onLogout: () => void;
   onOpenAIAssistant: () => void;
   onOpenScanner: () => void;
@@ -97,6 +100,9 @@ const Navbar: React.FC<NavbarProps> = ({
   onThemeChange,
   user,
   userEmail,
+  pole,
+  userRole,
+  isSuperAdmin,
   onLogout,
   onOpenAIAssistant,
   onOpenScanner,
@@ -473,6 +479,16 @@ const Navbar: React.FC<NavbarProps> = ({
                         <p className="truncate text-xs text-muted-foreground">
                           {userEmail}
                         </p>
+                        {pole && (
+                          <p className="truncate text-[10px] font-bold uppercase tracking-wider text-primary">
+                            {pole.code || "Pôle inconnu"}
+                          </p>
+                        )}
+                        {userRole && (
+                          <p className="truncate text-[10px] text-muted-foreground">
+                            {userRole.replace("_", " ").toUpperCase()}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -686,6 +702,16 @@ const Navbar: React.FC<NavbarProps> = ({
           <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Profil
           </p>
+          {pole && (
+            <div className="px-3 py-2 bg-muted border border-foreground/10 rounded-lg mb-2">
+              <p className="text-xs font-bold text-foreground truncate">
+                {pole.code || "Pôle inconnu"}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                {userRole.replace("_", " ").toUpperCase()}
+              </p>
+            </div>
+          )}
           <button className={dropItem} onClick={() => navigate(View.SETTINGS)}>
             <SettingsIcon className="h-4 w-4 text-purple-600" /> Paramètres
           </button>

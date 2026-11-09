@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session, AuthError } from "@supabase/supabase-js";
 import { supabase } from "../utils/supabase";
+import type { Profile, Pole } from "../types";
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +11,13 @@ interface AuthContextType {
   loading: boolean;
   devMode: boolean;
   toggleDevMode: () => void;
+  profile: Profile | null;
+  pole: Pole | null;
+  role: string | null;
+  poleId: string | null;
+  isSuperAdmin: boolean;
+  isPoleAdmin: boolean;
+  isUser: boolean;
   signIn: (
     email: string,
     password: string
@@ -42,9 +50,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [devMode, setDevMode] = useState(process.env.NODE_ENV === 'development');
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [pole, setPole] = useState<Pole | null>(null);
 
   const toggleDevMode = () => {
     setDevMode(prev => !prev);
+  };
+
+  const role = profile?.role ?? null;
+  const poleId = profile?.pole_id ?? null;
+  const isSuperAdmin = role === "super_admin";
+  const isPoleAdmin = role === "pole_admin";
+  const isUser = role === "user";
+
+  const fetchProfile = async (uid: string | null) => {
+    if (!uid) {
+      setProfile(null);
+      setPole(null);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*, pole:poles(id, code, name, created_at, updated_at, archived_at, password_hash)")
+      .eq("id", uid)
+      .single();
+
+    if (error || !data) {
+      setProfile(null);
+      setPole(null);
+      return;
+    }
+
+    setProfile(data as Profile);
+    setPole((data as any).pole ?? null);
   };
 
   useEffect(() => {
@@ -55,6 +93,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      }
       setLoading(false);
     };
 
@@ -66,6 +107,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+        setPole(null);
+      }
       setLoading(false);
     });
 
@@ -116,13 +163,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     session,
     loading,
+    devMode,
+    toggleDevMode,
+    profile,
+    pole,
+    role,
+    poleId,
+    isSuperAdmin,
+    isPoleAdmin,
+    isUser,
     signIn,
     signUp,
     signOut,
     signInWithGoogle,
     resetPassword,
-    devMode,
-    toggleDevMode,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

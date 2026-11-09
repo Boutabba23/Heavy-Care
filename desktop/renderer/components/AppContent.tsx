@@ -27,16 +27,26 @@ import AddStockModal from "./AddStockModal";
 import ThemeCustomizerModal from "./ThemeCustomizerModal";
 import { hexToHsl, isColorDark } from "../utils/colors";
 import ImportModal from "./ImportModal";
-import ImportMaintenanceModal from "./ImportMaintenanceModal";
+import ImportMaintenanceModal from "./ImportMaintenanceModal";
+import NoPoleScreen from "./NoPoleScreen";
 import { SparePartsView } from "./SparePartsView";
 import SparePartModal from "./SparePartModal";
 import SparePartInstallationModal from "./SparePartInstallationModal";
 import OilManagementView from "./OilManagementView";
 import { LogoIcon } from "../constants";
 
-const AppContent: React.FC = () => {
-  const { user, loading: authLoading, signOut } = useAuth();
-  const { state, actions } = useAppLogic();
+const AppContent: React.FC = () => {
+  const {
+    user,
+    session,
+    loading: authLoading,
+    signOut,
+    profile,
+    profileLoaded,
+    poleId,
+    isSuperAdmin,
+  } = useAuth();
+  const { state, actions } = useAppLogic();
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -166,9 +176,24 @@ const AppContent: React.FC = () => {
     );
   }
 
-  if (state.isLoading) {
-    return renderLoadingScreen();
-  }
+  if (state.isLoading) {
+    return renderLoadingScreen();
+  }
+
+  // Multi-pole gate for CLOUD users only: local/offline accounts have no
+  // cloud profile and manage their own machine-scoped data. A cloud user
+  // without an assigned pole would see a silently empty app (RLS hides
+  // every business row), so block early.
+  const isCloudUser = !!(session as any)?.access_token;
+  if (
+    !isSuperAdmin &&
+    profileLoaded &&
+    isCloudUser &&
+    !profile &&
+    !poleId
+  ) {
+    return <NoPoleScreen />;
+  }
 
   const renderView = () => {
     switch (state.currentView) {

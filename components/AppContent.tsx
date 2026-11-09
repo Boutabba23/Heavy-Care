@@ -4,6 +4,7 @@ import React from "react";
 import { useAppLogic } from "../hooks/useAppLogic";
 import { useAuth } from "../contexts/AuthContext";
 import LandingPage from "./LandingPage";
+import NoPoleScreen from "./NoPoleScreen";
 import MachineDetailView from "./MachineDetailView";import FilterManagementView from "./FilterManagementView";
 import UserProfile from "./UserProfile";
 import LoginPage from "./LoginPage";
@@ -34,7 +35,7 @@ import OilManagementView from "./OilManagementView";
 import { LogoIcon } from "../constants";
 
 const AppContent: React.FC = () => {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut, pole, role, isSuperAdmin } = useAuth();
   const { state, actions } = useAppLogic();
 
   React.useEffect(() => {
@@ -167,6 +168,12 @@ const AppContent: React.FC = () => {
 
   if (state.isLoading) {
     return renderLoadingScreen();
+  }
+
+  // Multi-pole gate: a cloud user without an assigned pole would see an
+  // empty, silently broken app (RLS hides all business data). Block early.
+  if (!isSuperAdmin && !pole) {
+    return <NoPoleScreen />;
   }
 
   const renderView = () => {
@@ -344,6 +351,9 @@ const AppContent: React.FC = () => {
         // user / profile
         user={user}
         userEmail={user?.email || ""}
+        pole={pole}
+        userRole={role || ""}
+        isSuperAdmin={isSuperAdmin}
         onLogout={handleLogout}
         onOpenAIAssistant={actions.openAIAssistant}
         onOpenScanner={actions.openScanner}

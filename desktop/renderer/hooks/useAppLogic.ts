@@ -23,6 +23,7 @@ import {
 } from "../types";
 import { calculateNextMaintenance } from "../utils/maintenance";
 import { supabase } from "../utils/supabase";
+import { useAuth } from "../contexts/AuthContext";
 import { themes, ThemeInfo } from "../utils/themes";
 // Type definitions for monthly daily adjustments
 type MonthlyDailyAdjustmentInsert = Database['public']['Tables']['monthly_daily_adjustments']['Insert'];
@@ -87,6 +88,7 @@ export const defaultCustomColors: CustomColors = {
 };
 
 export const useAppLogic = () => {
+  const { poleId, user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<View>(View.LANDING);
   const [machines, setMachines] = useState<Machine[]>([]);
@@ -247,6 +249,10 @@ export const useAppLogic = () => {
         installationsRes,
         oilStocksRes,
       ] = await Promise.all([
+        // Local reads are unfiltered by pole: this database only ever holds
+        // what the signed-in user's RLS-scoped sync pulled for them (plus
+        // local accounts' own data). Filtering here would break queries
+        // until the pole_id column exists locally.
         supabase.from("machines").select("*"),
         supabase.from("filter_groups").select("*"),
         supabase.from("filter_types").select("*"),
@@ -325,6 +331,7 @@ export const useAppLogic = () => {
           downtime_hours: adj.downtimeHours || 0,
           panne_hours: adj.panneHours || 0,
           notes: adj.notes || null,
+          pole_id: poleId || null,
         };
         const res = await (supabase as any).from('monthly_daily_adjustments').insert(payload as any);
         if (res.error) {
