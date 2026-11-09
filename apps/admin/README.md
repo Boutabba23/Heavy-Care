@@ -1,44 +1,49 @@
-# Admin Application
+# Heavy-Care — Console Super Admin
 
-The Super Admin administration interface for the Multi-Pole Management System.
+Application séparée pour la gestion multi-pôles (rôles, comptes, pôles).
+Seuls les `super_admin` peuvent y entrer (vérifié côté client **et** côté
+serveur dans l'Edge Function).
 
-## Features
+## Moteur de la sécurité
 
-- Global dashboard
-- List all poles
-- Create, edit, and manage poles
-- View pole details
-- Create and manage users
-- Assign users to poles
-- Manage roles and permissions
-- View global statistics
+- La clé `service_role` ne quitte **jamais** le navigateur : toutes les
+  opérations privilégiées (adresses email, création/suppression de comptes,
+  changement de rôle/pôle) passent par l'Edge Function
+  `supabase/functions/admin-users`, qui vérifie le JWT de l'appelant et son
+  rôle dans `profiles` avant toute action.
+- Le listing/crud des pôles passe par les policies RLS publiées en Phase 3 —
+  aucune donnée filtrée côté client. La discrimination se fait en base.
+- `auth.users.email` n'est exposé nulle part côté client : seul l'Edge
+  Function le lit.
 
-## Tech Stack
+## Développement
 
-- Next.js 14 (App Router)
-- Supabase (Auth + Database)
-- Recharts (statistics)
-- Lucide React (icons)
+```bash
+cd apps/admin
+npm install
+npm run dev        # http://localhost:3001
+```
 
-## Setup
+`.env` contient déjà les valeurs publiques (URL + clé anon — publiques par
+conception, la sécurité est dans la RLS).
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+## Déploiement de l'Edge Function (une fois, puis après chaque modification)
 
-2. Copy environment variables:
-   ```bash
-   cp .env.example .env.local
-   ```
+```bash
+# installer le CLI si besoin
+npm install -g supabase
 
-3. Run development server:
-   ```bash
-   npm run dev
-   ```
+# un jeton access-token personnel est nécessaire
+export SUPABASE_ACCESS_TOKEN=<votre jeton>   # PowerShell : $env:SUPABASE_ACCESS_TOKEN="..."
 
-4. Open http://localhost:3001
+supabase functions deploy admin-users --project-ref yklkxvvoeovksyslcfjy
+```
 
-## Authentication
+Le jeton s'obtient sur : dashboard Supabase → Account → Access Tokens.
 
-The admin app is accessible only to Super Admins. Authentication is handled via Supabase Auth with RLS policies ensuring only Super Admins can access the admin routes.
+## Déploiement de l'application admin
+
+Même pipeline que le reste du dépôt (build statique Next `output: export`
+non requis ici — app Node classique, port 3001). Les variables d'environnement
+de production : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+(déjà définies dans `.env`, à reproduire sur l'hébergeur).

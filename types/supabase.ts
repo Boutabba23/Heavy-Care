@@ -20,7 +20,6 @@ export interface Database {
           registration_number: string | null
           service_hours: number
           assigned_filters: Json
-          chantier_id: string | null
           pole_id: string | null
           created_at: string
           updated_at: string
@@ -35,7 +34,6 @@ export interface Database {
           registration_number?: string | null
           service_hours?: number
           assigned_filters?: Json
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -50,7 +48,6 @@ export interface Database {
           registration_number?: string | null
           service_hours?: number
           assigned_filters?: Json
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -60,7 +57,6 @@ export interface Database {
         Row: {
           id: string
           name: string
-          chantier_id: string | null
           pole_id: string | null
           created_at: string
           updated_at: string
@@ -68,7 +64,6 @@ export interface Database {
         Insert: {
           id?: string
           name: string
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -76,7 +71,6 @@ export interface Database {
         Update: {
           id?: string
           name?: string
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -89,7 +83,6 @@ export interface Database {
           filter_type: string | null
           original_reference_id: string | null
           references: Json
-          chantier_id: string | null
           pole_id: string | null
           created_at: string
           updated_at: string
@@ -100,7 +93,6 @@ export interface Database {
           filter_type?: string | null
           original_reference_id?: string | null
           references?: Json
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -111,7 +103,6 @@ export interface Database {
           filter_type?: string | null
           original_reference_id?: string | null
           references?: Json
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -128,7 +119,6 @@ export interface Database {
           oils_used: Json | null
           downtime_hours: number
           panne_hours: number
-          chantier_id: string | null
           pole_id: string | null
           notes: string | null
           created_at: string
@@ -144,7 +134,6 @@ export interface Database {
           oils_used?: Json | null
           downtime_hours?: number
           panne_hours?: number
-          chantier_id?: string | null
           pole_id?: string | null
           notes?: string | null
           created_at?: string
@@ -160,7 +149,6 @@ export interface Database {
           oils_used?: Json | null
           downtime_hours?: number
           panne_hours?: number
-          chantier_id?: string | null
           pole_id?: string | null
           notes?: string | null
           created_at?: string
@@ -175,7 +163,6 @@ export interface Database {
           downtime_hours: number
           panne_hours: number
           notes: string | null
-          chantier_id: string | null
           pole_id: string | null
           created_at: string
           updated_at: string
@@ -187,7 +174,6 @@ export interface Database {
           downtime_hours?: number
           panne_hours?: number
           notes?: string | null
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -199,7 +185,6 @@ export interface Database {
           downtime_hours?: number
           panne_hours?: number
           notes?: string | null
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -212,7 +197,6 @@ export interface Database {
           current_level: number
           total_barrels: number
           alert_threshold: number
-          chantier_id: string | null
           pole_id: string | null
           created_at: string
           updated_at: string
@@ -223,7 +207,6 @@ export interface Database {
           current_level?: number
           total_barrels?: number
           alert_threshold?: number
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -234,7 +217,6 @@ export interface Database {
           current_level?: number
           total_barrels?: number
           alert_threshold?: number
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -251,9 +233,7 @@ export interface Database {
           unitPrice: number
           stockQuantity: number
           minStock: number
-          location: string | null
-          chantier_id: string | null
-          pole_id: string | null
+          location: string | null          pole_id: string | null
           created_at: string
           updated_at: string | null
         }
@@ -268,7 +248,6 @@ export interface Database {
           stockQuantity: number
           minStock: number
           location?: string | null
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string | null
@@ -284,7 +263,6 @@ export interface Database {
           stockQuantity?: number
           minStock?: number
           location?: string | null
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string | null
@@ -300,7 +278,6 @@ export interface Database {
           service_hours_at_install: number | null
           installed_by: string | null
           notes: string | null
-          chantier_id: string | null
           pole_id: string | null
           created_at: string
           updated_at: string | null
@@ -314,7 +291,6 @@ export interface Database {
           service_hours_at_install?: number | null
           installed_by?: string | null
           notes?: string | null
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string | null
@@ -328,7 +304,6 @@ export interface Database {
           service_hours_at_install?: number | null
           installed_by?: string | null
           notes?: string | null
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string | null
@@ -339,7 +314,6 @@ export interface Database {
           id: string
           month: string
           intemperie_days: string[]
-          chantier_id: string | null
           pole_id: string | null
           created_at: string
           updated_at: string
@@ -348,7 +322,6 @@ export interface Database {
           id?: string
           month: string
           intemperie_days?: string[]
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -357,7 +330,6 @@ export interface Database {
           id?: string
           month?: string
           intemperie_days?: string[]
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -375,7 +347,6 @@ export interface Database {
           breakdown_hours: Record<string, number>
           idle_days: string[]
           idle_hours: Record<string, number>
-          chantier_id: string | null
           pole_id: string | null
           created_at: string
           updated_at: string
@@ -391,7 +362,6 @@ export interface Database {
           breakdown_hours?: Record<string, number>
           idle_days?: string[]
           idle_hours?: Record<string, number>
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string
@@ -407,7 +377,6 @@ export interface Database {
           breakdown_hours?: Record<string, number>
           idle_days?: string[]
           idle_hours?: Record<string, number>
-          chantier_id?: string | null
           pole_id?: string | null
           created_at?: string
           updated_at?: string

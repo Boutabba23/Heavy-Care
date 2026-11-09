@@ -122,7 +122,6 @@ export const useAppLogic = () => {
       downtime_hours: adj.downtimeHours || 0,
       panne_hours: adj.panneHours || 0,
       notes: adj.notes || null,
-      chantier_id: poleId || null,
       pole_id: poleId || null,
     };
     const { data, error } = await supabase
@@ -683,7 +682,6 @@ export const useAppLogic = () => {
         registration_number: machineData.registrationNumber || null, // Use null instead of empty string
         service_hours: machineData.serviceHours,
         assigned_filters: editingMachine.assignedFilters || [],
-        chantier_id: poleId || null,
         pole_id: poleId || null,
       }
       : {
@@ -853,7 +851,6 @@ export const useAppLogic = () => {
       service_hours: record.serviceHours,
       maintenance_range: record.maintenanceRange,
       filters_used: [],
-      chantier_id: poleId || null,
       pole_id: poleId || null,
     }));
 
@@ -903,7 +900,6 @@ export const useAppLogic = () => {
       registration_number: nm.registrationNumber || null, // Use null instead of empty string
       service_hours: nm.serviceHours,
       assigned_filters: [],
-      chantier_id: poleId || null,
       pole_id: poleId || null,
     }));
 
@@ -1040,7 +1036,6 @@ export const useAppLogic = () => {
           oils_used: recordData.oilsUsed,
           downtime_hours: (recordData as any).downtimeHours || 0,
           panne_hours: (recordData as any).panneHours || 0,
-          chantier_id: poleId || null,
           pole_id: poleId || null,
         }
         : {
@@ -1053,7 +1048,6 @@ export const useAppLogic = () => {
           oils_used: recordData.oilsUsed,
           downtime_hours: (recordData as any).downtimeHours || 0,
           panne_hours: (recordData as any).panneHours || 0,
-          chantier_id: poleId || null,
           pole_id: poleId || null,
         };
 
@@ -1358,7 +1352,6 @@ export const useAppLogic = () => {
       const res = await supabase.from("spare_parts").insert([{
         ...payload,
         id: `sp-${Date.now()}`,
-        chantier_id: poleId || null,
         pole_id: poleId || null,
       }]);
       error = res.error;
@@ -1428,7 +1421,6 @@ export const useAppLogic = () => {
     const { error } = await supabase.from("spare_part_installations").insert([{
       ...payload,
       id: `inst-${Date.now()}`,
-      chantier_id: poleId || null,
       pole_id: poleId || null,
     }]);
 
