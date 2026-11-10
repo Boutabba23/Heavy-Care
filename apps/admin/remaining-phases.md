@@ -43,7 +43,7 @@ The pre-migration dump (`heavycare-pre-multipole-dump.sql`) is archived at the r
 | 5.2 | Create/confirm the initial `super_admin` account | ✅ CONFIRMED — exactly one exists: `28b6f687-ff9f-4075-a062-f0e7dbd1a421`, `pole_id` NULL |
 | 5.3 | Smoke-test `/`, `/dashboard`, `/poles`, `/users`, `/statistics` | ✅ BUILD PASSING — clean `npm run build`: all 5 routes prerender statically. Build fixes: clean `npm ci` (SIGBUS from a corrupted SWC binary), `apps/admin/postcss.config.js` added to stop the root Tailwind config leaking in, `.env` with the public URL/anon key restored, lint no longer gates the build. Runtime smoke test still needs a super-admin login |
 | 5.4 | Non-super-admin rejection screen | ✅ VERIFIED IN CODE — `(dashboard)/layout.tsx` renders “Accès refusé”; runtime check needs a non-super-admin login |
-| 5.5 | Add the admin origin to the Supabase redirect allowlist | ❌ BLOCKED — real admin origin is still unknown (`admin.example.com` is a placeholder) |
+| 5.5 | Add the admin origin to the Supabase redirect allowlist | ✅ RESOLVED FOR DEV — admin panel is email/password only (no Google OAuth button), so no redirect URL is needed for local testing. When a production origin appears, add `https://<real-domain>` in Dashboard → Auth → URL Configuration (1 change) |
 | 5.6 | Delete `apps/admin/pass.js` | ✅ DONE — file deleted; `.gitignore:33` still ignores the path and it was never tracked |
 | 5.7 | Create the T200 pole | ✅ DONE — `fa8df36f-90bf-4ea6-aed4-9aac0ab7e62a`, “Chantier T200”, active |
 
