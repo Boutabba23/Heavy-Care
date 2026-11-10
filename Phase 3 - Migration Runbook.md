@@ -111,7 +111,11 @@ END; $$;
 CREATE OR REPLACE FUNCTION public.has_pole_access(pole_id uuid) RETURNS boolean
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
-  IF is_super_admin() THEN RETURN TRUE; END IF;
+  -- MUST be schema-qualified: with search_path = '' an unqualified
+  -- is_super_admin() resolves to nothing at runtime ("function
+  -- is_super_admin() does not exist"), which silently breaks every
+  -- business-table RLS policy for authenticated users.
+  IF public.is_super_admin() THEN RETURN TRUE; END IF;
   -- positional ref ($1) avoids name ambiguity between the column and the
   -- parameter, and keeps the original parameter name (CREATE OR REPLACE
   -- cannot rename input parameters).
@@ -305,7 +309,7 @@ SET LOCAL request.jwt.claims = '{"sub":"<USER-UUID-T154>"}';
 SELECT 'machines visible' AS probe, count(*) FROM public.machines;   -- expect 23
 SELECT 'poles visible'    AS probe, count(*) FROM public.poles;      -- expect 1
 SELECT count(*) FROM public.profiles;                                 -- expect 1 (own)
-UPDATE public.profiles SET role = 'super_admin' WHERE id = auth.uid();-- expect ERROR (policy)
+UPDATE public.profiles SET role = 'super_admin' WHERE id = auth.uid();-- expect silent no-op (0 rows; no UPDATE policy)
 ROLLBACK;
 
 -- SUPER ADMIN: sees everything
@@ -316,7 +320,7 @@ SELECT 'superadmin machines' AS probe, count(*) FROM public.machines; -- expect 
 SELECT 'superadmin profiles' AS probe, count(*) FROM public.profiles; -- expect 8
 ROLLBACK;
 ```
-(The UPDATE error is the **good** outcome: `42501 new row violates row-level security policy` — the Phase 1 critical hole is closed.)
+(The UPDATE **0 rows** is the good outcome: `profiles` has no UPDATE policy, so the target scan is empty and self-promotion silently does nothing. An explicit `42501` would also be fine — either way the Phase 1 critical hole is closed.)
 
 ### POST-5. Anon is still locked out (also re-probed from my side after you confirm)
 

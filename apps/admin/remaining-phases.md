@@ -10,6 +10,14 @@ the Supabase Management API (read-only queries), not assumed.
 Status: ✅ **COMPLETED** — database already at post-Stage-B state.
 Verified live on 2026-11-10.
 
+Post-fix note (2026-11-10): `is_super_admin()` resolved to nothing at runtime —
+`has_pole_access()` carried `SET search_path = ''` but called it unqualified, so
+**every authenticated RLS query failed** with `function is_super_admin() does not
+exist` (first surfaced when a real user opened the admin panel; anon probes never
+evaluated policies). Fixed live by re-creating `has_pole_access()` with
+`public.is_super_admin()` qualified, and the runbook snippet corrected so a
+replay cannot reintroduce it.
+
 Post-migration verification:
 
 - `public.poles` exists; `chantiers`, `user_chantiers`, `user_poles` are gone.
@@ -51,8 +59,8 @@ The pre-migration dump (`heavycare-pre-multipole-dump.sql`) is archived at the r
 
 | # | Task | Status |
 |---|---|---|
-| 6.1 | Cross-pole isolation (T154/T165/T200) | ❌ BLOCKED — needs per-user session tokens. The SQL role probe is ready; T165/T200 hold no machines, so a meaningful assertion needs at least one T165 record |
-| 6.2 | Super-admin global visibility across poles | ❌ BLOCKED — needs a super-admin session (the account exists) |
+| 6.1 | Cross-pole isolation (T154/T165/T200) | ✅ T154 PART VERIFIED — T154 user (`16b5dc38…`): sees 23 machines, 1 pole, 1 own profile via RLS. T165/T200 need records + a signed-in user to extend |
+| 6.2 | Super-admin global visibility across poles | ✅ VERIFIED — super_admin JWT context sees 3 poles, 23 machines, 8 profiles |
 | 6.3 | Pole-admin confinement | ❌ BLOCKED — no `pole_admin` profile exists yet; create one first |
 | 6.4 | Unauthorized direct-API probes | ✅ ANON PART RE-VERIFIED POST-STAGE-B — REST probes with the anon key return `HTTP 200, rows=0` for poles, profiles, machines, filter_groups, maintenance_records, spare_parts, oil_stocks, machine_monthly_stats, global_monthly_settings, monthly_daily_adjustments, spare_part_installations. User-token probes need a real token |
 | 6.5 | Regression: machines, filters, oil, maintenance, monthly, spare parts | ❌ BLOCKED — needs a signed-in account and Stage B applied |
