@@ -36,7 +36,7 @@ npm install -g supabase
 # un jeton access-token personnel est nécessaire
 export SUPABASE_ACCESS_TOKEN=<votre jeton>   # PowerShell : $env:SUPABASE_ACCESS_TOKEN="..."
 
-supabase functions deploy admin-users --project-ref yklkxvvoeovksyslcfjy
+supabase functions deploy admin-users --project-ref <project-id>
 ```
 
 Le jeton s'obtient sur : dashboard Supabase → Account → Access Tokens.
