@@ -32,11 +32,16 @@ import { SparePartsView } from "./SparePartsView";
 import SparePartModal from "./SparePartModal";
 import SparePartInstallationModal from "./SparePartInstallationModal";
 import OilManagementView from "./OilManagementView";
+import PoleAdminView from "./PoleAdminView";
 import { LogoIcon } from "../constants";
 
 const AppContent: React.FC = () => {
-  const { user, loading: authLoading, signOut, pole, role, isSuperAdmin } = useAuth();
+  const { user, loading: authLoading, signOut, pole, role, isSuperAdmin, isPoleAdmin } = useAuth();
   const { state, actions } = useAppLogic();
+
+  // pole_admin and super_admin can create/edit/delete machines, filter groups, etc.
+  // regular user can only view and create maintenance records
+  const canWrite = isSuperAdmin || isPoleAdmin;
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -212,6 +217,7 @@ const AppContent: React.FC = () => {
             theme={state.theme}
             customCardBorders={state.customColors.cardBorders}
             onOpenImportModal={actions.openImportModal}
+            canWrite={canWrite}
           />
         );
       case View.MACHINE_DETAIL:
@@ -242,6 +248,7 @@ const AppContent: React.FC = () => {
             highlightedFilterGroupId={state.highlightedFilterGroupId}
             onClearHighlight={actions.clearHighlightedFilterGroup}
             onOpenAddStockModal={actions.openAddStockModal}
+            canWrite={canWrite}
           />
         );
       case View.MAINTENANCE:
@@ -254,6 +261,7 @@ const AppContent: React.FC = () => {
             onOpenConfirmationDialog={actions.openConfirmationDialog}
             onOpenMaintenanceImportModal={actions.openMaintenanceImportModal}
             addToast={actions.addToast}
+            canWrite={canWrite}
           />
         );
       case View.ANALYTICS:
@@ -297,6 +305,7 @@ const AppContent: React.FC = () => {
             onDeleteSparePart={actions.deleteSparePart}
             onAddInstallation={actions.openInstallationModal}
             onOpenConfirmationDialog={actions.openConfirmationDialog}
+            canWrite={canWrite}
           />
         );
       case View.OIL_MANAGEMENT:
@@ -305,6 +314,23 @@ const AppContent: React.FC = () => {
             machines={state.machines}
             oilStocks={state.oilStocks}
             onUpdateStock={(actions as any).updateOilStocks}
+            addToast={actions.addToast}
+            canWrite={canWrite}
+          />
+        );
+      case View.POLE_ADMIN:
+        return (
+          <PoleAdminView
+            machines={state.machines}
+            filterGroups={state.filterGroups}
+            filterTypes={state.filterTypes}
+            onSelectMachine={actions.selectMachine}
+            onOpenMachineModal={actions.openMachineModal}
+            onDeleteMachine={actions.deleteMachine}
+            onOpenFilterGroupModal={actions.openFilterGroupModal}
+            onDeleteFilterGroup={actions.deleteFilterGroup}
+            onOpenConfirmationDialog={actions.openConfirmationDialog}
+            poleId={pole?.id ?? null}
             addToast={actions.addToast}
           />
         );
@@ -354,6 +380,7 @@ const AppContent: React.FC = () => {
         pole={pole}
         userRole={role || ""}
         isSuperAdmin={isSuperAdmin}
+        isPoleAdmin={isPoleAdmin}
         onLogout={handleLogout}
         onOpenAIAssistant={actions.openAIAssistant}
         onOpenScanner={actions.openScanner}

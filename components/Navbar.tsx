@@ -55,6 +55,7 @@ interface NavbarProps {
   pole: any;
   userRole: string;
   isSuperAdmin: boolean;
+  isPoleAdmin: boolean;
   onLogout: () => void;
   onOpenAIAssistant: () => void;
   onOpenScanner: () => void;
@@ -64,7 +65,7 @@ interface NavbarProps {
   onMarkAllNotificationsAsRead: () => void;
 }
 
-type MenuKey = "dashboard" | "inventory" | "theme" | "profile";
+type MenuKey = "dashboard" | "inventory" | "theme" | "profile" | "poleAdmin";
 
 const Caret = ({ className = "" }: { className?: string }) => (
   <svg
@@ -103,6 +104,7 @@ const Navbar: React.FC<NavbarProps> = ({
   pole,
   userRole,
   isSuperAdmin,
+  isPoleAdmin,
   onLogout,
   onOpenAIAssistant,
   onOpenScanner,
@@ -363,6 +365,18 @@ const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
           </div>
+
+          {/* Pole Admin — only for pole_admin users */}
+          {isPoleAdmin && (
+            <button
+              className={
+                isViewActive([View.POLE_ADMIN]) ? pillActive : pillIdle
+              }
+              onClick={() => navigate(View.POLE_ADMIN)}
+            >
+              <Squares2x2Icon className="h-4 w-4" /> Admin Pôle
+            </button>
+          )}
         </nav>
 
         {/* Right side actions */}

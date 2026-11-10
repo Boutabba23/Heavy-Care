@@ -45,8 +45,9 @@ interface MaintenanceViewProps {
   onOpenConfirmationDialog: ReturnType<
     typeof useAppLogic
   >["actions"]["openConfirmationDialog"];
-  onOpenMaintenanceImportModal: () => Promise<void>; // Make sure this is properly typed as async
-  addToast: (toast: Omit<Toast, "id">) => void; // Add this prop for toast notifications
+  onOpenMaintenanceImportModal: () => Promise<void>;
+  addToast: (toast: Omit<Toast, "id">) => void;
+  canWrite: boolean; // true for pole_admin/super_admin, false for user
 }
 
 const maintenanceSequence = ["C", "D", "C", "E", "C", "D", "F"];
@@ -60,6 +61,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
   onOpenConfirmationDialog,
   onOpenMaintenanceImportModal,
   addToast,
+  canWrite,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -369,32 +371,36 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
             Voir Détails
           </button>
         </li>
-        <li>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenMaintenanceModal(record);
-              setOpenMenuId(null);
-            }}
-            className="w-full text-left flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted"
-          >
-            <PencilIcon className="mr-3 h-4 w-4" />
-            Modifier
-          </button>
-        </li>
-        <li>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClick(record);
-              setOpenMenuId(null);
-            }}
-            className="w-full text-left flex items-center px-4 py-2 text-sm text-destructive hover:bg-destructive/10"
-          >
-            <TrashIcon className="mr-3 h-4 w-4" />
-            Supprimer
-          </button>
-        </li>
+        {canWrite && (
+          <>
+            <li>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenMaintenanceModal(record);
+                  setOpenMenuId(null);
+                }}
+                className="w-full text-left flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted"
+              >
+                <PencilIcon className="mr-3 h-4 w-4" />
+                Modifier
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick(record);
+                  setOpenMenuId(null);
+                }}
+                className="w-full text-left flex items-center px-4 py-2 text-sm text-destructive hover:bg-destructive/10"
+              >
+                <TrashIcon className="mr-3 h-4 w-4" />
+                Supprimer
+              </button>
+            </li>
+          </>
+        )}
       </ul>
     );
 
@@ -699,39 +705,41 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                 />
               </div>
             </div>
-            {/* Delete buttons section */}
-            <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDeleteByMachine}
-                disabled={machineFilter === "all"}
-                className="flex items-center gap-2"
-              >
-                <TrashIcon className="h-4 w-4" />
-                Supprimer par code
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDeleteByGamme}
-                disabled={rangeFilter === "all"}
-                className="flex items-center gap-2"
-              >
-                <TrashIcon className="h-4 w-4" />
-                Supprimer par gamme
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDeleteAllMaintenance}
-                disabled={maintenanceRecords.length === 0}
-                className="flex items-center gap-2"
-              >
-                <TrashIcon className="h-4 w-4" />
-                Supprimer tout
-              </Button>
-            </div>
+            {/* Delete buttons section - only for pole_admin/super_admin */}
+            {canWrite && (
+              <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteByMachine}
+                  disabled={machineFilter === "all"}
+                  className="flex items-center gap-2"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  Supprimer par code
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteByGamme}
+                  disabled={rangeFilter === "all"}
+                  className="flex items-center gap-2"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  Supprimer par gamme
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteAllMaintenance}
+                  disabled={maintenanceRecords.length === 0}
+                  className="flex items-center gap-2"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  Supprimer tout
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
