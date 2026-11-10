@@ -694,6 +694,7 @@ export const useAppLogic = () => {
         registration_number: machineData.registrationNumber || null, // Use null instead of empty string
         service_hours: machineData.serviceHours,
         assigned_filters: [],
+        pole_id: poleId || null,
       };
 
     const { error } = await supabase
