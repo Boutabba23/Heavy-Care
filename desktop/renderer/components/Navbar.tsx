@@ -52,6 +52,10 @@ interface NavbarProps {
   // user / profile
   user: any;
   userEmail: string;
+  pole: any;
+  userRole: string;
+  isSuperAdmin: boolean;
+  isPoleAdmin: boolean;
   onLogout: () => void;
   onOpenAIAssistant: () => void;
   onOpenScanner: () => void;
@@ -61,7 +65,7 @@ interface NavbarProps {
   onMarkAllNotificationsAsRead: () => void;
 }
 
-type MenuKey = "dashboard" | "inventory" | "theme" | "profile";
+type MenuKey = "dashboard" | "inventory" | "theme" | "profile" | "poleAdmin";
 
 const Caret = ({ className = "" }: { className?: string }) => (
   <svg
@@ -97,6 +101,10 @@ const Navbar: React.FC<NavbarProps> = ({
   onThemeChange,
   user,
   userEmail,
+  pole,
+  userRole,
+  isSuperAdmin,
+  isPoleAdmin,
   onLogout,
   onOpenAIAssistant,
   onOpenScanner,
@@ -329,7 +337,7 @@ const Navbar: React.FC<NavbarProps> = ({
             }
             onClick={() => navigate(View.MACHINE_LIST)}
           >
-            <ExcavatorIcon className="h-4 w-4" /> Engins
+            <ExcavatorIcon className="h-4 w-4" /> Machines
           </button>
 
           {/* Maintenance — direct */}
@@ -357,6 +365,18 @@ const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
           </div>
+
+          {/* Pole Admin — only for pole_admin users */}
+          {isPoleAdmin && (
+            <button
+              className={
+                isViewActive([View.POLE_ADMIN]) ? pillActive : pillIdle
+              }
+              onClick={() => navigate(View.POLE_ADMIN)}
+            >
+              <Squares2x2Icon className="h-4 w-4" /> Admin Pôle
+            </button>
+          )}
         </nav>
 
         {/* Right side actions */}
@@ -473,6 +493,16 @@ const Navbar: React.FC<NavbarProps> = ({
                         <p className="truncate text-xs text-muted-foreground">
                           {userEmail}
                         </p>
+                        {pole && (
+                          <p className="truncate text-[10px] font-bold uppercase tracking-wider text-primary">
+                            {pole.code || "Pôle inconnu"}
+                          </p>
+                        )}
+                        {userRole && (
+                          <p className="truncate text-[10px] text-muted-foreground">
+                            {userRole.replace("_", " ").toUpperCase()}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -664,14 +694,14 @@ const Navbar: React.FC<NavbarProps> = ({
             onSetView={setCurrentView}
           />
           <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            Tableau de bord
+            Dashboard
           </p>
           <DashboardItems />
           <button
             className={pillIdle}
             onClick={() => navigate(View.MACHINE_LIST)}
           >
-            <ExcavatorIcon className="h-4 w-4 text-emerald-600" /> Engins
+            <ExcavatorIcon className="h-4 w-4 text-emerald-600" /> Machines
           </button>
           <button
             className={pillIdle}
@@ -680,12 +710,22 @@ const Navbar: React.FC<NavbarProps> = ({
             <WrenchIcon className="h-4 w-4 text-orange-500" /> Maintenance
           </button>
           <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            Inventaire
+            Inventory
           </p>
           <InventoryItems />
           <p className="px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Profil
           </p>
+          {pole && (
+            <div className="px-3 py-2 bg-muted border border-foreground/10 rounded-lg mb-2">
+              <p className="text-xs font-bold text-foreground truncate">
+                {pole.code || "Pôle inconnu"}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                {userRole.replace("_", " ").toUpperCase()}
+              </p>
+            </div>
+          )}
           <button className={dropItem} onClick={() => navigate(View.SETTINGS)}>
             <SettingsIcon className="h-4 w-4 text-purple-600" /> Paramètres
           </button>

@@ -11,6 +11,7 @@ export enum View {
   MONTHLY_SUMMARY = "MONTHLY_SUMMARY",
   USER_PROFILE = "USER_PROFILE",
   OIL_MANAGEMENT = "OIL_MANAGEMENT",
+  POLE_ADMIN = "POLE_ADMIN",
 }
 
 export type Theme = string;
@@ -54,11 +55,16 @@ export interface FilterGroup {
   filterType: string; // The type of filter this group is for (e.g., "huile", "air", etc.)
   originalReferenceId?: string | null;
   references: FilterReference[];
+  pole_id?: string | null;
+  description?: string | null;
 }
 
 export interface FilterType {
   id: string;
   name: string; // e.g., "Filtre à huile", "Filtre à air cabine"
+  pole_id?: string | null;
+  filter_group_id?: string | null;
+  part_number?: string | null;
 }
 
 export interface AssignedFilter {
@@ -77,6 +83,8 @@ export interface Machine {
   registrationNumber?: string;
   serviceHours: number;
   assignedFilters: AssignedFilter[];
+  pole_id?: string | null;
+  status?: string;
 }
 
 export interface UsedFilter {
@@ -207,4 +215,30 @@ export interface OilTransaction {
 }
 
 export * from './types/monthly-stats';
+
+// --- Multi-pole / Multi-chantier types ---
+
+export interface Pole {
+  id: string;
+  code: string;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+  archived_at?: string | null;
+  password_hash?: string | null;
+}
+
+export interface Profile {
+  id: string;
+  pole_id: string | null;
+  role: 'super_admin' | 'pole_admin' | 'user';
+  created_at?: string;
+}
+
+export interface UserWithPole {
+  id: string;
+  email: string;
+  role: 'super_admin' | 'pole_admin' | 'user';
+  pole: Pole | null;
+}
 

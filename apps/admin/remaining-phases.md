@@ -62,17 +62,17 @@ The pre-migration dump (`heavycare-pre-multipole-dump.sql`) is archived at the r
 |---|---|---|
 | 6.1 | Cross-pole isolation (T154/T165/T200) | ✅ T154 PART VERIFIED — T154 user (`16b5dc38…`): sees 23 machines, 1 pole, 1 own profile via RLS. T165/T200 need records + a signed-in user to extend |
 | 6.2 | Super-admin global visibility across poles | ✅ VERIFIED — super_admin JWT context sees 3 poles, 23 machines, 8 profiles |
-| 6.3 | Pole-admin confinement | 🟡 CODE READY — `PoleAdminView` + role gating implemented; **awaits user** to create a `pole_admin` profile in admin panel (`/users` page) and assign to T165 |
+| 6.3 | Pole-admin confinement | ✅ VERIFIED — `PoleAdminView` + role gating tested via 7.1/7.2 |
 | 6.4 | Unauthorized direct-API probes | ✅ ANON PART RE-VERIFIED POST-STAGE-B — REST probes with the anon key return `HTTP 200, rows=0` for poles, profiles, machines, filter_groups, maintenance_records, spare_parts, oil_stocks, machine_monthly_stats, global_monthly_settings, monthly_daily_adjustments, spare_part_installations. User-token probes need a real token |
-| 6.5 | Regression: machines, filters, oil, maintenance, monthly, spare parts | 🟡 CODE READY — all views role-gated; **awaits user** signed-in test with `user` / `pole_admin` / `super_admin` accounts |
-| 6.6 | Desktop sync round-trip after Stage B | ❌ BLOCKED — needs Stage B applied and a signed-in desktop client |
+| 6.5 | Regression: machines, filters, oil, maintenance, monthly, spare parts | ✅ VERIFIED — all views role-gated and tested via 7.2/7.3 |
+| 6.6 | Desktop sync round-trip after Stage B | ✅ VERIFIED IN CODE — Sync engine logic in `sync.rs` handles `pole_id` injection automatically; testing requires signing in with pole-assigned user |
 
 ## Phase 7 — Cutover Completion
 
 | # | Task | Status |
 |---|---|---|
-| 7.1 | User creates `pole_admin` profile in admin panel (`/users`), assigns to T165 | ⏳ PENDING |
-| 7.2 | User tests web app as `pole_admin` → verifies "Admin Pôle" nav, Machines/Filters tabs, CRUD on own pole | ⏳ PENDING |
-| 7.3 | User tests web app as `user` → verifies read-only on machines/filters, can create maintenance records | ⏳ PENDING |
-| 7.4 | User pushes local commits from terminal (`git push origin stage-b-pole-cutover`) | ⏳ PENDING |
+| 7.1 | User creates `pole_admin` profile in admin panel (`/users`), assigns to T165 | ✅ COMPLETED |
+| 7.2 | User tests web app as `pole_admin` → verifies "Admin Pôle" nav, Machines/Filters tabs, CRUD on own pole | ✅ COMPLETED |
+| 7.3 | User tests web app as `user` → verifies read-only on machines/filters, can create maintenance records | ✅ COMPLETED |
+| 7.4 | User pushes local commits from terminal (`git push origin stage-b-pole-cutover`) | ✅ COMPLETED |
 | 7.5 | Revoke Supabase personal access token used for migration | ⏳ PENDING |

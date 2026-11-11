@@ -30,6 +30,7 @@ interface SparePartsViewProps {
         description: string;
         onConfirm: () => void;
     }) => void;
+    canWrite: boolean;
 }
 
 const getStockBadgeVariant = (
@@ -50,6 +51,7 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
     onDeleteSparePart,
     onAddInstallation,
     onOpenConfirmationDialog,
+    canWrite,
 }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -124,10 +126,12 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
                         <PlusIcon className="h-4 w-4 mr-2" />
                         Nouveau Montage
                     </Button>
-                    <Button onClick={onAddSparePart}>
-                        <PlusIcon className="h-4 w-4 mr-2" />
-                        Ajouter Pièce
-                    </Button>
+                    {canWrite && (
+                        <Button onClick={onAddSparePart}>
+                            <PlusIcon className="h-4 w-4 mr-2" />
+                            Ajouter Pièce
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -244,23 +248,27 @@ export const SparePartsView: React.FC<SparePartsViewProps> = ({
                                             >
                                                 <PlusIcon className="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => onEditSparePart(part)}
-                                                title="Modifier"
-                                            >
-                                                <PencilIcon className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleDeleteClick(part)}
-                                                title="Supprimer"
-                                                className="text-destructive hover:text-destructive"
-                                            >
-                                                <TrashIcon className="h-4 w-4" />
-                                            </Button>
+                                            {canWrite && (
+                                                <>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => onEditSparePart(part)}
+                                                        title="Modifier"
+                                                    >
+                                                        <PencilIcon className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleDeleteClick(part)}
+                                                        title="Supprimer"
+                                                        className="text-destructive hover:text-destructive"
+                                                    >
+                                                        <TrashIcon className="h-4 w-4" />
+                                                    </Button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

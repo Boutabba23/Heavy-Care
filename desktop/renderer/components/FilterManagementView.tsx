@@ -52,6 +52,7 @@ interface FilterManagementViewProps {
   highlightedFilterGroupId: string | null;
   onClearHighlight: () => void;
   onOpenAddStockModal: (info: StockUpdateInfo) => void;
+  canWrite: boolean; // true for pole_admin/super_admin, false for user
 }
 
 const getStockBadgeVariant = (
@@ -84,6 +85,7 @@ const getFilterTypeBadgeVariant = (
 };
 
 const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
+  const { canWrite } = props;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilterType, setSelectedFilterType] = useState("");
   const [openGroupMenuId, setOpenGroupMenuId] = useState<string | null>(null);
@@ -166,10 +168,12 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
           title="Aucun groupe de filtres créé"
           description="Commencez par créer votre premier groupe pour organiser vos références de filtres compatibles."
           action={
-            <Button onClick={() => props.onOpenFilterGroupModal(null, props.filterGroups)}>
-              <PlusIcon className="mr-2 h-5 w-5" />
-              Créer un groupe de filtres
-            </Button>
+            canWrite && (
+              <Button onClick={() => props.onOpenFilterGroupModal(null, props.filterGroups)}>
+                <PlusIcon className="mr-2 h-5 w-5" />
+                Créer un groupe de filtres
+              </Button>
+            )
           }
         />
       );
@@ -278,7 +282,7 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                     >
                       <EllipsisVerticalIcon />
                     </Button>
-                    {openGroupMenuId === group.id && (
+                    {openGroupMenuId === group.id && canWrite && (
                       <div className="absolute right-0 mt-2 w-48 bg-card border-2 border-foreground rounded-xl shadow-[4px_4px_0_0_hsl(var(--foreground))] z-50 animate-fadeIn">
                         <ul className="py-1">
                           <li>
@@ -479,12 +483,14 @@ const FilterManagementView: React.FC<FilterManagementViewProps> = (props) => {
                   
                 </Button>
               )}
+              {canWrite && (
               <Button 
-              className="px-8"
-              onClick={() => props.onOpenFilterGroupModal(null, props.filterGroups)}>
-                <PlusIcon className="mr-2 h-5 w-5" />
-                <span>Nouveau Groupe</span>
-              </Button>
+                className="px-8"
+                onClick={() => props.onOpenFilterGroupModal(null, props.filterGroups)}>
+                  <PlusIcon className="mr-2 h-5 w-5" />
+                  <span>Nouveau Groupe</span>
+                </Button>
+            )}
             </div>
           </div>
         </CardHeader>

@@ -41,6 +41,7 @@ interface MachineListViewProps {
   theme: Theme;
   customCardBorders: string[];
   onOpenImportModal: () => void;
+  canWrite: boolean; // true for pole_admin/super_admin, false for user
 }
 
 const MachineListView: React.FC<MachineListViewProps> = ({
@@ -51,6 +52,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
   onDeleteMachine,
   onOpenConfirmationDialog,
   onOpenImportModal,
+  canWrite,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMarque, setSelectedMarque] = useState("");
@@ -177,10 +179,12 @@ const MachineListView: React.FC<MachineListViewProps> = ({
           title="Votre parc est vide pour le moment"
           description="Commencez par ajouter votre premier engin pour suivre ses filtrations et planifier sa maintenance."
           action={
-            <Button onClick={onAddMachine}>
-              <PlusIcon className="mr-2 h-5 w-5" />
-              Ajouter votre premier engin
-            </Button>
+            canWrite && (
+              <Button onClick={onAddMachine}>
+                <PlusIcon className="mr-2 h-5 w-5" />
+                Ajouter votre premier engin
+              </Button>
+            )
           }
         />
       );
@@ -234,7 +238,7 @@ const MachineListView: React.FC<MachineListViewProps> = ({
                     >
                       <EllipsisVerticalIcon />
                     </Button>
-                    {openMenuId === machine.id && (
+                    {openMenuId === machine.id && canWrite && (
                       <div className="absolute right-0 mt-2 w-48 bg-card border-2 border-foreground rounded-xl shadow-[4px_4px_0_0_hsl(var(--foreground))] z-50 animate-fadeIn">
                         <ul className="py-1">
                           <li>
@@ -332,10 +336,12 @@ const MachineListView: React.FC<MachineListViewProps> = ({
                   Exporter
                 </Button>
               )}
-              <Button onClick={onAddMachine}>
-                <PlusIcon className="mr-2 h-5 w-5" />
-                <span>Nouveau Matériel</span>
-              </Button>
+              {canWrite && (
+                <Button onClick={onAddMachine}>
+                  <PlusIcon className="mr-2 h-5 w-5" />
+                  <span>Nouveau Matériel</span>
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>

@@ -8,6 +8,7 @@ interface OilManagementViewProps {
   oilStocks: OilStock[];
   onUpdateStock: (stocks: OilStock[]) => void;
   addToast: (toast: any) => void;
+  canWrite: boolean;
 }
 
 const MOCK_TRANSACTIONS: OilTransaction[] = [
@@ -17,7 +18,7 @@ const MOCK_TRANSACTIONS: OilTransaction[] = [
 
 type Tab = 'stock' | 'add' | 'reception' | 'history';
 
-const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStocks, onUpdateStock, addToast }) => {
+const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStocks, onUpdateStock, addToast, canWrite }) => {
   const [activeTab, setActiveTab] = useState<Tab>('stock');
   const [transactions, setTransactions] = useState<OilTransaction[]>(MOCK_TRANSACTIONS);
 
@@ -193,6 +194,7 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
             <Squares2x2Icon className="h-4 w-4" />
             Stock
           </button>
+          {canWrite && (
           <button
             onClick={() => setActiveTab('add')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'add'
@@ -203,9 +205,11 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
             <PlusIcon className="h-4 w-4" />
             Nouveau Rajout
           </button>
+        )}
+        {canWrite && (
           <button
             onClick={() => setActiveTab('reception')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'reception'
+            className={`flex items_center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'reception'
               ? 'bg-primary text-primary-foreground'
               : 'text-muted-foreground hover:bg-muted'
               }`}
@@ -213,6 +217,7 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
             <ArrowDownTrayIcon className="h-4 w-4" />
             Réception
           </button>
+        )}
           <button
             onClick={() => setActiveTab('history')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'history'
@@ -234,6 +239,7 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
               <div className="px-4 py-2 bg-card rounded-full border-2 border-foreground shadow-[2px_2px_0_0_hsl(var(--foreground))] text-sm font-medium">
                 <span className="font-black text-primary">{oilStocks.reduce((acc: number, s: OilStock) => acc + s.totalBarrels, 0)}</span> Fûts en réserve
               </div>
+              {canWrite && (
               <button
                 onClick={() => setIsAddTypeOpen(true)}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-xl border-2 border-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_0_hsl(var(--foreground))] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none flex items-center gap-2 text-sm font-bold"
@@ -241,6 +247,7 @@ const OilManagementView: React.FC<OilManagementViewProps> = ({ machines, oilStoc
                 <PlusIcon className="h-4 w-4" />
                 Nouveau Type
               </button>
+            )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -21,9 +21,9 @@ import {
   SparePartInstallation,
   OilStock,
 } from "../types";
+import { useAuth } from "../contexts/AuthContext";
 import { calculateNextMaintenance } from "../utils/maintenance";
 import { supabase } from "../utils/supabase";
-import { useAuth } from "../contexts/AuthContext";
 import { themes, ThemeInfo } from "../utils/themes";
 // Type definitions for monthly daily adjustments
 type MonthlyDailyAdjustmentInsert = Database['public']['Tables']['monthly_daily_adjustments']['Insert'];
@@ -88,7 +88,7 @@ export const defaultCustomColors: CustomColors = {
 };
 
 export const useAppLogic = () => {
-  const { poleId, user } = useAuth();
+  const { poleId } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<View>(View.LANDING);
   const [machines, setMachines] = useState<Machine[]>([]);
@@ -122,6 +122,7 @@ export const useAppLogic = () => {
       downtime_hours: adj.downtimeHours || 0,
       panne_hours: adj.panneHours || 0,
       notes: adj.notes || null,
+      pole_id: poleId || null,
     };
     const { data, error } = await supabase
       .from('monthly_daily_adjustments')
@@ -157,7 +158,8 @@ export const useAppLogic = () => {
     const { error } = await supabase
       .from('monthly_daily_adjustments')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('pole_id', poleId);
     if (error) {
       addToast({ type: 'error', title: 'Erreur', description: error.message });
       return false;
@@ -249,10 +251,6 @@ export const useAppLogic = () => {
         installationsRes,
         oilStocksRes,
       ] = await Promise.all([
-        // Local reads are unfiltered by pole: this database only ever holds
-        // what the signed-in user's RLS-scoped sync pulled for them (plus
-        // local accounts' own data). Filtering here would break queries
-        // until the pole_id column exists locally.
         supabase.from("machines").select("*"),
         supabase.from("filter_groups").select("*"),
         supabase.from("filter_types").select("*"),
@@ -331,7 +329,6 @@ export const useAppLogic = () => {
           downtime_hours: adj.downtimeHours || 0,
           panne_hours: adj.panneHours || 0,
           notes: adj.notes || null,
-          pole_id: poleId || null,
         };
         const res = await (supabase as any).from('monthly_daily_adjustments').insert(payload as any);
         if (res.error) {
@@ -417,16 +414,6 @@ export const useAppLogic = () => {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
-
-  // Live refresh: when the background sync pulls remote changes into the
-  // local SQLite DB, re-fetch so the UI reflects them without a restart.
-  useEffect(() => {
-    const desktop = (window as any).desktop;
-    if (!desktop?.db?.onSyncApplied) return;
-    return desktop.db.onSyncApplied(() => {
-      fetchData();
-    });
   }, [fetchData]);
 
   useEffect(() => {
@@ -695,6 +682,7 @@ export const useAppLogic = () => {
         registration_number: machineData.registrationNumber || null, // Use null instead of empty string
         service_hours: machineData.serviceHours,
         assigned_filters: editingMachine.assignedFilters || [],
+        pole_id: poleId || null,
       }
       : {
         id: `m-${Date.now()}`,
@@ -706,6 +694,7 @@ export const useAppLogic = () => {
         registration_number: machineData.registrationNumber || null, // Use null instead of empty string
         service_hours: machineData.serviceHours,
         assigned_filters: [],
+        pole_id: poleId || null,
       };
 
     const { error } = await supabase
@@ -752,7 +741,8 @@ export const useAppLogic = () => {
     const { error } = await supabase
       .from("machines")
       .delete()
-      .eq("id", machineId);
+      .eq("id", machineId)
+      .eq("pole_id", poleId);
     if (error) {
       addToast({ type: "error", title: "Erreur", description: error.message });
     } else {
@@ -862,6 +852,7 @@ export const useAppLogic = () => {
       service_hours: record.serviceHours,
       maintenance_range: record.maintenanceRange,
       filters_used: [],
+      pole_id: poleId || null,
     }));
 
     const { error } = await supabase
@@ -910,6 +901,7 @@ export const useAppLogic = () => {
       registration_number: nm.registrationNumber || null, // Use null instead of empty string
       service_hours: nm.serviceHours,
       assigned_filters: [],
+      pole_id: poleId || null,
     }));
 
     // Filter out any records that might have invalid data
@@ -999,7 +991,8 @@ export const useAppLogic = () => {
     const { error } = await supabase
       .from("filter_groups")
       .delete()
-      .eq("id", groupId);
+      .eq("id", groupId)
+      .eq("pole_id", poleId);
     if (error) {
       addToast({ type: "error", title: "Erreur", description: error.message });
     } else {
@@ -1044,6 +1037,7 @@ export const useAppLogic = () => {
           oils_used: recordData.oilsUsed,
           downtime_hours: (recordData as any).downtimeHours || 0,
           panne_hours: (recordData as any).panneHours || 0,
+          pole_id: poleId || null,
         }
         : {
           id: `maint-${Date.now()}`,
@@ -1055,6 +1049,7 @@ export const useAppLogic = () => {
           oils_used: recordData.oilsUsed,
           downtime_hours: (recordData as any).downtimeHours || 0,
           panne_hours: (recordData as any).panneHours || 0,
+          pole_id: poleId || null,
         };
 
     const { error } = await supabase
@@ -1163,7 +1158,8 @@ export const useAppLogic = () => {
     const { error } = await supabase
       .from("maintenance_records")
       .delete()
-      .eq("id", recordId);
+      .eq("id", recordId)
+      .eq("pole_id", poleId);
     if (error) {
       if (showNotification) {
         addToast({ type: "error", title: "Erreur", description: error.message });
@@ -1357,6 +1353,7 @@ export const useAppLogic = () => {
       const res = await supabase.from("spare_parts").insert([{
         ...payload,
         id: `sp-${Date.now()}`,
+        pole_id: poleId || null,
       }]);
       error = res.error;
     }
@@ -1382,7 +1379,8 @@ export const useAppLogic = () => {
     const { error } = await supabase
       .from("spare_parts")
       .delete()
-      .eq("id", partId);
+      .eq("id", partId)
+      .eq("pole_id", poleId);
 
     if (error) {
       addToast({
@@ -1424,6 +1422,7 @@ export const useAppLogic = () => {
     const { error } = await supabase.from("spare_part_installations").insert([{
       ...payload,
       id: `inst-${Date.now()}`,
+      pole_id: poleId || null,
     }]);
 
     if (error) {

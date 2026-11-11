@@ -137,8 +137,7 @@ export const SUPABASE_ANON_KEY =
 export async function fetchSupabaseProfile(): Promise<{
   role: string | null;
   pole_id: string | null;
-} | null> {
-  const bridge = getBridge();
+} | null> {  const bridge = getBridge();
   if (!bridge) return null;
   const res = await bridge.auth.getSession();
   const session: any = res?.data?.session;
@@ -149,6 +148,35 @@ export async function fetchSupabaseProfile(): Promise<{
     `${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(
       uid
     )}&select=role,pole_id`,
+    {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!r.ok) {
+    throw new Error(`profiles fetch failed: ${r.status}`);
+  }
+  const rows: any[] = await r.json();
+  return rows && rows.length > 0 ? rows[0] : null;
+}
+
+// Same as fetchSupabaseProfile but returns the full profile row joined with
+// its poles row (same query the web AuthContext runs). The desktop has no
+// local profiles/poles tables, so multi-pole UI data must come from REST.
+export async function fetchSupabaseProfileFull(): Promise<any> {
+  const bridge = getBridge();
+  if (!bridge) return null;
+  const res = await bridge.auth.getSession();
+  const session: any = res?.data?.session;
+  const uid = session?.user?.id;
+  const token = session?.access_token;
+  if (!uid || !token) return null;
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(
+      uid
+    )}&select=*,pole:poles(id,code,name,created_at,updated_at,archived_at,password_hash)`,
     {
       headers: {
         apikey: SUPABASE_ANON_KEY,

@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session, AuthError } from "@supabase/supabase-js";
-import { supabase, fetchSupabaseProfile } from "../utils/supabase";
+import { supabase, fetchSupabaseProfileFull } from "../utils/supabase";
+import type { Profile, Pole } from "../types";
 
 interface AuthContextType {
   user: User | null;
@@ -10,10 +11,11 @@ interface AuthContextType {
   loading: boolean;
   devMode: boolean;
   toggleDevMode: () => void;
-  profile: { role: string | null; pole_id: string | null } | null;
+  profile: Profile | null;
   profileLoaded: boolean;
-  poleId: string | null;
+  pole: Pole | null;
   role: string | null;
+  poleId: string | null;
   isSuperAdmin: boolean;
   isPoleAdmin: boolean;
   isUser: boolean;
@@ -49,44 +51,70 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [devMode, setDevMode] = useState(process.env.NODE_ENV === 'development');
-  // Multi-pole: the cloud profiles row decides the session's pole + role.
-  // Local-only accounts have no cloud profile — poleId stays null, which is
-  // fine because their data never leaves this machine.
-  const [profile, setProfile] = useState<{ role: string | null; pole_id: string | null } | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [pole, setPole] = useState<Pole | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
   const toggleDevMode = () => {
     setDevMode(prev => !prev);
   };
 
-  const fetchProfile = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    // Local accounts (offline, no cloud session) have no cloud profile —
-    // poleId stays null by design and they are never gated.
-    if (!session?.user || !(session as any).access_token) {
+  const role = profile?.role ?? null;
+  const poleId = profile?.pole_id ?? null;
+  const isSuperAdmin = role === "super_admin";
+  const isPoleAdmin = role === "pole_admin";
+  const isUser = role === "user";
+
+  const fetchProfile = async (uid: string | null) => {
+    if (!uid) {
       setProfile(null);
+      setPole(null);
       setProfileLoaded(true);
       return;
     }
-    try {
-      const row = await fetchSupabaseProfile();
-      setProfile(row);
+    // Desktop: no local profiles/poles tables — fetch via Supabase REST shim.
+    const isDesktop = typeof window !== "undefined" && (window as any).desktop;
+    if (isDesktop) {
+      try {
+        const row = await fetchSupabaseProfileFull();
+        setProfile((row as Profile) ?? null);
+        setPole((row as any)?.pole ?? null);
+      } catch {
+        // Transient failure — keep previous state; the db:synced listener
+        // retries once the sync loop refreshes the token.
+      }
       setProfileLoaded(true);
-    } catch {
-      // Transient failure — leave profileLoaded false; the db:synced
-      // listener retries once the sync loop refreshes the token.
+      return;
     }
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*, pole:poles(id, code, name, created_at, updated_at, archived_at, password_hash)")
+      .eq("id", uid)
+      .single();
+
+    if (error || !data) {
+      setProfile(null);
+      setPole(null);
+      setProfileLoaded(true);
+      return;
+    }
+
+    setProfile(data as Profile);
+    setPole((data as any).pole ?? null);
+    setProfileLoaded(true);
   };
 
   useEffect(() => {
-    // Get initial session + cloud profile
+    // Get initial session
     const getInitialSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
-      await fetchProfile();
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      }
       setLoading(false);
     };
 
@@ -99,27 +127,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchProfile();
+        await fetchProfile(session.user.id);
       } else {
         setProfile(null);
+        setPole(null);
         setProfileLoaded(true);
       }
       setLoading(false);
     });
 
     // Refresh the pole after each successful sync (pole can be reassigned
-    // from the admin app while the desktop app is running)
-    const onSynced = () => { void (async () => { await fetchProfile(); })(); };
+    // from the admin app while the desktop app is running) and retry any
+    // transient profile fetch failure.
+    const onSynced = () => {
+      void (async () => {
+        const uid = session?.user?.id ?? null;
+        if (uid) await fetchProfile(uid);
+      })();
+    };
     window.addEventListener("db:synced", onSynced as any);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("db:synced", onSynced as any);
+    };
   }, []);
-
-  const role = profile?.role ?? null;
-  const poleId = profile?.pole_id ?? null;
-  const isSuperAdmin = role === "super_admin";
-  const isPoleAdmin = role === "pole_admin";
-  const isUser = role === "user";
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -139,18 +171,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
-    setProfile(null);
-    setProfileLoaded(true);
     return { error };
   };
 
   const signInWithGoogle = async () => {
-   
+    // The desktop supabase shim routes this to the Tauri command
+    // `auth_sign_in_google` (PKCE in the system browser + loopback callback);
+    // on the web it is a normal browser redirect. The session arrives later
+    // through the auth:changed / onAuthStateChange events either way.
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      //options: {redirectTo},
       options: {
-      redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}/`,
       }
     });
     return { error };
@@ -167,20 +199,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     session,
     loading,
+    devMode,
+    toggleDevMode,
+    profile,
+    profileLoaded,
+    pole,
+    role,
+    poleId,
+    isSuperAdmin,
+    isPoleAdmin,
+    isUser,
     signIn,
     signUp,
     signOut,
     signInWithGoogle,
     resetPassword,
-    devMode,
-    toggleDevMode,
-    profile,
-    profileLoaded,
-    poleId,
-    role,
-    isSuperAdmin,
-    isPoleAdmin,
-    isUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
