@@ -73,6 +73,30 @@ The pre-migration dump (`heavycare-pre-multipole-dump.sql`) is archived at the r
 |---|---|---|
 | 7.1 | User creates `pole_admin` profile in admin panel (`/users`), assigns to T165 | ✅ COMPLETED |
 | 7.2 | User tests web app as `pole_admin` → verifies "Admin Pôle" nav, Machines/Filters tabs, CRUD on own pole | ✅ COMPLETED |
-| 7.3 | User tests web app as `user` → verifies read-only on machines/filters, can create maintenance records | ✅ COMPLETED |
+| 7.3 | User tests web app as `user` → verifies read-only on machines/filters, can create maintenance records |  COMPLETED - superseded by Phase 8: user is now strict read-only (maintenance records included) |
 | 7.4 | User pushes local commits from terminal (`git push origin stage-b-pole-cutover`) | ✅ COMPLETED |
 | 7.5 | Revoke Supabase personal access token used for migration | ⏳ PENDING |
+
+## Phase 8 - `user` role: strict read-only (RLS)
+
+Status:  **COMPLETED** - applied live on 2026-11-12 via Supabase CLI
+(`supabase db query --remote=yklkxvvoeovksyslcfjy --file supabase/user-readonly-rls.sql`),
+verified against `pg_policies` afterwards.
+
+Change: write access on all 10 business tables is now granted only to
+`super_admin` (any pole) or `pole_admin` (own pole). The `user` role keeps
+read access via `has_pole_access(pole_id)` but can no longer INSERT, UPDATE
+or DELETE anything - maintenance records included, superseding the 7.3 note.
+
+- New helper `public.can_write_pole(target_pole_id)` (SECURITY DEFINER,
+  `search_path = ''`, `public.`-qualified calls): TRUE for super_admin, or for
+  `pole_admin` whose `profiles.pole_id` equals the target row's `pole_id`.
+- Per-table policies (`pole_access_insert/update/delete`) now use
+  `can_write_pole(pole_id)`; USING on UPDATE/DELETE is also `can_write_pole`
+  so a `user` cannot mutate rows it can merely see.
+- `pole_access_select` unchanged (`has_pole_access(pole_id)`).
+- `profiles` / `poles` policies untouched (role & pole changes only via the
+  `admin-users` Edge Function; poles managed by super_admin only).
+- Post-apply verification: 40 policies (10 tables x 4), anon REST INSERT on
+  `machines` still rejected 401 `violates row-level security policy`.
+- Migration source: `supabase/user-readonly-rls.sql` (committed).
