@@ -100,3 +100,20 @@ or DELETE anything - maintenance records included, superseding the 7.3 note.
 - Post-apply verification: 40 policies (10 tables x 4), anon REST INSERT on
   `machines` still rejected 401 `violates row-level security policy`.
 - Migration source: `supabase/user-readonly-rls.sql` (committed).
+
+### 5.1bis - Role editing E2E verified (2026-11-12)
+
+Status:  **COMPLETED** - `admin-users` redeployed from repo source (`supabase
+functions deploy --use-api`), then the full production path was verified with a
+disposable super_admin account created + deleted via SQL:
+
+- sign-in with the test account: 200 (initially 500 - the synthetic identity
+  row needed `auth.identities.provider_id` = the EMAIL, not the user id)
+- `set_role` on a second account: **200 `{ok:true}`**, change persisted in
+  `profiles` (verified via SQL) - the exact call `/users` page makes
+- gate refuses non-super-admin callers: 403 `Reserve aux super admins.`
+- probe account fully deleted afterwards (auth.users, identities, profiles)
+
+Conclusion: role editing works server-side. If the dropdown still fails in the
+browser, check (a) you are not editing your OWN row - it is intentionally
+locked, and (b) the error toast text, which shows the Edge Function message.

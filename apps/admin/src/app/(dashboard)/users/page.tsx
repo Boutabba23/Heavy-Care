@@ -201,6 +201,7 @@ export default function UsersPage() {
                     className="input"
                     value={u.role}
                     disabled={busyId === u.id || u.id === me?.id}
+                    title={u.id === me?.id ? 'Votre propre rôle ne peut pas être modifié ici.' : 'Modifier le rôle'}
                     onChange={(e) => setRole(u.id, e.target.value as AdminUser['role'])}
                   >
                     <option value="user">user</option>
