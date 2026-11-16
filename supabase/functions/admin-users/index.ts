@@ -71,7 +71,6 @@ Deno.serve(async (req) => {
           if (error) throw toMsg(error);
           for (const u of data.users) {
             accounts.push(u);
-            if (data.users.length < 200) break;
           }
           if (!data.users || data.users.length < 200 || page >= 20) break;
           page += 1;

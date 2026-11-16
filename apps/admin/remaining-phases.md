@@ -117,3 +117,19 @@ disposable super_admin account created + deleted via SQL:
 Conclusion: role editing works server-side. If the dropdown still fails in the
 browser, check (a) you are not editing your OWN row - it is intentionally
 locked, and (b) the error toast text, which shows the Edge Function message.
+
+### 6.2 - Admin app data bugs: users list + poles count (2026-11-16)
+
+Status:  **COMPLETED** (code) + data finding reported.
+
+Bug 1 - Utilisateurs tab showed only 1 user: `admin-users` `list` had an
+inner `if (data.users.length < 200) break;` INSIDE the for-of loop, ending the
+loop after the first user of any under-200 page. Removed, redeployed,
+verified: `list` returns all accounts (tested with a disposable super_admin:
+9 rows returned). Probe deleted after.
+
+Bug 2 - Poles tab Utilisateurs count = 0: not a code bug. The `profiles`
+SELECT policy allows super_admin to read all rows, but in the DB **no
+profile has pole_id set** and every account (8) is currently `super_admin`.
+Counts are therefore legitimately 0 until users are assigned to poles in the
+admin UI. Decision pending: which accounts belong to which pole / what roles.
