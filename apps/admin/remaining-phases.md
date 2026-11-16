@@ -129,7 +129,14 @@ verified: `list` returns all accounts (tested with a disposable super_admin:
 9 rows returned). Probe deleted after.
 
 Bug 2 - Poles tab Utilisateurs count = 0: not a code bug. The `profiles`
-SELECT policy allows super_admin to read all rows, but in the DB **no
-profile has pole_id set** and every account (8) is currently `super_admin`.
-Counts are therefore legitimately 0 until users are assigned to poles in the
-admin UI. Decision pending: which accounts belong to which pole / what roles.
+SELECT policy allows super_admin to read all rows, but no profile had
+pole_id set and every account (8) was `super_admin`.
+
+Resolution (2026-11-16, applied via SQL at the user's request):
+- `boutabba.larab@gmail.com` stays the ONLY super_admin (pole NULL).
+- 6 accounts -> role `user`, pole T154: cosidertp154mat@, boutabba@,
+  boutabba.mohamed.larab@, aimannouari010@, louaifl235@,
+  brahim.abdelmalek.05@
+- `cosidert165materiel@gmail.com` -> role `user`, pole T165.
+- From now on, new accounts default to `user` (handle_new_user trigger);
+  promote them in the admin UI only when decided.
